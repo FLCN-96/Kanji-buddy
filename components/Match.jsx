@@ -130,6 +130,10 @@ const MatchApp = ({ cards }) => {
   const lastMatchAtRef = React.useRef(0);
   const startedAtRef = React.useRef(0);
   const rafRef = React.useRef(0);
+  const penaltyAccumRef = React.useRef(0);
+  // Guards the end-of-game save effect against re-firing when it sets state
+  // (pb, beatPb, xpGained) during its own run.
+  const finishedRef = React.useRef(false);
   // Ref (not state) so the ready-phase countdown effect doesn't restart when
   // card_states finish loading — Match only reads it at pool-build time.
   const cardStatesRef = React.useRef([]);
@@ -192,13 +196,12 @@ const MatchApp = ({ cards }) => {
     if (phase !== 'play') return;
     const startTime = startedAtRef.current;
     const total = tweaks.duration * 1000;
-    let penaltyMs = 0;
     const loop = (now) => {
       const elapsed = now - startTime;
       const remain = total - elapsed - penaltyAccumRef.current;
       if (remain <= 0) {
         setTimeLeft(0);
-        endRun('time');
+        setPhase('end');
         return;
       }
       setTimeLeft(remain);
@@ -208,38 +211,40 @@ const MatchApp = ({ cards }) => {
     return () => cancelAnimationFrame(rafRef.current);
   }, [phase, tweaks.duration]);
 
-  const penaltyAccumRef = React.useRef(0);
-
-  const endRun = (reason) => {
-    setPhase('end');
-    cancelAnimationFrame(rafRef.current);
-    if (score > pb) {
+  // End-of-game save. Must live here rather than in the clock loop so the
+  // closure captures the final score/matches/misses rather than the zeros
+  // they were reset to when phase became 'play'.
+  React.useEffect(() => {
+    if (phase !== 'end' || !window.DB) return;
+    if (finishedRef.current) return;
+    if (matches + misses === 0) return;
+    finishedRef.current = true;
+    const isHot = window.Daily && window.Daily.hotChallengeId() === 'match';
+    const newBeatPb = score > pb;
+    if (newBeatPb) {
       setBeatPb(true);
       try { localStorage.setItem(PB_KEY_MT, String(score)); } catch(e) {}
       setPb(score);
     }
-    if (window.DB && matches + misses > 0) {
-      const isHot = window.Daily && window.Daily.hotChallengeId() === 'match';
-      // Score-scaled base + PB bonus — strong play should be obviously rewarded.
-      const base = 20 + score * 2;
-      const pbBonus = (score > pb) ? 20 : 0;
-      const earned = Math.round((base + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
-      setXpGained(earned);
-      window.DB.saveScore({ mode: 'match', score, duration_s: tweaks.duration }).catch(() => {});
-      window.DB.saveSession({
-        mode: 'match',
-        duration_s: tweaks.duration,
-        cards_reviewed: matches + misses,
-        hits: matches,
-        misses,
-        hard: 0,
-        xp_earned: earned,
-      })
-        .then(() => window.DB.grantXp(earned))
-        .then(() => window.DB.recordSessionStreak())
-        .catch(() => {});
-    }
-  };
+    // Score-scaled base + PB bonus — strong play should be obviously rewarded.
+    const base = 20 + score * 2;
+    const pbBonus = newBeatPb ? 20 : 0;
+    const earned = Math.round((base + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+    setXpGained(earned);
+    window.DB.saveScore({ mode: 'match', score, duration_s: tweaks.duration }).catch(() => {});
+    window.DB.saveSession({
+      mode: 'match',
+      duration_s: tweaks.duration,
+      cards_reviewed: matches + misses,
+      hits: matches,
+      misses,
+      hard: 0,
+      xp_earned: earned,
+    })
+      .then(() => window.DB.grantXp(earned))
+      .then(() => window.DB.recordSessionStreak())
+      .catch(() => {});
+  }, [phase]);
 
   // Refill: when a pair is matched, remove both tiles and pull next from pool
   const replaceWithNext = (matchedIds) => {
@@ -366,6 +371,7 @@ const MatchApp = ({ cards }) => {
   const restart = () => {
     setPhase('ready');
     penaltyAccumRef.current = 0;
+    finishedRef.current = false;
   };
   const quit = () => {
     if (phase === 'play' && !confirm('Abort match? Score will not save.')) return;
