@@ -581,7 +581,16 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
   );
   background-size: 250% 100%;
   background-position: -100% 0;
-  animation: kb-hot-glimmer 9s cubic-bezier(.55,.1,.45,.95) infinite;
+  /* Pre-promote to a compositor layer so the first frames don't pay the
+     mix-blend-mode setup cost. The previous easing was cubic-bezier(.55,.1,
+     .45,.95) — strong ease-in-out meant the band barely moved for the first
+     ~200ms of the 22%-of-9s sweep, which read as a stutter. The new curve
+     is front-loaded (immediate motion, gentle landing) so the sweep starts
+     visibly on frame one. */
+  will-change: background-position;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  animation: kb-hot-glimmer 9s cubic-bezier(.3,.7,.4,1) infinite;
   mix-blend-mode: screen;
   z-index: 1;
 }
