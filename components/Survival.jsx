@@ -2,7 +2,6 @@
 
 const TWEAK_DEFAULTS_SV = {
   scanlines: 'off',
-  density: 'comfortable',
   countdown: 'dissolve',
   promptMode: 'rotate',
 };
@@ -150,7 +149,6 @@ const SurvivalApp = ({ cards }) => {
 
   React.useEffect(() => {
     document.body.dataset.scanlines = tweaks.scanlines;
-    document.body.dataset.density = tweaks.density;
   }, [tweaks]);
 
   const pickMode = React.useCallback((d) => {

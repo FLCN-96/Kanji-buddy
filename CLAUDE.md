@@ -70,7 +70,7 @@ Large (≈6.7 MB) bundled deck. Each card has `idx` (1-based, used as the card_s
 
 ### Settings & visual variants
 
-`localStorage['kb-tweaks']` stores `{ scanlines, density, hero }`. `App.jsx` writes them to `document.body.dataset.*`, and CSS keys off those data attributes. Accent is locked to cyan+magenta brand and is no longer user-tweakable. The `game` visual variant is the only shipped variant and is hardcoded into the shell className on every page; the previous `calm`/`hud` alternates have been retired from the UI. When adding a tweak, add it to `TWEAK_DEFAULTS` in **both** `App.jsx` and `Settings.jsx`, and in every mode's `TWEAK_DEFAULTS_*`.
+`localStorage['kb-tweaks']` stores `{ scanlines, hero }`. `App.jsx` writes them to `document.body.dataset.*`, and CSS keys off those data attributes. Accent is locked to cyan+magenta brand and density is locked to compact (its tuned values are baked into the base CSS rules) — neither is user-tweakable. The `game` visual variant is the only shipped variant and is hardcoded into the shell className on every page; the previous `calm`/`hud` alternates have been retired from the UI. When adding a tweak, add it to `TWEAK_DEFAULTS` in **both** `App.jsx` and `Settings.jsx`, and in every mode's `TWEAK_DEFAULTS_*`.
 
 ### Service worker (`sw.js`)
 

@@ -2,7 +2,8 @@
 
 /* =========================================================
    Kanji-buddy Home · cyberpunk splash+dashboard
-   Responsive mobile-first, 3 density/gamification variants
+   Responsive mobile-first; density and accent are locked,
+   the variant-game shell is the only shipped variant.
    ========================================================= */
 
 * { box-sizing: border-box; }
@@ -111,8 +112,7 @@ body[data-scanlines="on"]::after {
 .kb-statusbar-l { display: flex; gap: var(--sp-3); }
 
 /* ---------- Main content ---------- */
-.kb-main { flex: 1; padding: var(--sp-5) var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-5); }
-body[data-density="compact"] .kb-main { gap: var(--sp-3); padding: var(--sp-3) var(--sp-3); }
+.kb-main { flex: 1; padding: var(--sp-3); display: flex; flex-direction: column; gap: var(--sp-3); }
 
 /* =========================================================
    BOOT BANNER — small strip at top of dashboard (unified)
@@ -168,7 +168,7 @@ body[data-density="compact"] .kb-main { gap: var(--sp-3); padding: var(--sp-3) v
 }
 .kb-hero-strip .mag { color: var(--accent-magenta); }
 .kb-hero-body {
-  padding: var(--sp-5) var(--sp-4) var(--sp-4);
+  padding: var(--sp-3);
   display: grid; grid-template-columns: 1fr auto; gap: var(--sp-4);
   align-items: center;
 }
@@ -177,7 +177,7 @@ body[data-hero="off"] .kb-hero { display: none; }
 .kb-hero-kanji {
   font-family: var(--font-jp-serif);
   font-weight: 700;
-  font-size: 132px;
+  font-size: 96px;
   line-height: 1;
   color: var(--fg-0);
   position: relative;
@@ -222,9 +222,8 @@ body[data-hero="off"] .kb-hero { display: none; }
    QUEUE BAR + STREAK
    ========================================================= */
 .kb-stats-row {
-  display: grid; grid-template-columns: 2fr 1fr; gap: var(--sp-3);
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3);
 }
-body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
 
 .kb-due {
   border: 1px solid var(--line-dim); background: var(--bg-1);
@@ -237,7 +236,7 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
 .kb-due-lbl { font-size: 10px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; }
 .kb-due-count {
   font-family: var(--font-mono); font-weight: 700;
-  font-size: 40px; line-height: 1; color: var(--fg-0);
+  font-size: 28px; line-height: 1; color: var(--fg-0);
 }
 .kb-due-count.amber { color: var(--accent-amber); }
 .kb-due-count.cyan { color: var(--accent-cyan); }
@@ -293,7 +292,7 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
 }
 .kb-progress-lbl { font-size: 10px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; }
 .kb-progress-val {
-  font-family: var(--font-mono); font-weight: 700; font-size: 40px; line-height: 1;
+  font-family: var(--font-mono); font-weight: 700; font-size: 28px; line-height: 1;
   color: var(--accent-cyan); display: inline-flex; align-items: baseline; gap: 4px;
   text-shadow: 0 0 10px rgba(34,211,238,0.4);
   min-width: 0;
@@ -314,7 +313,7 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
 .kb-progress-sub {
   font-size: 10px; color: var(--fg-2); letter-spacing: .08em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  padding-right: 52px; /* clear the ring */
+  padding-right: 44px; /* clear the ring */
 }
 .kb-progress-dots {
   display: flex; gap: 4px; margin-top: 4px;
@@ -332,12 +331,12 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
 .kb-progress.tier-magenta .kb-progress-dots span.is-on { background: var(--accent-magenta); border-color: var(--accent-magenta); box-shadow: 0 0 5px rgba(255,61,255,.6); }
 
 .kb-progress-ring-wrap {
-  position: absolute; right: 10px; top: 10px;
-  width: 48px; height: 48px;
+  position: absolute; right: 8px; top: 8px;
+  width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
   pointer-events: none;
 }
-.kb-progress-ring { display: block; }
+.kb-progress-ring { display: block; width: 40px; height: 40px; }
 .kb-progress-ring-track {
   fill: none;
   stroke: var(--line-dim);
@@ -383,7 +382,7 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
   background:
     linear-gradient(180deg, rgba(255,255,255,.06), transparent 18%),
     linear-gradient(180deg, var(--accent-cyan-bg), transparent 60%);
-  padding: var(--sp-4);
+  padding: var(--sp-3);
   display: grid; grid-template-columns: 1fr auto;
   align-items: center; gap: var(--sp-3);
   cursor: pointer;
@@ -464,7 +463,7 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
 .kb-rp-body { position: relative; z-index: 2; }
 .kb-run-primary .kb-rp-top { font-size: 10px; color: var(--accent-cyan); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 4px; }
 .kb-run-primary .kb-rp-label {
-  font-weight: 700; font-size: 22px; letter-spacing: .02em;
+  font-weight: 700; font-size: 18px; letter-spacing: .02em;
   color: var(--accent-cyan); text-shadow: 0 0 8px rgba(34,211,238,.5);
   text-transform: uppercase;
 }
@@ -611,7 +610,7 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
 
 /* Challenge grid — 1 wide hero + 4 in 2x2 (or 4 across on wider screens) */
 .kb-chal-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-2);
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
 }
 .kb-chal-grid > .kb-chal:first-child {
   grid-column: 1 / -1;
@@ -620,11 +619,11 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
   justify-content: flex-start;
   text-align: left;
   gap: var(--sp-3);
-  min-height: 90px;
-  padding: var(--sp-3) var(--sp-4);
+  min-height: 70px;
+  padding: 10px var(--sp-3);
 }
 .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph {
-  font-size: 44px;
+  font-size: 32px;
   margin: 0;
 }
 .kb-chal-grid > .kb-chal:first-child .kb-chal-name { font-size: 13px; }
@@ -646,14 +645,11 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
   .kb-chal-grid { grid-template-columns: repeat(4, 1fr); }
   .kb-chal-grid > .kb-chal:first-child { grid-column: 1 / -1; }
 }
-body[data-density="compact"] .kb-chal-grid { gap: 6px; }
-body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child { min-height: 70px; padding: 10px var(--sp-3); }
-body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph { font-size: 32px; }
 
 .kb-chal {
   border: 1px solid var(--line-dim);
   background: var(--bg-1);
-  padding: var(--sp-3);
+  padding: 10px;
   text-align: left;
   cursor: pointer;
   position: relative;
@@ -661,7 +657,7 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
   color: var(--fg-1);
   transition: all var(--dur-fast) var(--ease-snap);
   display: flex; flex-direction: column; gap: 6px;
-  min-height: 92px;
+  min-height: 70px;
   overflow: hidden;
 }
 .kb-chal:hover {
@@ -674,7 +670,7 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
 .kb-chal-glyph {
   font-family: var(--font-jp-sans);
   font-weight: 700;
-  font-size: 22px;
+  font-size: 18px;
   color: var(--fg-0);
   line-height: 1;
 }
@@ -853,21 +849,6 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
 .variant-xp-meta { display: flex; justify-content: space-between; font-size: 10px; color: var(--fg-2); }
 .variant-xp-meta b { color: var(--fg-0); font-weight: 500; }
 
-
-/* =========================================================
-   Density
-   ========================================================= */
-body[data-density="compact"] .kb-hero-kanji { font-size: 96px; }
-body[data-density="compact"] .kb-hero-body { padding: var(--sp-3) var(--sp-3); }
-body[data-density="compact"] .kb-due-count,
-body[data-density="compact"] .kb-progress-val { font-size: 28px; }
-body[data-density="compact"] .kb-progress-ring-wrap { width: 40px; height: 40px; right: 8px; top: 8px; }
-body[data-density="compact"] .kb-progress-ring { width: 40px; height: 40px; }
-body[data-density="compact"] .kb-progress-sub { padding-right: 44px; }
-body[data-density="compact"] .kb-run-primary { padding: var(--sp-3); }
-body[data-density="compact"] .kb-run-primary .kb-rp-label { font-size: 18px; }
-body[data-density="compact"] .kb-chal { min-height: 70px; padding: 10px; }
-body[data-density="compact"] .kb-chal-glyph { font-size: 18px; }
 
 /* =========================================================
    Utility

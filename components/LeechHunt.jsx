@@ -2,7 +2,6 @@
 
 const TWEAK_DEFAULTS_LH = {
   scanlines: 'off',
-  density: 'comfortable',
   countdown: 'dissolve',
   leechCount: 8,
   missCap: 3,
@@ -188,7 +187,6 @@ const LeechHuntApp = ({ cards }) => {
 
   React.useEffect(() => {
     document.body.dataset.scanlines = tweaks.scanlines;
-    document.body.dataset.density = tweaks.density;
   }, [tweaks]);
 
   React.useEffect(() => {

@@ -2,7 +2,6 @@
 
 const TWEAK_DEFAULTS = {
   scanlines: 'off',
-  density: 'comfortable',
   hero: 'on',
 };
 
@@ -15,7 +14,6 @@ const readTweaks = () => {
 
 const applyBodyDataset = (tw) => {
   document.body.dataset.scanlines = tw.scanlines;
-  document.body.dataset.density = tw.density;
   document.body.dataset.hero = tw.hero;
 };
 
@@ -352,8 +350,6 @@ const Settings = () => {
           <div className="kb-set-section-head">▸ APPEARANCE</div>
           <OptRow label="SCANLINES" value={tweaks.scanlines} onSet={setKey('scanlines')}
             options={[{id:'off',label:'off'},{id:'on',label:'on'}]} />
-          <OptRow label="DENSITY" value={tweaks.density} onSet={setKey('density')}
-            options={[{id:'comfortable',label:'comfort'},{id:'compact',label:'compact'}]} />
           <OptRow label="HERO CARD" value={tweaks.hero} onSet={setKey('hero')}
             options={[{id:'on',label:'on'},{id:'off',label:'off'}]} />
         </section>

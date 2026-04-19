@@ -742,11 +742,6 @@
 .variant-game .mt-tile-k-glyph { font-size: 64px; text-shadow: 0 0 18px rgba(255,255,255,.08); }
 .variant-game .mt-tile.is-selected { transform: translateY(-3px) scale(1.02); }
 
-/* Density */
-[data-density="compact"] .mt-tile { min-height: 44px; }
-[data-density="compact"] .mt-tile-k-glyph { font-size: 44px; }
-[data-density="compact"] .mt-tile-v-text { font-size: 15px; }
-
 /* ================= Responsive ================= */
 @media (max-width: 560px) {
   .mt-board { grid-template-columns: 1fr 50px 1fr; gap: 6px; }

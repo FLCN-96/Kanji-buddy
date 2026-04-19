@@ -4,7 +4,6 @@
 
 const TWEAK_DEFAULTS_SG = {
   scanlines: 'off',
-  density: 'comfortable',
   countdown: 'dissolve',
   cellCount: 12,
   difficulty: 'mix',
@@ -114,7 +113,6 @@ const StreakGuardApp = ({ cards }) => {
 
   React.useEffect(() => {
     document.body.dataset.scanlines = tweaks.scanlines;
-    document.body.dataset.density = tweaks.density;
   }, [tweaks]);
 
   // 3-2-1 countdown → start play
