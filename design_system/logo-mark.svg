@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect x="2" y="2" width="60" height="60" fill="#0a0e14" stroke="#22d3ee" stroke-width="2"></rect>
+  <rect x="8" y="8" width="48" height="48" fill="none" stroke="#22d3ee" stroke-width="1" opacity="0.25"></rect>
+  <text x="32" y="50" text-anchor="middle" font-family="&#39;Noto Serif JP&#39;, serif" font-weight="700" font-size="42" fill="#22d3ee">字</text>
+  
+  <text x="33" y="51" text-anchor="middle" font-family="&#39;Noto Serif JP&#39;, serif" font-weight="700" font-size="42" fill="#ff3dff" opacity="0.4">字</text>
+</svg>

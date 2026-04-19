@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 4" width="4" height="4">
+  <defs>
+    <pattern id="sl" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#ffffff" opacity="0.08"></rect>
+    </pattern>
+  </defs>
+  <rect width="4" height="4" fill="url(#sl)"></rect>
+</svg>

@@ -1,0 +1,3460 @@
+[
+  {
+    "idx": 1,
+    "k": "一",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "イツ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "イチ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "ひと.つ",
+        "gloss": "one",
+        "main": false
+      }
+    ],
+    "mean": "one",
+    "ex": [
+      {
+        "w": "一部",
+        "r": "いちぶ",
+        "m": "one part"
+      },
+      {
+        "w": "一般",
+        "r": "いっぱん",
+        "m": "general, universal"
+      },
+      {
+        "w": "一時",
+        "r": "ひととき",
+        "m": "a time"
+      }
+    ],
+    "rad": "一",
+    "cls": "Ideographic"
+  },
+  {
+    "idx": 2,
+    "k": "二",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ニ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "ふた.つ",
+        "gloss": "two",
+        "main": false
+      },
+      {
+        "r": "ふた",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "two",
+    "ex": [
+      {
+        "w": "二塁",
+        "r": "にるい",
+        "m": "second base"
+      },
+      {
+        "w": "二分",
+        "r": "にぶん",
+        "m": "halving"
+      },
+      {
+        "w": "二輪",
+        "r": "にりん",
+        "m": "two wheels"
+      }
+    ],
+    "rad": "二",
+    "cls": "Ideographic"
+  },
+  {
+    "idx": 3,
+    "k": "人",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ニン",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ジン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "ひと",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "person",
+    "ex": [
+      {
+        "w": "個人",
+        "r": "こじん",
+        "m": "individual"
+      },
+      {
+        "w": "人間",
+        "r": "にんげん",
+        "m": "human being"
+      },
+      {
+        "w": "人気",
+        "r": "にんき",
+        "m": "popularity"
+      }
+    ],
+    "rad": "人",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 4,
+    "k": "入",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ニュウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "はい.る",
+        "gloss": "to get in",
+        "main": false
+      },
+      {
+        "r": "い.れる",
+        "gloss": "to put in",
+        "main": false
+      },
+      {
+        "r": "い.る",
+        "gloss": "to get in",
+        "main": false
+      }
+    ],
+    "mean": "enter, insert",
+    "ex": [
+      {
+        "w": "導入",
+        "r": "どうにゅう",
+        "m": "introduction"
+      },
+      {
+        "w": "輸入",
+        "r": "ゆにゅう",
+        "m": "import, importation"
+      },
+      {
+        "w": "購入",
+        "r": "こうにゅう",
+        "m": "purchase, buy"
+      }
+    ],
+    "rad": "入",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 5,
+    "k": "九",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ク",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "キュウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "ここの.つ",
+        "gloss": "nine",
+        "main": false
+      },
+      {
+        "r": "ここの",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "nine",
+    "ex": [
+      {
+        "w": "九重",
+        "r": "ここのえ",
+        "m": "ninefold"
+      },
+      {
+        "w": "九月",
+        "r": "くがつ",
+        "m": "September"
+      },
+      {
+        "w": "九死",
+        "r": "きゅうし",
+        "m": "narrowly averting death"
+      }
+    ],
+    "rad": "乙",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 6,
+    "k": "十",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ジッ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ジュウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "と",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "とお",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "ten",
+    "ex": [
+      {
+        "w": "十月",
+        "r": "じゅうがつ",
+        "m": "October"
+      },
+      {
+        "w": "十字",
+        "r": "じゅうじ",
+        "m": "cross, crossed"
+      },
+      {
+        "w": "十全",
+        "r": "じゅうぜん",
+        "m": "perfection, thoroughness"
+      }
+    ],
+    "rad": "十",
+    "cls": "Ideographic"
+  },
+  {
+    "idx": 7,
+    "k": "大",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "タイ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ダイ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "おお.きい",
+        "gloss": "big",
+        "main": false
+      }
+    ],
+    "mean": "large, big",
+    "ex": [
+      {
+        "w": "大人",
+        "r": "おとな",
+        "m": "adult, grown-up"
+      },
+      {
+        "w": "一大",
+        "r": "いちだい",
+        "m": "one large ..."
+      },
+      {
+        "w": "大会",
+        "r": "たいかい",
+        "m": "mass meeting"
+      }
+    ],
+    "rad": "大",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 8,
+    "k": "川",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "セン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "かわ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "stream, river",
+    "ex": [
+      {
+        "w": "大川",
+        "r": "おおかわ",
+        "m": "big river"
+      },
+      {
+        "w": "川柳",
+        "r": "せんりゅう",
+        "m": "senryū"
+      },
+      {
+        "w": "河川",
+        "r": "かせん",
+        "m": "rivers"
+      }
+    ],
+    "rad": "巛",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 9,
+    "k": "女",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ニョ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ジョ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "め",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "おんな",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "woman, female",
+    "ex": [
+      {
+        "w": "女人",
+        "r": "にょにん",
+        "m": "woman"
+      },
+      {
+        "w": "一女",
+        "r": "いちじょ",
+        "m": "one daughter"
+      },
+      {
+        "w": "女性",
+        "r": "じょせい",
+        "m": "woman, female"
+      }
+    ],
+    "rad": "女",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 10,
+    "k": "小",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ショウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "ちい.さい",
+        "gloss": "small",
+        "main": false
+      }
+    ],
+    "mean": "little, small",
+    "ex": [
+      {
+        "w": "大小",
+        "r": "だいしょう",
+        "m": "size"
+      },
+      {
+        "w": "小川",
+        "r": "おがわ",
+        "m": "stream, brook"
+      },
+      {
+        "w": "小人",
+        "r": "しょうにん",
+        "m": "child"
+      }
+    ],
+    "rad": "小",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 11,
+    "k": "土",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ト",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ド",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "つち",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "soil, earth, ground, Turkey",
+    "ex": [
+      {
+        "w": "土人",
+        "r": "どじん",
+        "m": "native, aboriginal"
+      },
+      {
+        "w": "国土",
+        "r": "こくど",
+        "m": "country, territory"
+      },
+      {
+        "w": "土地",
+        "r": "とち",
+        "m": "plot of land"
+      }
+    ],
+    "rad": "土",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 12,
+    "k": "山",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "サン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "やま",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "mountain",
+    "ex": [
+      {
+        "w": "小山",
+        "r": "こやま",
+        "m": "hill, knoll"
+      },
+      {
+        "w": "入山",
+        "r": "にゅうざん",
+        "m": "entering a mountain area"
+      },
+      {
+        "w": "山川",
+        "r": "さんせん",
+        "m": "mountains and rivers"
+      }
+    ],
+    "rad": "山",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 13,
+    "k": "子",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ス",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "シ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "こ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "child",
+    "ex": [
+      {
+        "w": "女子",
+        "r": "じょし",
+        "m": "woman, girl"
+      },
+      {
+        "w": "一子",
+        "r": "いっし",
+        "m": "one child"
+      },
+      {
+        "w": "子女",
+        "r": "しじょ",
+        "m": "sons and daughters"
+      }
+    ],
+    "rad": "子",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 14,
+    "k": "月",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ガツ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ゲツ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "つき",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "month, moon",
+    "ex": [
+      {
+        "w": "二月",
+        "r": "にがつ",
+        "m": "February"
+      },
+      {
+        "w": "九月",
+        "r": "くがつ",
+        "m": "September"
+      },
+      {
+        "w": "十月",
+        "r": "じゅうがつ",
+        "m": "October"
+      }
+    ],
+    "rad": "月",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 15,
+    "k": "日",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ジツ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ニチ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "ひ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "day, sun, Japan, counter for days",
+    "ex": [
+      {
+        "w": "土日",
+        "r": "どにち",
+        "m": "weekend"
+      },
+      {
+        "w": "月日",
+        "r": "つきひ",
+        "m": "time, years"
+      },
+      {
+        "w": "日月",
+        "r": "じつげつ",
+        "m": "sun and moon"
+      }
+    ],
+    "rad": "日",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 16,
+    "k": "水",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "スイ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "みず",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "water",
+    "ex": [
+      {
+        "w": "山水",
+        "r": "さんすい",
+        "m": "mountain and water"
+      },
+      {
+        "w": "大水",
+        "r": "おおみず",
+        "m": "flood"
+      },
+      {
+        "w": "水月",
+        "r": "すいげつ",
+        "m": "water and moon"
+      }
+    ],
+    "rad": "水",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 17,
+    "k": "木",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "モク",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ボク",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "き",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "tree, wood",
+    "ex": [
+      {
+        "w": "土木",
+        "r": "どぼく",
+        "m": "engineering works"
+      },
+      {
+        "w": "大木",
+        "r": "たいぼく",
+        "m": "large tree"
+      },
+      {
+        "w": "水木",
+        "r": "みずき",
+        "m": "dogwood"
+      }
+    ],
+    "rad": "木",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 18,
+    "k": "火",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "カ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "ひ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "fire",
+    "ex": [
+      {
+        "w": "火山",
+        "r": "かざん",
+        "m": "volcano"
+      },
+      {
+        "w": "大火",
+        "r": "たいか",
+        "m": "large fire"
+      },
+      {
+        "w": "火水",
+        "r": "ひみず",
+        "m": "fire and water"
+      }
+    ],
+    "rad": "火",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 19,
+    "k": "父",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "フ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "ちち",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "father",
+    "ex": [
+      {
+        "w": "父子",
+        "r": "ふし",
+        "m": "father and child"
+      },
+      {
+        "w": "小父",
+        "r": "おじ",
+        "m": "old man"
+      },
+      {
+        "w": "父親",
+        "r": "ちちおや",
+        "m": "father"
+      }
+    ],
+    "rad": "父",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 20,
+    "k": "生",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ショウ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "セイ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "い.ける",
+        "gloss": "to arrange",
+        "main": false
+      },
+      {
+        "r": "い.かす",
+        "gloss": "to make use of",
+        "main": false
+      },
+      {
+        "r": "い.きる",
+        "gloss": "to live",
+        "main": false
+      }
+    ],
+    "mean": "life, genuine, birth",
+    "ex": [
+      {
+        "w": "人生",
+        "r": "じんせい",
+        "m": "life"
+      },
+      {
+        "w": "一生",
+        "r": "いっしょう",
+        "m": "whole life"
+      },
+      {
+        "w": "水生",
+        "r": "すいせい",
+        "m": "aquatic"
+      }
+    ],
+    "rad": "生",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 21,
+    "k": "白",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ビャク",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ハク",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "しろ.い",
+        "gloss": "white",
+        "main": false
+      },
+      {
+        "r": "しろ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "white",
+    "ex": [
+      {
+        "w": "白水",
+        "r": "しろみず",
+        "m": "color of water after washing rice"
+      },
+      {
+        "w": "白子",
+        "r": "しらこ",
+        "m": "soft roe"
+      },
+      {
+        "w": "白日",
+        "r": "はくじつ",
+        "m": "bright sunshine"
+      }
+    ],
+    "rad": "白",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 22,
+    "k": "西",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "サイ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "セイ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "にし",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "west, Spain",
+    "ex": [
+      {
+        "w": "西日",
+        "r": "にしび",
+        "m": "westering sun"
+      },
+      {
+        "w": "西土",
+        "r": "せいど",
+        "m": "western lands"
+      },
+      {
+        "w": "西部",
+        "r": "せいぶ",
+        "m": "western part"
+      }
+    ],
+    "rad": "襾",
+    "cls": "Loan"
+  },
+  {
+    "idx": 23,
+    "k": "車",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "シャ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "くるま",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "car",
+    "ex": [
+      {
+        "w": "山車",
+        "r": "だし",
+        "m": "parade float"
+      },
+      {
+        "w": "水車",
+        "r": "すいしゃ",
+        "m": "water wheel"
+      },
+      {
+        "w": "電車",
+        "r": "でんしゃ",
+        "m": "train"
+      }
+    ],
+    "rad": "車",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 24,
+    "k": "雨",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "あめ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "rain",
+    "ex": [
+      {
+        "w": "大雨",
+        "r": "おおあめ",
+        "m": "heavy rain"
+      },
+      {
+        "w": "雨水",
+        "r": "あまみず",
+        "m": "rain water"
+      },
+      {
+        "w": "小雨",
+        "r": "こさめ",
+        "m": "light rain"
+      }
+    ],
+    "rad": "雨",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 25,
+    "k": "金",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "コン",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "キン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "かね",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "gold",
+    "ex": [
+      {
+        "w": "入金",
+        "r": "にゅうきん",
+        "m": "deposit, payment"
+      },
+      {
+        "w": "大金",
+        "r": "たいきん",
+        "m": "large amount of money"
+      },
+      {
+        "w": "金子",
+        "r": "きんす",
+        "m": "money, funds"
+      }
+    ],
+    "rad": "金",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 26,
+    "k": "長",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "チョウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "なが.い",
+        "gloss": "long",
+        "main": false
+      }
+    ],
+    "mean": "long, leader, superior, senior",
+    "ex": [
+      {
+        "w": "長女",
+        "r": "ちょうじょ",
+        "m": "eldest daughter"
+      },
+      {
+        "w": "長大",
+        "r": "ちょうだい",
+        "m": "long and large"
+      },
+      {
+        "w": "生長",
+        "r": "せいちょう",
+        "m": "growth"
+      }
+    ],
+    "rad": "長",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 27,
+    "k": "食",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ショク",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "た.べる",
+        "gloss": "to eat",
+        "main": false
+      },
+      {
+        "r": "く.らう",
+        "gloss": "to eat",
+        "main": false
+      },
+      {
+        "r": "く.う",
+        "gloss": "to eat",
+        "main": false
+      }
+    ],
+    "mean": "eat, food",
+    "ex": [
+      {
+        "w": "日食",
+        "r": "にっしょく",
+        "m": "solar eclipse"
+      },
+      {
+        "w": "月食",
+        "r": "げっしょく",
+        "m": "lunar eclipse"
+      },
+      {
+        "w": "生食",
+        "r": "せいしょく",
+        "m": "eating something raw"
+      }
+    ],
+    "rad": "食",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 28,
+    "k": "八",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ハチ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "やっ.つ",
+        "gloss": "eight",
+        "main": false
+      },
+      {
+        "r": "や.つ",
+        "gloss": "eight",
+        "main": false
+      },
+      {
+        "r": "や",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "eight",
+    "ex": [
+      {
+        "w": "八月",
+        "r": "はちがつ",
+        "m": "August"
+      },
+      {
+        "w": "二八",
+        "r": "にはち",
+        "m": "sixteen"
+      },
+      {
+        "w": "八角",
+        "r": "はっかく",
+        "m": "octagon"
+      }
+    ],
+    "rad": "八",
+    "cls": "Ideographic"
+  },
+  {
+    "idx": 29,
+    "k": "七",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "シチ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "なな.つ",
+        "gloss": "seven",
+        "main": false
+      },
+      {
+        "r": "なな",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "seven",
+    "ex": [
+      {
+        "w": "七生",
+        "r": "しちしょう",
+        "m": "seven lives"
+      },
+      {
+        "w": "七月",
+        "r": "しちがつ",
+        "m": "July"
+      },
+      {
+        "w": "七夕",
+        "r": "たなばた",
+        "m": "Star Festival"
+      }
+    ],
+    "rad": "一",
+    "cls": "Loan"
+  },
+  {
+    "idx": 30,
+    "k": "千",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "セン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "ち",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "thousand",
+    "ex": [
+      {
+        "w": "一千",
+        "r": "いっせん",
+        "m": "1,000"
+      },
+      {
+        "w": "千代",
+        "r": "ちよ",
+        "m": "thousand years"
+      },
+      {
+        "w": "千里",
+        "r": "せんり",
+        "m": "1000 ri"
+      }
+    ],
+    "rad": "十",
+    "cls": "Phonetic"
+  },
+  {
+    "idx": 31,
+    "k": "三",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "サン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "みっ.つ",
+        "gloss": "three",
+        "main": false
+      },
+      {
+        "r": "み.つ",
+        "gloss": "three",
+        "main": false
+      },
+      {
+        "r": "み",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "three",
+    "ex": [
+      {
+        "w": "三月",
+        "r": "さんがつ",
+        "m": "March"
+      },
+      {
+        "w": "三女",
+        "r": "さんじょ",
+        "m": "third daughter"
+      },
+      {
+        "w": "二三",
+        "r": "にさん",
+        "m": "two or three"
+      }
+    ],
+    "rad": "一",
+    "cls": "Ideographic"
+  },
+  {
+    "idx": 32,
+    "k": "上",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ジョウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "あ.げる",
+        "gloss": "to raise",
+        "main": false
+      },
+      {
+        "r": "かみ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "うえ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "above, up",
+    "ex": [
+      {
+        "w": "川上",
+        "r": "かわかみ",
+        "m": "upper reaches of a river"
+      },
+      {
+        "w": "水上",
+        "r": "すいじょう",
+        "m": "aquatic"
+      },
+      {
+        "w": "山上",
+        "r": "さんじょう",
+        "m": "mountain top"
+      }
+    ],
+    "rad": "一",
+    "cls": "Ideographic"
+  },
+  {
+    "idx": 33,
+    "k": "下",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ゲ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "カ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "もと",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "しも",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "した",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "below, down, descend, give, low, inferior",
+    "ex": [
+      {
+        "w": "上下",
+        "r": "うえした",
+        "m": "top and bottom"
+      },
+      {
+        "w": "下車",
+        "r": "げしゃ",
+        "m": "alighting"
+      },
+      {
+        "w": "下山",
+        "r": "げざん",
+        "m": "descending"
+      }
+    ],
+    "rad": "一",
+    "cls": "Ideographic"
+  },
+  {
+    "idx": 34,
+    "k": "万",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "バン",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "マン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [],
+    "mean": "ten thousand, 10,000",
+    "ex": [
+      {
+        "w": "万一",
+        "r": "まんいち",
+        "m": "emergency"
+      },
+      {
+        "w": "千万",
+        "r": "せんばん",
+        "m": "exceedingly, extremely"
+      },
+      {
+        "w": "万金",
+        "r": "まんきん",
+        "m": "immense sum"
+      }
+    ],
+    "rad": "一",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 35,
+    "k": "六",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ロク",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "むっ.つ",
+        "gloss": "six",
+        "main": false
+      },
+      {
+        "r": "む.つ",
+        "gloss": "six",
+        "main": false
+      },
+      {
+        "r": "む",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "six",
+    "ex": [
+      {
+        "w": "六月",
+        "r": "ろくがつ",
+        "m": "June"
+      },
+      {
+        "w": "双六",
+        "r": "すごろく",
+        "m": "race game"
+      },
+      {
+        "w": "六道",
+        "r": "ろくどう",
+        "m": "the six realms"
+      }
+    ],
+    "rad": "八",
+    "cls": "Loan"
+  },
+  {
+    "idx": 36,
+    "k": "天",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "テン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "あめ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "heavens, sky, imperial",
+    "ex": [
+      {
+        "w": "天下",
+        "r": "てんか",
+        "m": "the whole world"
+      },
+      {
+        "w": "雨天",
+        "r": "うてん",
+        "m": "rainy weather"
+      },
+      {
+        "w": "天上",
+        "r": "てんじょう",
+        "m": "the heavens"
+      }
+    ],
+    "rad": "大",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 37,
+    "k": "今",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "キン",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "コン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "いま",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "now",
+    "ex": [
+      {
+        "w": "今月",
+        "r": "こんげつ",
+        "m": "this month"
+      },
+      {
+        "w": "今日",
+        "r": "きょう",
+        "m": "today"
+      },
+      {
+        "w": "今生",
+        "r": "こんじょう",
+        "m": "this life"
+      }
+    ],
+    "rad": "人",
+    "cls": "Loan"
+  },
+  {
+    "idx": 38,
+    "k": "分",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ブ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "フン",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ブン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "わ.かる",
+        "gloss": "to understand",
+        "main": false
+      },
+      {
+        "r": "わ.かれる",
+        "gloss": "to branch",
+        "main": false
+      },
+      {
+        "r": "わ.ける",
+        "gloss": "to divide",
+        "main": false
+      }
+    ],
+    "mean": "part, minute of time, segment, share, degree, one's lot",
+    "ex": [
+      {
+        "w": "水分",
+        "r": "すいぶん",
+        "m": "water, liquid"
+      },
+      {
+        "w": "分子",
+        "r": "ぶんし",
+        "m": "numerator"
+      },
+      {
+        "w": "二分",
+        "r": "にぶん",
+        "m": "halving"
+      }
+    ],
+    "rad": "刀",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 39,
+    "k": "五",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ゴ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "いつ.つ",
+        "gloss": "five",
+        "main": false
+      },
+      {
+        "r": "いつ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "five",
+    "ex": [
+      {
+        "w": "五月",
+        "r": "ごがつ",
+        "m": "May"
+      },
+      {
+        "w": "五山",
+        "r": "ごさん",
+        "m": "five most important temples of a region"
+      },
+      {
+        "w": "五分",
+        "r": "ごぶ",
+        "m": "half, 50%"
+      }
+    ],
+    "rad": "二",
+    "cls": "Loan"
+  },
+  {
+    "idx": 40,
+    "k": "友",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ユウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "とも",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "friend",
+    "ex": [
+      {
+        "w": "友人",
+        "r": "ゆうじん",
+        "m": "friend"
+      },
+      {
+        "w": "友達",
+        "r": "ともだち",
+        "m": "friend, companion"
+      },
+      {
+        "w": "友好",
+        "r": "ゆうこう",
+        "m": "friendship"
+      }
+    ],
+    "rad": "又",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 41,
+    "k": "円",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "エン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "まる.い",
+        "gloss": "round",
+        "main": false
+      }
+    ],
+    "mean": "circle, yen, round",
+    "ex": [
+      {
+        "w": "長円",
+        "r": "ちょうえん",
+        "m": "ellipse, oval"
+      },
+      {
+        "w": "大円",
+        "r": "だいえん",
+        "m": "large circle"
+      },
+      {
+        "w": "金円",
+        "r": "きんえん",
+        "m": "money"
+      }
+    ],
+    "rad": "冂",
+    "cls": "Phonetic"
+  },
+  {
+    "idx": 42,
+    "k": "本",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ホン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "もと",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "book, present, main, origin, true, real",
+    "ex": [
+      {
+        "w": "本人",
+        "r": "ほんにん",
+        "m": "the person in question"
+      },
+      {
+        "w": "本土",
+        "r": "ほんど",
+        "m": "mainland"
+      },
+      {
+        "w": "本日",
+        "r": "ほんじつ",
+        "m": "today"
+      }
+    ],
+    "rad": "木",
+    "cls": "Ideographic"
+  },
+  {
+    "idx": 43,
+    "k": "出",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "シュツ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "だ.す",
+        "gloss": "to take out",
+        "main": false
+      },
+      {
+        "r": "で.る",
+        "gloss": "to leave",
+        "main": false
+      }
+    ],
+    "mean": "exit, leave, go out, come out, put out, protrude",
+    "ex": [
+      {
+        "w": "出火",
+        "r": "しゅっか",
+        "m": "outbreak of fire"
+      },
+      {
+        "w": "出生",
+        "r": "しゅっしょう",
+        "m": "birth"
+      },
+      {
+        "w": "出土",
+        "r": "しゅつど",
+        "m": "archeological excavation"
+      }
+    ],
+    "rad": "凵",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 44,
+    "k": "四",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "シ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "よっ.つ",
+        "gloss": "four",
+        "main": false
+      },
+      {
+        "r": "よ.つ",
+        "gloss": "four",
+        "main": false
+      },
+      {
+        "r": "よ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "four",
+    "ex": [
+      {
+        "w": "四月",
+        "r": "しがつ",
+        "m": "April"
+      },
+      {
+        "w": "四大",
+        "r": "よんだい",
+        "m": "university or college offering four-year programs"
+      },
+      {
+        "w": "四球",
+        "r": "しきゅう",
+        "m": "four balls"
+      }
+    ],
+    "rad": "囗",
+    "cls": "Ideographic"
+  },
+  {
+    "idx": 45,
+    "k": "母",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ボ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "はは",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "mother",
+    "ex": [
+      {
+        "w": "母子",
+        "r": "ぼし",
+        "m": "mother and child"
+      },
+      {
+        "w": "父母",
+        "r": "ふぼ",
+        "m": "father and mother"
+      },
+      {
+        "w": "分母",
+        "r": "ぶんぼ",
+        "m": "denominator"
+      }
+    ],
+    "rad": "毋",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 46,
+    "k": "北",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ホク",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "きた",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "north",
+    "ex": [
+      {
+        "w": "北西",
+        "r": "ほくせい",
+        "m": "northwest"
+      },
+      {
+        "w": "北上",
+        "r": "ほくじょう",
+        "m": "going north"
+      },
+      {
+        "w": "西北",
+        "r": "せいほく",
+        "m": "north-west"
+      }
+    ],
+    "rad": "匕",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 47,
+    "k": "外",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ゲ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ガイ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "はず.す",
+        "gloss": "to remove",
+        "main": false
+      },
+      {
+        "r": "ほか",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "そと",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "outside",
+    "ex": [
+      {
+        "w": "外出",
+        "r": "がいしゅつ",
+        "m": "going out"
+      },
+      {
+        "w": "外食",
+        "r": "がいしょく",
+        "m": "eating out"
+      },
+      {
+        "w": "車外",
+        "r": "しゃがい",
+        "m": "outside a car"
+      }
+    ],
+    "rad": "夕",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 48,
+    "k": "左",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "サ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "ひだり",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "left",
+    "ex": [
+      {
+        "w": "左上",
+        "r": "ひだりうえ",
+        "m": "upper left"
+      },
+      {
+        "w": "左下",
+        "r": "ひだりした",
+        "m": "lower left"
+      },
+      {
+        "w": "左右",
+        "r": "さゆう",
+        "m": "left and right"
+      }
+    ],
+    "rad": "工",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 49,
+    "k": "半",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ハン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "なか.ば",
+        "gloss": "middle",
+        "main": false
+      }
+    ],
+    "mean": "half, middle, odd number, semi-, part-",
+    "ex": [
+      {
+        "w": "大半",
+        "r": "たいはん",
+        "m": "majority"
+      },
+      {
+        "w": "半分",
+        "r": "はんぶん",
+        "m": "half"
+      },
+      {
+        "w": "半生",
+        "r": "はんしょう",
+        "m": "half death"
+      }
+    ],
+    "rad": "十",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 50,
+    "k": "休",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "キュウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "やす.める",
+        "gloss": "to rest",
+        "main": false
+      },
+      {
+        "r": "やす.まる",
+        "gloss": "to be rested",
+        "main": false
+      },
+      {
+        "r": "やす.む",
+        "gloss": "to be absent",
+        "main": false
+      }
+    ],
+    "mean": "rest, day off, retire, sleep",
+    "ex": [
+      {
+        "w": "休日",
+        "r": "きゅうじつ",
+        "m": "holiday"
+      },
+      {
+        "w": "半休",
+        "r": "はんきゅう",
+        "m": "half-holiday"
+      },
+      {
+        "w": "休養",
+        "r": "きゅうよう",
+        "m": "rest, break"
+      }
+    ],
+    "rad": "人",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 51,
+    "k": "百",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ヒャク",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [],
+    "mean": "hundred",
+    "ex": [
+      {
+        "w": "百出",
+        "r": "ひゃくしゅつ",
+        "m": "arise in great numbers"
+      },
+      {
+        "w": "百千",
+        "r": "ひゃくせん",
+        "m": "a large number"
+      },
+      {
+        "w": "百科",
+        "r": "ひゃっか",
+        "m": "many objects"
+      }
+    ],
+    "rad": "白",
+    "cls": "Ideographic"
+  },
+  {
+    "idx": 52,
+    "k": "行",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ギョウ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "コウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "おこな.う",
+        "gloss": "to perform",
+        "main": false
+      },
+      {
+        "r": "ゆ.く",
+        "gloss": "to go",
+        "main": false
+      },
+      {
+        "r": "い.く",
+        "gloss": "to go",
+        "main": false
+      }
+    ],
+    "mean": "going, journey, carry out, conduct, act, line",
+    "ex": [
+      {
+        "w": "一行",
+        "r": "いちぎょう",
+        "m": "line"
+      },
+      {
+        "w": "五行",
+        "r": "ごぎょう",
+        "m": "the five elements"
+      },
+      {
+        "w": "行人",
+        "r": "こうじん",
+        "m": "passer-by, traveler"
+      }
+    ],
+    "rad": "行",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 53,
+    "k": "気",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ケ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "キ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [],
+    "mean": "spirit, mind, air, atmosphere, mood",
+    "ex": [
+      {
+        "w": "人気",
+        "r": "にんき",
+        "m": "popularity"
+      },
+      {
+        "w": "気分",
+        "r": "きぶん",
+        "m": "feeling, mood"
+      },
+      {
+        "w": "大気",
+        "r": "たいき",
+        "m": "atmosphere, air"
+      }
+    ],
+    "rad": "气",
+    "cls": "Phonetic"
+  },
+  {
+    "idx": 54,
+    "k": "先",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "セン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "さき",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "before, ahead, previous, future, precedence",
+    "ex": [
+      {
+        "w": "先生",
+        "r": "せんせい",
+        "m": "teacher, instructor"
+      },
+      {
+        "w": "先月",
+        "r": "せんげつ",
+        "m": "last month"
+      },
+      {
+        "w": "先行",
+        "r": "せんこう",
+        "m": "going ahead"
+      }
+    ],
+    "rad": "儿",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 55,
+    "k": "男",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ナン",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ダン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "おとこ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "male",
+    "ex": [
+      {
+        "w": "男子",
+        "r": "だんし",
+        "m": "youth"
+      },
+      {
+        "w": "長男",
+        "r": "ちょうなん",
+        "m": "eldest son"
+      },
+      {
+        "w": "男女",
+        "r": "だんじょ",
+        "m": "men and women"
+      }
+    ],
+    "rad": "田",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 56,
+    "k": "見",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ケン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "み.せる",
+        "gloss": "to show",
+        "main": false
+      },
+      {
+        "r": "み.える",
+        "gloss": "to be seen",
+        "main": false
+      },
+      {
+        "r": "み.る",
+        "gloss": "to see",
+        "main": false
+      }
+    ],
+    "mean": "see, hopes, chances, idea, opinion, look at",
+    "ex": [
+      {
+        "w": "外見",
+        "r": "がいけん",
+        "m": "outward appearance"
+      },
+      {
+        "w": "一見",
+        "r": "いっけん",
+        "m": "look, glimpse"
+      },
+      {
+        "w": "見本",
+        "r": "みほん",
+        "m": "sample, specimen"
+      }
+    ],
+    "rad": "見",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 57,
+    "k": "来",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ライ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "きた.す",
+        "gloss": "to cause",
+        "main": false
+      },
+      {
+        "r": "きた.る",
+        "gloss": "to come",
+        "main": false
+      },
+      {
+        "r": "く.る",
+        "gloss": "to come",
+        "main": false
+      }
+    ],
+    "mean": "come, due, next, cause, become",
+    "ex": [
+      {
+        "w": "来日",
+        "r": "らいにち",
+        "m": "arrival in Japan"
+      },
+      {
+        "w": "来月",
+        "r": "らいげつ",
+        "m": "next month"
+      },
+      {
+        "w": "本来",
+        "r": "ほんらい",
+        "m": "originally, primarily"
+      }
+    ],
+    "rad": "木",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 58,
+    "k": "学",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ガク",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "まな.ぶ",
+        "gloss": "to study",
+        "main": false
+      }
+    ],
+    "mean": "study, learning, science",
+    "ex": [
+      {
+        "w": "大学",
+        "r": "だいがく",
+        "m": "university, college"
+      },
+      {
+        "w": "学生",
+        "r": "がくせい",
+        "m": "student"
+      },
+      {
+        "w": "入学",
+        "r": "にゅうがく",
+        "m": "entry to school or university"
+      }
+    ],
+    "rad": "子",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 59,
+    "k": "国",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "コク",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "くに",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "country",
+    "ex": [
+      {
+        "w": "外国",
+        "r": "がいこく",
+        "m": "foreign country"
+      },
+      {
+        "w": "国土",
+        "r": "こくど",
+        "m": "country, territory"
+      },
+      {
+        "w": "大国",
+        "r": "たいこく",
+        "m": "large country"
+      }
+    ],
+    "rad": "囗",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 60,
+    "k": "東",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "トウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "ひがし",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "east",
+    "ex": [
+      {
+        "w": "東西",
+        "r": "とうざい",
+        "m": "east and west"
+      },
+      {
+        "w": "北東",
+        "r": "ほくとう",
+        "m": "northeast"
+      },
+      {
+        "w": "東国",
+        "r": "とうごく",
+        "m": "eastern country"
+      }
+    ],
+    "rad": "木",
+    "cls": "Loan"
+  },
+  {
+    "idx": 61,
+    "k": "後",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "コウ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ゴ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "あと",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "うし.ろ",
+        "gloss": "back",
+        "main": false
+      },
+      {
+        "r": "のち",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "behind, back, later",
+    "ex": [
+      {
+        "w": "今後",
+        "r": "こんご",
+        "m": "from now on"
+      },
+      {
+        "w": "後半",
+        "r": "こうはん",
+        "m": "second half"
+      },
+      {
+        "w": "生後",
+        "r": "せいご",
+        "m": "post-natal"
+      }
+    ],
+    "rad": "彳",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 62,
+    "k": "前",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ゼン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "まえ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "in front, before",
+    "ex": [
+      {
+        "w": "前半",
+        "r": "ぜんはん",
+        "m": "first half"
+      },
+      {
+        "w": "前日",
+        "r": "ぜんじつ",
+        "m": "previous day"
+      },
+      {
+        "w": "前月",
+        "r": "ぜんげつ",
+        "m": "last month"
+      }
+    ],
+    "rad": "刀",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 63,
+    "k": "書",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ショ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "か.く",
+        "gloss": "to write",
+        "main": false
+      }
+    ],
+    "mean": "write",
+    "ex": [
+      {
+        "w": "白書",
+        "r": "はくしょ",
+        "m": "white paper"
+      },
+      {
+        "w": "本書",
+        "r": "ほんしょ",
+        "m": "text, script"
+      },
+      {
+        "w": "大書",
+        "r": "たいしょ",
+        "m": "writing in large letters"
+      }
+    ],
+    "rad": "曰",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 64,
+    "k": "校",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "コウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [],
+    "mean": "exam, school, printing, proof, correction",
+    "ex": [
+      {
+        "w": "学校",
+        "r": "がっこう",
+        "m": "school"
+      },
+      {
+        "w": "校長",
+        "r": "こうちょう",
+        "m": "principal, headmaster"
+      },
+      {
+        "w": "母校",
+        "r": "ぼこう",
+        "m": "alma mater"
+      }
+    ],
+    "rad": "木",
+    "cls": "Phonetic"
+  },
+  {
+    "idx": 65,
+    "k": "時",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ジ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "とき",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "time, hour",
+    "ex": [
+      {
+        "w": "時半",
+        "r": "じはん",
+        "m": "half past"
+      },
+      {
+        "w": "一時",
+        "r": "ひととき",
+        "m": "a time"
+      },
+      {
+        "w": "日時",
+        "r": "にちじ",
+        "m": "date and time"
+      }
+    ],
+    "rad": "日",
+    "cls": "Phonetic"
+  },
+  {
+    "idx": 66,
+    "k": "間",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ケン",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "カン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "ま",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "あいだ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "interval, space",
+    "ex": [
+      {
+        "w": "時間",
+        "r": "じかん",
+        "m": "time"
+      },
+      {
+        "w": "人間",
+        "r": "にんげん",
+        "m": "human being"
+      },
+      {
+        "w": "分間",
+        "r": "ふんかん",
+        "m": "minutes"
+      }
+    ],
+    "rad": "門",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 67,
+    "k": "電",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "デン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [],
+    "mean": "electricity",
+    "ex": [
+      {
+        "w": "電子",
+        "r": "でんし",
+        "m": "electron"
+      },
+      {
+        "w": "電気",
+        "r": "でんき",
+        "m": "electricity"
+      },
+      {
+        "w": "電車",
+        "r": "でんしゃ",
+        "m": "train"
+      }
+    ],
+    "rad": "雨",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 68,
+    "k": "聞",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "モン",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ブン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "き.こえる",
+        "gloss": "to be heard",
+        "main": false
+      },
+      {
+        "r": "き.く",
+        "gloss": "to hear",
+        "main": false
+      }
+    ],
+    "mean": "hear, ask, listen",
+    "ex": [
+      {
+        "w": "見聞",
+        "r": "けんぶん",
+        "m": "information, experience"
+      },
+      {
+        "w": "百聞",
+        "r": "ひゃくぶん",
+        "m": "hearing many times"
+      },
+      {
+        "w": "外聞",
+        "r": "がいぶん",
+        "m": "reputation, respectability"
+      }
+    ],
+    "rad": "耳",
+    "cls": "Phonetic"
+  },
+  {
+    "idx": 69,
+    "k": "読",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "トク",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ドク",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "よ.む",
+        "gloss": "to read",
+        "main": false
+      }
+    ],
+    "mean": "read",
+    "ex": [
+      {
+        "w": "読書",
+        "r": "どくしょ",
+        "m": "reading"
+      },
+      {
+        "w": "読後",
+        "r": "どくご",
+        "m": "after reading a book"
+      },
+      {
+        "w": "読者",
+        "r": "どくしゃ",
+        "m": "reader"
+      }
+    ],
+    "rad": "言",
+    "cls": "Phonetic"
+  },
+  {
+    "idx": 70,
+    "k": "中",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "チュウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "なか",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "in, inside, middle, mean, center",
+    "ex": [
+      {
+        "w": "中間",
+        "r": "ちゅうかん",
+        "m": "middle, midway"
+      },
+      {
+        "w": "中学",
+        "r": "ちゅうがく",
+        "m": "junior high school"
+      },
+      {
+        "w": "中小",
+        "r": "ちゅうしょう",
+        "m": "small and medium"
+      }
+    ],
+    "rad": "丨",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 71,
+    "k": "午",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ゴ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [],
+    "mean": "noon",
+    "ex": [
+      {
+        "w": "午後",
+        "r": "ごご",
+        "m": "afternoon, p.m."
+      },
+      {
+        "w": "午前",
+        "r": "ごぜん",
+        "m": "morning, a.m."
+      },
+      {
+        "w": "正午",
+        "r": "しょうご",
+        "m": "noon, midday"
+      }
+    ],
+    "rad": "十",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 72,
+    "k": "右",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ユウ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "ウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "みぎ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "right",
+    "ex": [
+      {
+        "w": "左右",
+        "r": "さゆう",
+        "m": "left and right"
+      },
+      {
+        "w": "右左",
+        "r": "みぎひだり",
+        "m": "right and left"
+      },
+      {
+        "w": "右上",
+        "r": "みぎうえ",
+        "m": "upper right"
+      }
+    ],
+    "rad": "口",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 73,
+    "k": "名",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ミョウ",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "メイ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "な",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "name, noted, distinguished, reputation",
+    "ex": [
+      {
+        "w": "名人",
+        "r": "めいじん",
+        "m": "master, expert"
+      },
+      {
+        "w": "名前",
+        "r": "なまえ",
+        "m": "name"
+      },
+      {
+        "w": "本名",
+        "r": "ほんみょう",
+        "m": "real name"
+      }
+    ],
+    "rad": "口",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 74,
+    "k": "毎",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "マイ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [],
+    "mean": "every",
+    "ex": [
+      {
+        "w": "毎日",
+        "r": "まいにち",
+        "m": "every day"
+      },
+      {
+        "w": "毎月",
+        "r": "まいつき",
+        "m": "every month"
+      },
+      {
+        "w": "毎食",
+        "r": "まいしょく",
+        "m": "every meal"
+      }
+    ],
+    "rad": "毋",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 75,
+    "k": "年",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ネン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "とし",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "year, counter for years",
+    "ex": [
+      {
+        "w": "今年",
+        "r": "ことし",
+        "m": "this year"
+      },
+      {
+        "w": "年間",
+        "r": "ねんかん",
+        "m": "a year"
+      },
+      {
+        "w": "年金",
+        "r": "ねんきん",
+        "m": "annuity, pension"
+      }
+    ],
+    "rad": "干",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 76,
+    "k": "何",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "カ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "なに",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "what",
+    "ex": [
+      {
+        "w": "何人",
+        "r": "なんにん",
+        "m": "how many people"
+      },
+      {
+        "w": "何時",
+        "r": "いつ",
+        "m": "when"
+      },
+      {
+        "w": "何分",
+        "r": "なにぶん",
+        "m": "some, any"
+      }
+    ],
+    "rad": "人",
+    "cls": "Phonetic"
+  },
+  {
+    "idx": 77,
+    "k": "南",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ナン",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "みなみ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "mean": "south",
+    "ex": [
+      {
+        "w": "南北",
+        "r": "なんぼく",
+        "m": "north and south"
+      },
+      {
+        "w": "南西",
+        "r": "なんせい",
+        "m": "southwest"
+      },
+      {
+        "w": "南東",
+        "r": "なんとう",
+        "m": "southeast"
+      }
+    ],
+    "rad": "十",
+    "cls": "Pictographic"
+  },
+  {
+    "idx": 78,
+    "k": "高",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "コウ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "たか.まる",
+        "gloss": "to rise",
+        "main": false
+      },
+      {
+        "r": "たか",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "たか.い",
+        "gloss": "high",
+        "main": false
+      }
+    ],
+    "mean": "tall, high, expensive",
+    "ex": [
+      {
+        "w": "高校",
+        "r": "こうこう",
+        "m": "senior high school"
+      },
+      {
+        "w": "中高",
+        "r": "なかだか",
+        "m": "convex"
+      },
+      {
+        "w": "高下",
+        "r": "こうげ",
+        "m": "rise and fall"
+      }
+    ],
+    "rad": "高",
+    "cls": "Com. Ideographic"
+  },
+  {
+    "idx": 79,
+    "k": "語",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ゴ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "かた.らう",
+        "gloss": "to talk",
+        "main": false
+      },
+      {
+        "r": "かた.る",
+        "gloss": "to talk about",
+        "main": false
+      }
+    ],
+    "mean": "word, speech, language",
+    "ex": [
+      {
+        "w": "国語",
+        "r": "こくご",
+        "m": "national language"
+      },
+      {
+        "w": "語学",
+        "r": "ごがく",
+        "m": "study of foreign languages"
+      },
+      {
+        "w": "語気",
+        "r": "ごき",
+        "m": "tone"
+      }
+    ],
+    "rad": "言",
+    "cls": "Phonetic"
+  },
+  {
+    "idx": 80,
+    "k": "話",
+    "jlpt": 5,
+    "on": [
+      {
+        "r": "ワ",
+        "gloss": null,
+        "main": false
+      }
+    ],
+    "kun": [
+      {
+        "r": "はなし",
+        "gloss": null,
+        "main": false
+      },
+      {
+        "r": "はな.す",
+        "gloss": "to talk",
+        "main": false
+      }
+    ],
+    "mean": "tale, talk",
+    "ex": [
+      {
+        "w": "電話",
+        "r": "でんわ",
+        "m": "telephone call"
+      },
+      {
+        "w": "小話",
+        "r": "こばなし",
+        "m": "anecdote"
+      },
+      {
+        "w": "長話",
+        "r": "ながばなし",
+        "m": "long talk"
+      }
+    ],
+    "rad": "言",
+    "cls": "Phonetic"
+  }
+]
