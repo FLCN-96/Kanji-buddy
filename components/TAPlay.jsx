@@ -17,17 +17,14 @@ const TAHud = ({ hits, misses, combo }) => (
   </div>
 );
 
-const TAPlay = ({ q, onPick, feedback, clockMs, danger, combo, comboBurst }) => {
-  // clock bar pct
-  // We don't know total duration here; use a ref-free approach: pass relative via prop? Keep simple: use 60s bar capped visually
-  // We'll compute a pct externally via data attribute in parent. For now, width by clockMs ratio vs 60s is misleading for 30s/120s.
-  // Parent doesn't pass durationMs, so infer: clamp to known ranges by looking at env — pass through props.
-  // Simpler: include an inline bar showing danger ≤10s.
+const TAPlay = ({ q, onPick, feedback, clockMs, totalMs, danger, combo, comboBurst }) => {
+  const barTotal = totalMs > 0 ? totalMs : 60_000;
+  const barPct = Math.max(0, Math.min(100, (clockMs / barTotal) * 100));
 
   return (
     <div className="ta-play" data-screen-label="ta-play">
       <div className={`ta-clock-bar${danger ? ' is-danger' : ''}`}>
-        <div className="ta-clock-bar-fill" style={{ width: `${Math.max(0, Math.min(100, (clockMs / 60_000) * 100))}%` }} />
+        <div className="ta-clock-bar-fill" style={{ width: `${barPct}%` }} />
         <div className="ta-clock-ticks">
           {[...Array(12)].map((_, i) => <span key={i} />)}
         </div>
