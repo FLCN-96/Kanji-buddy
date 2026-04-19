@@ -1,50 +1,84 @@
 // Pre-run and end screens
 
-const PreRun = ({ state, total, onStart }) => {
-  const conf = {
-    fresh:  { count: total, new: 8, rev: 34, lch: 3, est: '~6m', acc: '84', cls: 'cyan', title: 'DAILY QUEUE · READY' },
-    clear:  { count: 10, new: 0, rev: 10, lch: 0, est: '~2m', acc: '84', cls: 'cyan', title: 'QUEUE CLEAR · PRACTICE RUN' },
-    behind: { count: 40, new: 22, rev: 141, lch: 17, est: '~15m', acc: '72', cls: 'amb', title: 'SRS DEBT · 180 OVERDUE' },
-  }[state] || { count: total, new: 8, rev: 34, lch: 3, est: '~6m', acc: '84', cls: 'cyan', title: 'DAILY QUEUE · READY' };
-  const bTotal = conf.new + conf.rev + conf.lch || 1;
+const formatHMS = (seconds) => {
+  const s = Math.max(0, seconds | 0);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const ss = s % 60;
+  const pad = (n) => String(n).padStart(2, '0');
+  return h > 0 ? `${pad(h)}:${pad(m)}:${pad(ss)}` : `${pad(m)}:${pad(ss)}`;
+};
+
+const secondsUntilMidnightLocal = () => {
+  const now = new Date();
+  const mid = new Date(now);
+  mid.setHours(24, 0, 0, 0);
+  return Math.max(0, Math.floor((mid - now) / 1000));
+};
+
+// composition: { new, due, leech, total } from the weighted deck selector.
+const PreRun = ({ composition, onStart }) => {
+  const c = composition || { new: 0, due: 0, leech: 0, total: 0 };
+  const total = c.total || (c.new + c.due + c.leech);
+  const bTotal = Math.max(1, c.new + c.due + c.leech);
+  const estSec = total * 9; // rough: ~9s per card
+  const estMin = Math.max(1, Math.round(estSec / 60));
+
+  const hasNew    = c.new   > 0;
+  const hasDue    = c.due   > 0;
+  const hasLeech  = c.leech > 0;
+
+  const title = total === 0
+    ? 'NOTHING QUEUED'
+    : hasNew && !hasDue && !hasLeech
+      ? 'LEARN · FIRST KANJI'
+      : hasLeech && !hasNew && !hasDue
+        ? 'LEECH RECLAIM'
+        : 'DAILY RUN · READY';
+
   return (
     <div className="run-pre" data-screen-label="pre-run">
       <div className="run-pre-head">
         <div className="run-pre-lbl">▸ RUN · PRE-FLIGHT</div>
-        <div className="run-pre-title">{conf.title}</div>
+        <div className="run-pre-title">{title}</div>
       </div>
+
       <div className="run-pre-stats">
         <div className="run-pre-stat">
           <div className="run-pre-stat-lbl">CARDS</div>
-          <div className={`run-pre-stat-val ${conf.cls}`}>{conf.count}</div>
+          <div className="run-pre-stat-val cyan">{total}</div>
         </div>
         <div className="run-pre-stat">
           <div className="run-pre-stat-lbl">EST TIME</div>
-          <div className="run-pre-stat-val">{conf.est}</div>
+          <div className="run-pre-stat-val">~{estMin}m</div>
         </div>
         <div className="run-pre-stat">
-          <div className="run-pre-stat-lbl">ACC · 7D</div>
-          <div className={`run-pre-stat-val ${conf.cls}`}>{conf.acc} %</div>
+          <div className="run-pre-stat-lbl">FLOW</div>
+          <div className="run-pre-stat-val">
+            {hasNew ? 'learn → quiz' : 'quiz'}
+          </div>
         </div>
       </div>
+
       <div className="run-pre-breakdown">
         <div className="run-pre-breakdown-head">
-          <span>▸ QUEUE COMPOSITION</span>
-          <span>stack · core_2k + n3_kanji + wk_lv10</span>
+          <span>▸ DECK COMPOSITION</span>
+          <span>weighted · new · review · leech</span>
         </div>
         <div className="run-pre-breakdown-bar">
-          <div className="new" style={{width: `${100*conf.new/bTotal}%`}} />
-          <div className="rev" style={{width: `${100*conf.rev/bTotal}%`}} />
-          <div className="lch" style={{width: `${100*conf.lch/bTotal}%`}} />
+          <div className="new" style={{width: `${100*c.new/bTotal}%`}} />
+          <div className="rev" style={{width: `${100*c.due/bTotal}%`}} />
+          <div className="lch" style={{width: `${100*c.leech/bTotal}%`}} />
         </div>
         <div className="run-pre-legend">
-          <span><span className="dot new" /><b>new</b>{conf.new}</span>
-          <span><span className="dot rev" /><b>review</b>{conf.rev}</span>
-          <span><span className="dot lch" /><b>leech</b>{conf.lch}</span>
+          <span><span className="dot new" /><b>new</b>{c.new}</span>
+          <span><span className="dot rev" /><b>review</b>{c.due}</span>
+          <span><span className="dot lch" /><b>leech</b>{c.leech}</span>
         </div>
       </div>
-      <button className="run-pre-start" onClick={onStart}>
-        <span>▸ RUN START</span>
+
+      <button className="run-pre-start" onClick={onStart} disabled={total === 0}>
+        <span>{total === 0 ? '▸ CHECK BACK AFTER MIDNIGHT' : hasNew ? '▸ START LEARN' : '▸ RUN START'}</span>
         <span className="arrow">▸</span>
       </button>
       <div className="run-pre-hint">
@@ -54,7 +88,8 @@ const PreRun = ({ state, total, onStart }) => {
   );
 };
 
-const EndRun = ({ results, cards, duration, onAgain, onHome, variant }) => {
+// EndRun — fed real user data (streak, total_xp, xpGained) so nothing is faked.
+const EndRun = ({ results, cards, duration, onAgain, onHome, variant, user, xpGained }) => {
   const counts = { miss:0, hard:0, ok:0, easy:0 };
   results.forEach(r => { if (counts[r] != null) counts[r]++; });
   const total = results.length;
@@ -62,8 +97,27 @@ const EndRun = ({ results, cards, duration, onAgain, onHome, variant }) => {
   const acc = total === 0 ? 0 : Math.round(100 * hits / total);
   const mm = Math.floor(duration / 60), ss = duration % 60;
   const durStr = `${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
-  const xp = hits * 10 + counts.easy * 5 - counts.miss * 2;
+  const xp = xpGained ?? 0;
+
   const missedCards = results.map((r, i) => ({r, c: cards[i]})).filter(x => x.r === 'miss');
+
+  const streakDays = user?.current_streak ?? 0;
+  const bestStreak = user?.best_streak ?? 0;
+  const currentXp  = user?.total_xp ?? 0;
+  const nextXp     = currentXp + xp;
+  const [nextDrop, setNextDrop] = React.useState(secondsUntilMidnightLocal());
+  React.useEffect(() => {
+    const t = setInterval(() => setNextDrop(secondsUntilMidnightLocal()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Rank pulled from Dashboard.jsx (shared via window)
+  const ranks = (typeof rankFor === 'function') ? rankFor(nextXp) : null;
+  const curRank = ranks?.cur?.label || 'RANK —';
+  const nextRank = ranks?.next || null;
+  const toNext = nextRank ? Math.max(0, nextRank.min - nextXp) : null;
+
+  const streakDelta = streakDays > (user?._streakBefore ?? streakDays) ? '▲ +1' : null;
 
   return (
     <div className="run-end" data-screen-label="run-end">
@@ -92,15 +146,27 @@ const EndRun = ({ results, cards, duration, onAgain, onHome, variant }) => {
       </div>
       <div className="run-end-panels">
         <div className="run-end-panel">
-          <div className="run-end-p-head"><span>▸ STREAK</span><span className="kb-cyan" style={{color:'var(--accent-cyan)'}}>▲ +1</span></div>
-          <div className="run-end-p-val streak">13<span style={{fontSize:11,color:'var(--fg-2)',marginLeft:6,fontWeight:400,letterSpacing:'.12em',textTransform:'uppercase'}}>days</span></div>
-          <div className="run-end-p-sub">next drop · 07:14:33</div>
+          <div className="run-end-p-head">
+            <span>▸ STREAK</span>
+            {streakDelta && <span className="kb-cyan" style={{color:'var(--accent-cyan)'}}>{streakDelta}</span>}
+          </div>
+          <div className="run-end-p-val streak">
+            {streakDays}<span style={{fontSize:11,color:'var(--fg-2)',marginLeft:6,fontWeight:400,letterSpacing:'.12em',textTransform:'uppercase'}}>days</span>
+          </div>
+          <div className="run-end-p-sub">
+            {streakDays === 0 ? 'streak starts tomorrow' : `best ${bestStreak}d · next drop ${formatHMS(nextDrop)}`}
+          </div>
         </div>
         {variant === 'game' ? (
           <div className="run-end-panel">
-            <div className="run-end-p-head"><span>▸ XP GAINED</span><span style={{color:'var(--accent-magenta)'}}>RANK Ⅲ</span></div>
-            <div className="run-end-p-val xp">+{xp}<span style={{fontSize:11,color:'var(--fg-2)',marginLeft:6,fontWeight:400,letterSpacing:'.12em',textTransform:'uppercase'}}>xp</span></div>
-            <div className="run-end-p-sub">2,140 → {2140+xp} · 680 to rank Ⅳ</div>
+            <div className="run-end-p-head"><span>▸ XP GAINED</span><span style={{color:'var(--accent-magenta)'}}>{curRank.replace(/^RANK /, '')}</span></div>
+            <div className="run-end-p-val xp">
+              +{xp}<span style={{fontSize:11,color:'var(--fg-2)',marginLeft:6,fontWeight:400,letterSpacing:'.12em',textTransform:'uppercase'}}>xp</span>
+            </div>
+            <div className="run-end-p-sub">
+              {currentXp.toLocaleString()} → {nextXp.toLocaleString()}
+              {nextRank ? ` · ${toNext.toLocaleString()} to ${nextRank.label}` : ' · max rank'}
+            </div>
           </div>
         ) : (
           <div className="run-end-panel">
