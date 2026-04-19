@@ -158,7 +158,6 @@ const App = () => {
   const [user, setUser] = React.useState(null);
   const [userLoaded, setUserLoaded] = React.useState(false);
   const [dueCount, setDueCount] = React.useState(null);
-  const [deckChoice, setDeckChoice] = React.useState(null); // null | 'imported' | 'bundled'
 
   React.useEffect(() => {
     if (!window.DB) { setUserLoaded(true); return; }
@@ -167,21 +166,12 @@ const App = () => {
       .then(u => {
         setUser(u);
         setUserLoaded(true);
-        if (u?.settings?.deckChoice) setDeckChoice(u.settings.deckChoice);
       })
       .catch(() => setUserLoaded(true));
     window.DB.getDueCards()
       .then(cards => setDueCount(cards.length))
       .catch(() => {});
   }, []);
-
-  const onDeckImportDone = (choice) => {
-    setDeckChoice(choice);
-    // refresh due count after import
-    if (window.DB) {
-      window.DB.getDueCards().then(c => setDueCount(c.length)).catch(() => {});
-    }
-  };
 
   React.useEffect(() => {
     document.body.dataset.accent = tweaks.accent;
@@ -252,9 +242,6 @@ const App = () => {
     <>
       {userLoaded && !user && (
         <FirstRunModal onDone={(name) => setUser({ display_name: name })} />
-      )}
-      {userLoaded && user && !deckChoice && window.DeckImport && (
-        <DeckImport onDone={onDeckImportDone} />
       )}
       <div className={variantClass}>
         <Topbar state={tweaks.state} displayName={user?.display_name} />
