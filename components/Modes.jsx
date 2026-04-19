@@ -29,7 +29,7 @@ const RunPrimary = ({ state, deck, onRun }) => {
                  : 'RUN';
   const subCopy  = loading      ? 'loading…'
                  : overachiever ? 'bonus cycle · cooling compromised'
-                 : `${count} cards · ~${mins}m · srs priority`;
+                 : `${count} ${count === 1 ? 'card' : 'cards'} · ~${mins}m · srs priority`;
 
   const cls = `kb-run-primary`
     + (disabled     ? ' is-disabled'     : '')

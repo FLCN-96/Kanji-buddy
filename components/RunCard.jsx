@@ -105,7 +105,7 @@ const IntroCard = ({ card, index, total, onNext }) => {
         <span className="run-card-strip-r">
           <span>{index + 1} / {total}</span>
           <span>JLPT N{card.jlpt}</span>
-          {card.strokes ? <span>{card.strokes} strokes</span> : null}
+          {card.strokes ? <span>{card.strokes} {card.strokes === 1 ? 'stroke' : 'strokes'}</span> : null}
         </span>
       </div>
       <div className="run-card-body">
