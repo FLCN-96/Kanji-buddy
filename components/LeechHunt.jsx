@@ -12,34 +12,69 @@ const TWEAK_DEFAULTS_LH = {
 
 const PB_KEY_LH = 'kb-lh-pb';
 
-// Build a leech roster: synthetic contamination + miss history for flavour.
-// In a real SRS we'd pull from review stats; here we sample higher-JLPT cards
-// (typically harder) and stamp them with realistic miss patterns.
-function buildLeeches(cards, n) {
-  const pool = cards.filter(c => c.ex && c.ex.length >= 1);
-  // sort by random but weight toward higher JLPT (harder)
+// Build a leech roster. Real leeches (card_states with lapses ≥ LEECH_LAPSES)
+// come first, sorted by lapse count. If the user has fewer real leeches than
+// the target count, we pad with synthetic practice targets (harder-JLPT cards
+// they haven't lapsed on yet) so the mode still has enough meat to chew on.
+function buildLeeches(cards, n, cardStates) {
+  const LEECH_LAPSES = (window.Daily && 3) || 3; // mirrors daily.js
+  const byIdx = new Map(cards.map(c => [c.idx, c]));
+
+  const realStates = (cardStates || [])
+    .filter(s => (s.lapses || 0) >= LEECH_LAPSES && byIdx.has(s.idx))
+    .sort((a, b) => (b.lapses || 0) - (a.lapses || 0))
+    .slice(0, n);
+
+  const realLeeches = realStates.map((state, i) => {
+    const card    = byIdx.get(state.idx);
+    const lapses  = state.lapses  || 0;
+    const reviews = state.reviews || 0;
+    const total   = Math.max(1, lapses + reviews);
+    const missRate = lapses / total;
+    const history = Array.from({length: 8}, () => Math.random() < missRate ? 'x' : 'o');
+    // These ARE leeches — guarantee at least one visible miss in the history.
+    if (!history.includes('x')) history[Math.floor(Math.random() * 8)] = 'x';
+    return {
+      id: `leech-${i}`,
+      card,
+      contamination: missRate,
+      history,
+      status: 'pending', // pending | active | purged | weakened | survived
+      cleansed: 0,
+      firstTry: true,
+      synthetic: false,
+    };
+  });
+
+  const needed = n - realLeeches.length;
+  if (needed <= 0) return realLeeches;
+
+  const realIdxSet = new Set(realLeeches.map(l => l.card.idx));
+  const pool = cards.filter(c => c.ex && c.ex.length >= 1 && !realIdxSet.has(c.idx));
   const scored = pool.map(c => ({ c, s: Math.random() + (5 - c.jlpt) * 0.2 }));
-  scored.sort((a,b) => b.s - a.s);
-  const picked = scored.slice(0, n).map(x => x.c);
-  return picked.map((card, i) => {
-    const contamination = 0.58 + Math.random() * 0.32; // 58–90% miss rate
-    // 8 recent attempts: biased toward misses given contamination
+  scored.sort((a, b) => b.s - a.s);
+
+  const synthetic = scored.slice(0, needed).map((x, i) => {
+    const card = x.c;
+    const contamination = 0.58 + Math.random() * 0.32;
     const history = Array.from({length: 8}, () => Math.random() < contamination ? 'x' : 'o');
-    // ensure at least 4 misses visible
     while (history.filter(h => h === 'x').length < 4) {
       const j = Math.floor(Math.random() * 8);
       history[j] = 'x';
     }
     return {
-      id: `leech-${i}`,
+      id: `leech-${realLeeches.length + i}`,
       card,
       contamination,
       history,
-      status: 'pending', // pending | active | purged | weakened | survived
-      cleansed: 0, // stages cleared first try this encounter
+      status: 'pending',
+      cleansed: 0,
       firstTry: true,
+      synthetic: true,
     };
   });
+
+  return [...realLeeches, ...synthetic];
 }
 
 function dealStage(leech, stageIdx, allCards) {
@@ -141,6 +176,17 @@ const LeechHuntApp = ({ cards }) => {
   const [beatPb, setBeatPb] = React.useState(false);
   const lockRef = React.useRef(false);
   const finishedRef = React.useRef(false);
+  // Ref (not state) so the ready-phase countdown effect doesn't restart when
+  // card_states finish loading — the hunt only reads it at roster-build time.
+  const cardStatesRef = React.useRef([]);
+
+  React.useEffect(() => {
+    if (!window.DB) return;
+    window.DB.open()
+      .then(() => window.DB.getAllCardStates())
+      .then(s => { cardStatesRef.current = s || []; })
+      .catch(() => {});
+  }, []);
 
   React.useEffect(() => {
     document.body.dataset.accent = tweaks.accent;
@@ -156,7 +202,7 @@ const LeechHuntApp = ({ cards }) => {
       n -= 1;
       if (n <= 0) {
         setCountdown(0);
-        const r = buildLeeches(cards, tweaks.leechCount);
+        const r = buildLeeches(cards, tweaks.leechCount, cardStatesRef.current);
         setRoster(r);
         setMisses(0);
         setResult(null);

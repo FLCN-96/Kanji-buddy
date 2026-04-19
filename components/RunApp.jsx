@@ -189,20 +189,10 @@ const RunApp = ({ cards }) => {
     setResults(nextResults);
 
     const card = quizOrder[quizIdx];
-    if (window.DB && card) {
+    if (window.DB && window.Srs && card) {
       window.DB.getCardState(card.idx).then(existing => {
-        const base = existing || { idx: card.idx, interval_days: 1, ease_factor: 2.5, reviews: 0, lapses: 0 };
-        const intervalMap = { easy: 4, ok: 1, hard: 0.25, miss: 0 };
-        const daysAhead = intervalMap[v] ?? 1;
-        const due = new Date();
-        due.setDate(due.getDate() + daysAhead);
-        return window.DB.upsertCardState({
-          ...base,
-          reviews: base.reviews + 1,
-          lapses: v === 'miss' ? base.lapses + 1 : base.lapses,
-          due_date: due.toISOString(),
-          last_reviewed: new Date().toISOString(),
-        });
+        const next = window.Srs.schedule(existing, v);
+        return window.DB.upsertCardState({ idx: card.idx, ...next });
       }).catch(() => {});
     }
 

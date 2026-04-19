@@ -16,11 +16,10 @@ const readTweaks = () => {
   } catch(e) { return { ...TWEAK_DEFAULTS }; }
 };
 
-const deriveState = (dueCount) => {
-  if (dueCount === null || dueCount === undefined) return 'fresh';
-  if (dueCount === 0) return 'clear';
-  if (dueCount > 100) return 'behind';
-  return 'fresh';
+const deriveState = (deck) => {
+  if (!deck) return 'loading';
+  if (deck.total === 0) return 'clear';
+  return 'active';
 };
 
 // Daily rotation helpers come from window.Daily (data/daily.js).
@@ -116,7 +115,8 @@ const App = ({ cards }) => {
   const [tweaks] = React.useState(readTweaks);
   const [user, setUser] = React.useState(null);
   const [userLoaded, setUserLoaded] = React.useState(false);
-  const [dueCount, setDueCount] = React.useState(null);
+  const [deck, setDeck] = React.useState(null);       // {new, due, leech, total} — today's Run preview
+  const [dueCount, setDueCount] = React.useState(null); // raw SRS backlog for StatusBar
 
   React.useEffect(() => {
     // Drop any ?reset=TS left over from a hard-reset redirect.
@@ -134,16 +134,38 @@ const App = ({ cards }) => {
         setUserLoaded(true);
       })
       .catch(() => { setUser(null); setUserLoaded(true); });
-    window.DB.getDueCards()
-      .then(cs => {
-        if (cs.length > 0) { setDueCount(cs.length); return; }
-        // 0 due could mean "all reviewed" or "no cards yet" — distinguish them
-        return window.DB.getAllCardStates().then(all => {
-          setDueCount(all.length === 0 ? null : 0);
+  }, []);
+
+  React.useEffect(() => {
+    if (!window.DB || !window.Daily || !cards || !cards.length) return;
+    window.DB.open()
+      .then(() => window.DB.getAllCardStates())
+      .then(states => {
+        const todayStr = new Date().toDateString();
+        const reviewedToday = states.filter(s =>
+          s.last_reviewed && new Date(s.last_reviewed).toDateString() === todayStr
+        ).length;
+
+        // Gate: once today's quota is met, queue is clear until next midnight —
+        // prevents the ~2000-card "new" pool from endlessly refilling the panel.
+        const dailyDone = reviewedToday >= window.Daily.DECK_SIZE;
+        const picks = dailyDone ? [] : window.Daily.selectDailyDeck(cards, states);
+        setDeck({
+          new:   picks.filter(c => c._bucket === 'new').length,
+          due:   picks.filter(c => c._bucket === 'due').length,
+          leech: picks.filter(c => c._bucket === 'leech').length,
+          total: picks.length,
         });
+
+        const nowIso = new Date().toISOString();
+        const rawDue = states.filter(s =>
+          s.due_date && s.due_date <= nowIso &&
+          (!s.last_reviewed || new Date(s.last_reviewed).toDateString() !== todayStr)
+        ).length;
+        setDueCount(rawDue);
       })
       .catch(() => {});
-  }, []);
+  }, [cards]);
 
   React.useEffect(() => {
     document.body.dataset.accent = tweaks.accent;
@@ -152,7 +174,7 @@ const App = ({ cards }) => {
     document.body.dataset.hero = tweaks.hero;
   }, [tweaks]);
 
-  const state = deriveState(dueCount);
+  const state = deriveState(deck);
 
   // Daily picks — deterministic per local day
   const seed = React.useMemo(() => window.Daily.daySeed(), []);
@@ -209,7 +231,7 @@ const App = ({ cards }) => {
           <Countdown state={state} />
 
           <div className="kb-stats-row">
-            <DuePanel state={state} dueCount={dueCount} />
+            <DuePanel state={state} deck={deck} />
             <StreakPanel state={state} streak={user?.current_streak} bestStreak={user?.best_streak} />
           </div>
 
@@ -219,7 +241,7 @@ const App = ({ cards }) => {
             <span className="kb-section-title">Primary run</span>
             <span className="kb-section-r">space · enter</span>
           </div>
-          <RunPrimary state={state} onRun={onRun} />
+          <RunPrimary state={state} deck={deck} onRun={onRun} />
 
           <div className="kb-section-head">
             <span className="kb-section-title">Challenge modes</span>

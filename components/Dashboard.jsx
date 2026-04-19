@@ -71,9 +71,6 @@ const Countdown = ({ state }) => {
   if (state === 'clear') {
     lbl = 'NEXT DROP // in'; val = 'queue clear · review any time';
     cls = 'is-clear';
-  } else if (state === 'behind') {
-    lbl = 'OVERDUE // srs debt'; val = 'catch up before the next drop';
-    cls = 'is-overdue';
   } else {
     lbl = 'NEXT DROP // in'; val = 'new reviews unlock at 00:00';
   }
@@ -88,36 +85,55 @@ const Countdown = ({ state }) => {
   );
 };
 
-const DuePanel = ({ state, dueCount }) => {
-  const conf = {
-    fresh: { count: 42, unit: 'due', segs: [1,1,1,1,1,1,0,0,0,0,0,0], sub: 'new 8 · review 34 · leech 3', cls: 'cyan' },
-    clear: { count: 0,  unit: 'due', segs: [], sub: 'queue clear. next drop 07:14:33', cls: 'dim' },
-    behind: { count: 180, unit: 'overdue', segs: Array(12).fill(1), sub: 'new 22 · review 141 · leech 17', cls: 'amber' },
-  }[state] || { count: 42, unit: 'due', segs: [1,1,1,1,1,1,0,0,0,0,0,0], sub: 'new 8 · review 34 · leech 3', cls: 'cyan' };
+const DECK_MAX = (typeof window !== 'undefined' && window.Daily?.DECK_SIZE) || 5;
 
-  const realCount = dueCount !== null ? dueCount : conf.count;
-  const realCls   = realCount === 0 ? 'dim' : realCount > 100 ? 'amber' : 'cyan';
-  const filledSegs = Math.round((realCount / Math.max(realCount, 42)) * 12);
-  const realSegs   = dueCount !== null
-    ? Array.from({length: 12}, (_, i) => i < filledSegs ? 1 : 0)
-    : conf.segs;
+const composeSub = (deck) => {
+  const parts = [];
+  if (deck.new)   parts.push(`new ${deck.new}`);
+  if (deck.due)   parts.push(`review ${deck.due}`);
+  if (deck.leech) parts.push(`leech ${deck.leech}`);
+  return parts.join(' · ');
+};
+
+const DuePanel = ({ state, deck }) => {
+  if (state === 'loading' || !deck) {
+    return (
+      <div className="kb-due" data-screen-label="due-panel">
+        <div className="kb-due-head">
+          <span className="kb-due-lbl">▸ DAILY QUEUE</span>
+          <span className="kb-due-lbl">—</span>
+        </div>
+        <div className="kb-due-count dim">—<span className="unit">cards</span></div>
+        <div className="kb-due-sub">loading…</div>
+        <div className="kb-due-seg">
+          {Array.from({length: 12}).map((_, i) => <div key={i} className="kb-due-seg-s" />)}
+        </div>
+      </div>
+    );
+  }
+
+  const total = deck.total;
+  const isClear = total === 0;
+  const cls = isClear ? 'dim' : 'cyan';
+  const filledSegs = Math.round((total / DECK_MAX) * 12);
+  const sub = isClear
+    ? `queue clear · next drop ${formatCountdown(secondsUntilMidnight())}`
+    : composeSub(deck);
 
   return (
     <div className="kb-due" data-screen-label="due-panel">
       <div className="kb-due-head">
         <span className="kb-due-lbl">▸ DAILY QUEUE</span>
-        <span className="kb-due-lbl">{realCount === 0 ? 'clear' : realCount > 100 ? 'amber' : 'green'}</span>
+        <span className="kb-due-lbl">{isClear ? 'clear' : 'green'}</span>
       </div>
-      <div className={`kb-due-count ${realCls}`}>
-        {realCount}<span className="unit">{conf.unit}</span>
+      <div className={`kb-due-count ${cls}`}>
+        {total}<span className="unit">cards</span>
       </div>
-      <div className="kb-due-sub">{dueCount !== null ? `${realCount} cards due now` : conf.sub}</div>
+      <div className="kb-due-sub">{sub}</div>
       <div className="kb-due-seg">
-        {Array.from({length: 12}).map((_, i) => {
-          const filled = realSegs[i];
-          const isAmber = realCls === 'amber' && filled;
-          return <div key={i} className={`kb-due-seg-s${filled ? (isAmber ? ' is-amber' : ' is-filled') : ''}`} />;
-        })}
+        {Array.from({length: 12}).map((_, i) => (
+          <div key={i} className={`kb-due-seg-s${i < filledSegs ? ' is-filled' : ''}`} />
+        ))}
       </div>
     </div>
   );
@@ -188,4 +204,4 @@ const XpBar = ({ xp = 0 }) => {
   );
 };
 
-Object.assign(window, { Hero, Countdown, DuePanel, StreakPanel, XpBar, RANK_TABLE, rankFor });
+Object.assign(window, { Hero, Countdown, DuePanel, StreakPanel, XpBar, RANK_TABLE, rankFor, formatCountdown, secondsUntilMidnight });
