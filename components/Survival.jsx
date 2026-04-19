@@ -1,7 +1,6 @@
 // Survival orchestrator — single life, depth ladder
 
 const TWEAK_DEFAULTS_SV = {
-  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -275,7 +274,7 @@ const SurvivalApp = ({ cards }) => {
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  const shellCls = `run-shell sv-shell variant-${tweaks.variant}${heartBreak ? ' is-breaking' : ''}`;
+  const shellCls = `run-shell sv-shell variant-game${heartBreak ? ' is-breaking' : ''}`;
   const pressure = Math.min(1, depth / 40); // 0..1 dread
   const tier = pickDepthTier(depth);
   const lastEight = history.slice(-8);

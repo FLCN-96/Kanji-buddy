@@ -117,7 +117,7 @@ const PreRun = ({ composition, onStart }) => {
 };
 
 // EndRun — fed real user data (streak, total_xp, xpGained) so nothing is faked.
-const EndRun = ({ results, cards, duration, onAgain, onHome, variant, user, xpGained }) => {
+const EndRun = ({ results, cards, duration, onAgain, onHome, user, xpGained }) => {
   const counts = { miss:0, hard:0, ok:0, easy:0 };
   results.forEach(r => { if (counts[r] != null) counts[r]++; });
   const total = results.length;
@@ -185,24 +185,16 @@ const EndRun = ({ results, cards, duration, onAgain, onHome, variant, user, xpGa
             {streakDays === 0 ? 'streak starts tomorrow' : `best ${bestStreak}d · next drop ${formatHMS(nextDrop)}`}
           </div>
         </div>
-        {variant === 'game' ? (
-          <div className="run-end-panel">
-            <div className="run-end-p-head"><span>▸ XP GAINED</span><span style={{color:'var(--accent-magenta)'}}>{curRank.replace(/^RANK /, '')}</span></div>
-            <div className="run-end-p-val xp">
-              +{xp}<span style={{fontSize:11,color:'var(--fg-2)',marginLeft:6,fontWeight:400,letterSpacing:'.12em',textTransform:'uppercase'}}>xp</span>
-            </div>
-            <div className="run-end-p-sub">
-              {currentXp.toLocaleString()} → {nextXp.toLocaleString()}
-              {nextRank ? ` · ${toNext.toLocaleString()} to ${nextRank.label}` : ' · max rank'}
-            </div>
+        <div className="run-end-panel">
+          <div className="run-end-p-head"><span>▸ XP GAINED</span><span style={{color:'var(--accent-magenta)'}}>{curRank.replace(/^RANK /, '')}</span></div>
+          <div className="run-end-p-val xp">
+            +{xp}<span style={{fontSize:11,color:'var(--fg-2)',marginLeft:6,fontWeight:400,letterSpacing:'.12em',textTransform:'uppercase'}}>xp</span>
           </div>
-        ) : (
-          <div className="run-end-panel">
-            <div className="run-end-p-head"><span>▸ PACE</span><span>avg</span></div>
-            <div className="run-end-p-val">{total ? Math.round(duration/total) : 0}<span style={{fontSize:11,color:'var(--fg-2)',marginLeft:6,fontWeight:400,letterSpacing:'.12em',textTransform:'uppercase'}}>s/card</span></div>
-            <div className="run-end-p-sub">{total} cards · {durStr} total</div>
+          <div className="run-end-p-sub">
+            {currentXp.toLocaleString()} → {nextXp.toLocaleString()}
+            {nextRank ? ` · ${toNext.toLocaleString()} to ${nextRank.label}` : ' · max rank'}
           </div>
-        )}
+        </div>
       </div>
       {missedCards.length > 0 && (
         <div className="run-end-missed">

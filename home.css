@@ -44,7 +44,7 @@ body[data-scanlines="on"]::after {
   background: var(--bg-0);
 }
 @media (min-width: 900px) {
-  .kb-shell.variant-hud, .kb-shell.variant-calm, .kb-shell.variant-game {
+  .kb-shell.variant-game {
     max-width: 1080px;
   }
 }

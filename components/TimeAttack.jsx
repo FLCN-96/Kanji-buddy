@@ -1,7 +1,6 @@
 // TimeAttack orchestrator — phase machine, scoring, timer, deck dealer
 
 const TWEAK_DEFAULTS_TA = {
-  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -313,7 +312,7 @@ const TimeAttackApp = ({ cards }) => {
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  const shellCls = `run-shell ta-shell variant-${tweaks.variant}${glitch ? ' is-glitching' : ''}`;
+  const shellCls = `run-shell ta-shell variant-game${glitch ? ' is-glitching' : ''}`;
   const tier = React.useMemo(() => pickTier(score), [score]);
   const prevPb = pb[tweaks.duration] || 0;
 

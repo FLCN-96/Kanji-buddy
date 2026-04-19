@@ -2,7 +2,6 @@
 // Wrong pair → -2s penalty. Speed bonus per match.
 
 const TWEAK_DEFAULTS_MT = {
-  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -388,7 +387,7 @@ const MatchApp = ({ cards }) => {
 
   return (
     <>
-      <div className={`run-shell mt-shell variant-${tweaks.variant}`} data-phase={phase}>
+      <div className="run-shell mt-shell variant-game" data-phase={phase}>
         <MTTopbar
           timeLeft={timeLeft}
           total={tweaks.duration * 1000}

@@ -1,7 +1,6 @@
 // Daily Run orchestrator: weighted 5-card deck, learn → quiz phase split.
 
 const TWEAK_DEFAULTS = {
-  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -272,7 +271,7 @@ const RunApp = ({ cards }) => {
   }, [now, startedAt]);
 
   const cardLatency = cardStartedAt ? Math.floor((now - cardStartedAt)/1000) : 0;
-  const shellCls = `run-shell variant-${tweaks.variant}`;
+  const shellCls = 'run-shell variant-game';
 
   if (phase === 'loading') {
     return (
@@ -333,7 +332,6 @@ const RunApp = ({ cards }) => {
             duration={duration}
             onAgain={restart}
             onHome={() => window.location.href = 'Home.html'}
-            variant={tweaks.variant}
             user={user ? { ...user, _streakBefore: streakBefore } : null}
             xpGained={xpGained}
           />
