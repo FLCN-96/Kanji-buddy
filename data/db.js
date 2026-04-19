@@ -103,7 +103,15 @@ const DB = {
       const t     = db.transaction('card_states', 'readonly');
       const idx   = t.objectStore('card_states').index('due_date');
       const req   = idx.getAll(IDBKeyRange.upperBound(today), limit);
-      req.onsuccess = (e) => resolve(e.target.result);
+      req.onsuccess = (e) => {
+        // Cards reviewed earlier today are "handled" — miss/hard re-queue them
+        // with a same-day due_date, but Home shouldn't count that as owed.
+        const todayStr = new Date().toDateString();
+        resolve(e.target.result.filter(s =>
+          !s.last_reviewed ||
+          new Date(s.last_reviewed).toDateString() !== todayStr
+        ));
+      };
       req.onerror   = (e) => reject(e.target.error);
     }));
   },
