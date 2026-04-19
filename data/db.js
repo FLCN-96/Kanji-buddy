@@ -60,6 +60,13 @@ function rw(store, mode, fn) {
 const DB = {
   open: openDB,
 
+  close() {
+    if (_db) {
+      try { _db.close(); } catch(e) {}
+      _db = null;
+    }
+  },
+
   // ── user ──────────────────────────────────────────────────────────
 
   getUser() {

@@ -286,3 +286,198 @@ body[data-density="compact"] .kb-set-row { padding: 4px 0; }
     transparent 12px 24px);
 }
 .kb-danger.is-done .kb-danger-title { color: var(--accent-cyan); }
+
+/* ---------- Hard reset nuke (safety-cover + red button) ---------- */
+.kb-nuke {
+  margin-top: var(--sp-4);
+  position: relative;
+  padding: 0;
+  background: #0a0908;
+  border: 1px solid #3a2a10;
+  overflow: hidden;
+}
+.kb-nuke-hazard {
+  height: 12px;
+  background:
+    repeating-linear-gradient(135deg,
+      #f5c518 0 14px,
+      #0a0908 14px 28px);
+  border-bottom: 1px solid #3a2a10;
+}
+.kb-nuke-head {
+  padding: 10px var(--sp-4) 8px;
+  border-bottom: 1px dashed #3a2a10;
+}
+.kb-nuke-lbl {
+  color: #f5c518;
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(245,197,24,.35);
+}
+.kb-nuke-sub {
+  display: block;
+  color: var(--fg-3);
+  font-size: 10px;
+  letter-spacing: .1em;
+  margin-top: 4px;
+}
+
+.kb-nuke-switch {
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  display: flex; flex-direction: column;
+  gap: var(--sp-3);
+  align-items: stretch;
+  position: relative;
+}
+
+/* The hinged safety cover — clickable. */
+.kb-nuke-cover {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background:
+    repeating-linear-gradient(135deg,
+      rgba(245,197,24,.92) 0 18px,
+      rgba(10,9,8,.92) 18px 36px);
+  border: 2px solid #3a2a10;
+  color: #0a0908;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow:
+    0 4px 0 rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(255,255,255,.3),
+    inset 0 -2px 0 rgba(0,0,0,.4);
+  transform-origin: top center;
+  transition: transform 380ms cubic-bezier(.16,.84,.44,1), box-shadow 200ms;
+  text-shadow: 0 1px 0 rgba(255,255,255,.3);
+}
+.kb-nuke-cover:hover {
+  box-shadow:
+    0 6px 0 rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(255,255,255,.4),
+    inset 0 -2px 0 rgba(0,0,0,.4),
+    0 0 16px rgba(245,197,24,.4);
+}
+.kb-nuke-cover:disabled { opacity: .6; cursor: default; }
+.kb-nuke-cover-grip {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0 3px, #555 4px 6px, #111 7px 100%);
+  box-shadow: inset 0 0 2px rgba(0,0,0,.6);
+  flex-shrink: 0;
+}
+.kb-nuke-cover-label { flex: 1; text-align: center; }
+
+/* Armed state — cover flips up to reveal the well underneath. */
+.kb-nuke-switch.is-armed .kb-nuke-cover {
+  transform: rotateX(-75deg) translateY(-4px);
+  box-shadow:
+    0 20px 30px rgba(0,0,0,.7),
+    inset 0 1px 0 rgba(255,255,255,.3),
+    inset 0 -2px 0 rgba(0,0,0,.4);
+}
+
+/* The well — where the button lives. Hidden until armed. */
+.kb-nuke-well {
+  display: flex; flex-direction: column; align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) 0 0;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 300ms ease 200ms, max-height 380ms ease;
+  pointer-events: none;
+}
+.kb-nuke-switch.is-armed .kb-nuke-well {
+  opacity: 1;
+  max-height: 220px;
+  pointer-events: auto;
+}
+
+/* The big red button */
+.kb-nuke-btn {
+  position: relative;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  background: transparent;
+  padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  outline: none;
+}
+.kb-nuke-btn:disabled { cursor: default; }
+.kb-nuke-btn-ring {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 35%, #3a0000 0 40%, #1a0000 50%, #000 70%),
+    conic-gradient(from 0deg, #2a0000, #3a0000, #2a0000);
+  box-shadow:
+    0 8px 16px rgba(0,0,0,.8),
+    inset 0 2px 0 rgba(255,255,255,.08),
+    inset 0 -4px 0 rgba(0,0,0,.6);
+}
+.kb-nuke-btn-core {
+  position: relative;
+  width: 82px; height: 82px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 25%, #ff5555 0 20%, #e30000 35%, #7a0000 80%, #3a0000 100%);
+  box-shadow:
+    0 6px 12px rgba(0,0,0,.7),
+    inset 0 2px 6px rgba(255,255,255,.35),
+    inset 0 -4px 8px rgba(0,0,0,.5),
+    0 0 24px rgba(230,0,0,.55);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: .18em;
+  font-weight: 900;
+  text-shadow: 0 -1px 0 rgba(0,0,0,.7), 0 0 4px rgba(255,50,50,.9);
+  display: flex; align-items: center; justify-content: center;
+  animation: nuke-pulse 1.6s ease-in-out infinite;
+  transition: transform 100ms;
+}
+@keyframes nuke-pulse {
+  0%,100% {
+    box-shadow:
+      0 6px 12px rgba(0,0,0,.7),
+      inset 0 2px 6px rgba(255,255,255,.35),
+      inset 0 -4px 8px rgba(0,0,0,.5),
+      0 0 24px rgba(230,0,0,.55);
+  }
+  50% {
+    box-shadow:
+      0 6px 12px rgba(0,0,0,.7),
+      inset 0 2px 6px rgba(255,255,255,.4),
+      inset 0 -4px 8px rgba(0,0,0,.5),
+      0 0 40px rgba(255,40,40,.9);
+  }
+}
+.kb-nuke-btn:hover:not(:disabled) .kb-nuke-btn-core { transform: scale(1.03); }
+.kb-nuke-btn:active:not(:disabled) .kb-nuke-btn-core { transform: scale(.94) translateY(2px); }
+.kb-nuke-btn.is-firing .kb-nuke-btn-core {
+  animation: nuke-fire .35s linear infinite;
+  background: radial-gradient(circle at 30% 25%, #fff 0 15%, #ff3030 40%, #7a0000 100%);
+}
+@keyframes nuke-fire {
+  0%,100% { transform: scale(.96) rotate(0deg); }
+  50%     { transform: scale(1.02) rotate(90deg); }
+}
+
+.kb-nuke-readout {
+  color: var(--fg-2);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-align: center;
+  min-height: 14px;
+}
+.kb-nuke-switch.is-armed .kb-nuke-readout { color: #f5c518; }
+.kb-nuke-btn.is-firing ~ .kb-nuke-readout,
+.kb-nuke-switch .kb-nuke-btn.is-firing + .kb-nuke-readout { color: var(--accent-magenta); }

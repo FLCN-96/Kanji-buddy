@@ -166,6 +166,109 @@ const DangerZone = () => {
   );
 };
 
+// HardResetSwitch — full browser-state nuke for when the PWA gets wedged.
+// Flip the yellow hazard-striped safety cover to arm the big red button.
+// Press → delete IndexedDB, unregister SW, clear caches + local/session
+// storage, hard-reload bypassing cache.
+const HardResetSwitch = () => {
+  const [armed, setArmed] = React.useState(false);
+  const [firing, setFiring] = React.useState(false);
+
+  const performHardReset = async () => {
+    setFiring(true);
+    try {
+      // 1. Close our open DB handle so deleteDatabase isn't blocked.
+      if (window.DB && window.DB.close) window.DB.close();
+
+      // 2. Unregister every service worker registration.
+      if ('serviceWorker' in navigator) {
+        try {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r => r.unregister().catch(() => {})));
+        } catch(e) {}
+      }
+
+      // 3. Delete every Cache Storage bucket.
+      if ('caches' in window) {
+        try {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k).catch(() => {})));
+        } catch(e) {}
+      }
+
+      // 4. Delete the IndexedDB database entirely.
+      await new Promise(resolve => {
+        try {
+          const req = indexedDB.deleteDatabase('kanji-buddy-db');
+          req.onsuccess = () => resolve();
+          req.onerror   = () => resolve();
+          req.onblocked = () => resolve();
+        } catch(e) { resolve(); }
+      });
+
+      // 5. Clear every client-side storage.
+      try { localStorage.clear();   } catch(e) {}
+      try { sessionStorage.clear(); } catch(e) {}
+
+      // 6. Navigate to Home with a cache-busting query so the browser
+      //    doesn't serve any lingering resource from memory.
+      const bust = Date.now();
+      const base = window.location.pathname.replace(/[^/]*$/, '');
+      window.location.replace(`${base}Home.html?reset=${bust}`);
+    } catch(e) {
+      setFiring(false);
+      // eslint-disable-next-line no-alert
+      alert('Hard reset failed — try closing the tab and reopening.');
+    }
+  };
+
+  return (
+    <section className="kb-nuke" data-screen-label="nuclear-reset">
+      <div className="kb-nuke-hazard" aria-hidden />
+      <div className="kb-nuke-head">
+        <span className="kb-nuke-lbl">⚠ HARD RESET · PHYSICAL OVERRIDE</span>
+        <span className="kb-nuke-sub">last-resort nuke · wipes db, cache, sw, storage · reloads</span>
+      </div>
+
+      <div className={`kb-nuke-switch${armed ? ' is-armed' : ''}`}>
+        <button
+          className="kb-nuke-cover"
+          onClick={() => setArmed(a => !a)}
+          aria-pressed={armed}
+          disabled={firing}
+        >
+          <span className="kb-nuke-cover-grip" />
+          <span className="kb-nuke-cover-label">
+            {armed ? '▾ GUARD OPEN · click to close' : '▴ FLIP SAFETY GUARD TO ARM'}
+          </span>
+          <span className="kb-nuke-cover-grip" />
+        </button>
+
+        <div className="kb-nuke-well">
+          <button
+            className={`kb-nuke-btn${firing ? ' is-firing' : ''}`}
+            onClick={performHardReset}
+            disabled={!armed || firing}
+            aria-label="hard reset — detonate"
+          >
+            <span className="kb-nuke-btn-ring" aria-hidden />
+            <span className="kb-nuke-btn-core">
+              {firing ? '⟳' : 'RESET'}
+            </span>
+          </button>
+          <div className="kb-nuke-readout">
+            {firing
+              ? '▸ DETONATING · unregistering service worker · clearing caches · deleting database...'
+              : armed
+                ? '▸ ARMED · press RESET to detonate'
+                : '▸ SAFE · cover closed'}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const Settings = () => {
   const [tweaks, setTweaks] = React.useState(readTweaks);
   const [user, setUser] = React.useState(null);
@@ -259,6 +362,7 @@ const Settings = () => {
         </div>
 
         <DangerZone />
+        <HardResetSwitch />
       </main>
     </div>
   );
