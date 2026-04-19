@@ -244,10 +244,41 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
 .kb-due-count.dim { color: var(--fg-2); }
 .kb-due-count .unit { font-size: 12px; color: var(--fg-2); font-weight: 400; margin-left: 4px; letter-spacing: .12em; text-transform: uppercase; }
 .kb-due-sub { font-size: 11px; color: var(--fg-2); margin-top: 4px; }
-.kb-due-seg { display: flex; gap: 2px; margin-top: var(--sp-3); height: 6px; }
-.kb-due-seg-s { flex: 1; background: var(--bg-2); border: 1px solid var(--line-dim); }
-.kb-due-seg-s.is-filled { background: var(--accent-cyan); border-color: var(--accent-cyan); box-shadow: 0 0 4px rgba(34,211,238,.5); }
-.kb-due-seg-s.is-amber { background: var(--accent-amber); border-color: var(--accent-amber); }
+/* Daily-queue cells: one slot per planned card today (DECK_MAX = 5).
+   `is-done` = reviewed (solid cyan); the rest carry their bucket colour
+   as a dim outline so the panel doubles as a composition preview that
+   fills left→right as the user works through the deck. */
+.kb-due-seg { display: flex; gap: 3px; margin-top: var(--sp-3); height: 8px; }
+.kb-due-seg-s {
+  flex: 1; background: var(--bg-2);
+  border: 1px solid var(--line-dim);
+  transition: background var(--dur-fast) var(--ease-snap),
+              border-color var(--dur-fast) var(--ease-snap),
+              box-shadow var(--dur-fast) var(--ease-snap);
+}
+.kb-due-seg-s.is-done {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 6px rgba(34,211,238,.55);
+}
+.kb-due-seg-s.is-new {
+  background: var(--bg-2);
+  border-color: var(--accent-cyan-dim);
+  box-shadow: inset 0 0 4px rgba(34,211,238,.18);
+}
+.kb-due-seg-s.is-due {
+  background: rgba(245,165,36,.10);
+  border-color: var(--accent-amber);
+}
+.kb-due-seg-s.is-leech {
+  background: var(--accent-magenta-bg);
+  border-color: var(--accent-magenta);
+  box-shadow: 0 0 6px rgba(255,61,255,.35);
+}
+.kb-due-seg-s.is-pending {
+  background: var(--bg-2);
+  border-color: var(--line-dim);
+}
 
 /* Streak — geometric flame: stacked chevrons */
 .kb-streak {

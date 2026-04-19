@@ -95,9 +95,33 @@ const composeSub = (deck) => {
   return parts.join(' · ');
 };
 
+// Build the queue cells: one slot per planned card today (DECK_MAX). Cells
+// already reviewed render as filled-cyan ("done"); the rest carry their
+// bucket colour (new=cyan-dim, due=amber, leech=magenta) in the order the
+// Run flow plays them. So the bar fills left→right as the user progresses.
+const buildDueCells = (deck, reviewedToday) => {
+  const cells = [];
+  const done = Math.min(DECK_MAX, reviewedToday);
+  for (let i = 0; i < done; i++) cells.push('done');
+  let remaining = DECK_MAX - done;
+  const push = (bucket, n) => {
+    const k = Math.min(n, remaining);
+    for (let i = 0; i < k; i++) cells.push(bucket);
+    remaining -= k;
+  };
+  push('new',   deck.new);
+  push('due',   deck.due);
+  push('leech', deck.leech);
+  // Defensive: if the deck composition is short of remaining slots (shouldn't
+  // happen with cascade-fill but guards against transient mid-load states),
+  // pad with neutral so the bar still renders 5 cells.
+  while (cells.length < DECK_MAX) cells.push('pending');
+  return cells;
+};
+
 // DuePanel owns one question: "what's queued today and what's in it?"
 // The midnight timer lives in <Countdown> right below — don't duplicate it here.
-const DuePanel = ({ state, deck }) => {
+const DuePanel = ({ state, deck, reviewedToday = 0 }) => {
   if (state === 'loading' || !deck) {
     return (
       <div className="kb-due" data-screen-label="due-panel">
@@ -108,7 +132,7 @@ const DuePanel = ({ state, deck }) => {
         <div className="kb-due-count dim">—<span className="unit">queued today</span></div>
         <div className="kb-due-sub">loading…</div>
         <div className="kb-due-seg">
-          {Array.from({length: 12}).map((_, i) => <div key={i} className="kb-due-seg-s" />)}
+          {Array.from({length: DECK_MAX}).map((_, i) => <div key={i} className="kb-due-seg-s" />)}
         </div>
       </div>
     );
@@ -117,22 +141,26 @@ const DuePanel = ({ state, deck }) => {
   const total = deck.total;
   const isClear = total === 0;
   const cls = isClear ? 'dim' : 'cyan';
-  const filledSegs = Math.round((total / DECK_MAX) * 12);
   const sub = isClear ? '✓ all caught up' : composeSub(deck);
+  // When the daily is cleared, show all 5 cells filled — the satisfying
+  // "all done" look. Otherwise, render the in-progress mix.
+  const cells = isClear
+    ? Array(DECK_MAX).fill('done')
+    : buildDueCells(deck, reviewedToday);
 
   return (
     <div className="kb-due" data-screen-label="due-panel">
       <div className="kb-due-head">
         <span className="kb-due-lbl">▸ DAILY QUEUE</span>
-        <span className="kb-due-lbl">{isClear ? 'cleared' : 'ready'}</span>
+        <span className="kb-due-lbl">{isClear ? 'cleared' : `${Math.min(DECK_MAX, reviewedToday)} / ${DECK_MAX}`}</span>
       </div>
       <div className={`kb-due-count ${cls}`}>
         {total}<span className="unit">queued today</span>
       </div>
       <div className="kb-due-sub">{sub}</div>
       <div className="kb-due-seg">
-        {Array.from({length: 12}).map((_, i) => (
-          <div key={i} className={`kb-due-seg-s${i < filledSegs ? ' is-filled' : ''}`} />
+        {cells.map((bucket, i) => (
+          <div key={i} className={`kb-due-seg-s is-${bucket}`} />
         ))}
       </div>
     </div>
