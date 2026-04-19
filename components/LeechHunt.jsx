@@ -140,6 +140,7 @@ const LeechHuntApp = ({ cards }) => {
   });
   const [beatPb, setBeatPb] = React.useState(false);
   const lockRef = React.useRef(false);
+  const finishedRef = React.useRef(false);
 
   React.useEffect(() => {
     document.body.dataset.accent = tweaks.accent;
@@ -181,6 +182,8 @@ const LeechHuntApp = ({ cards }) => {
   };
 
   const finish = (purged, res) => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
     if (purged > pb) {
       setBeatPb(true);
       try { localStorage.setItem(PB_KEY_LH, String(purged)); } catch(e) {}
@@ -211,70 +214,86 @@ const LeechHuntApp = ({ cards }) => {
   };
 
   const onStageAnswer = (tileIdx) => {
-    if (!stage || lockRef.current) return;
+    if (!stage || lockRef.current || finishedRef.current) return;
     lockRef.current = true;
     const ok = tileIdx === stage.correctIdx;
     setFeedback({ picked: tileIdx, correct: stage.correctIdx, ok });
 
+    // Snapshot the active leech. These fields aren't mutated between now
+    // and the end-of-turn dispatch, so the closure reference is safe.
+    const leech = roster[activeIdx];
+    const idxAtAnswer = activeIdx;
+    const newMisses = ok ? misses : misses + 1;
+    if (!ok) setMisses(newMisses);
+    const missCapHit = !ok && newMisses >= tweaks.missCap && tweaks.missCap !== 99;
+    const lastStage = stageIdx >= 2;
+
+    const nextFirstTry = leech.firstTry && ok;
+    const nextCleansed = leech.cleansed + (ok ? 1 : 0);
+
+    // Two reveal-pause durations: short when simply advancing a stage,
+    // longer when we're about to resolve the leech or end the run.
+    const resolving = lastStage || missCapHit;
+    const revealMs = resolving ? 1200 : (ok ? 480 : 780);
+
     setTimeout(() => {
-      const leech = roster[activeIdx];
-      const newMisses = ok ? misses : misses + 1;
-      if (!ok) setMisses(newMisses);
+      if (resolving) {
+        // Resolve the leech now. If we got here via miss-cap mid-run the
+        // leech exits as 'weakened'; otherwise normal purge/weakened rules.
+        const finalFirstTry = lastStage && nextFirstTry;
+        const finalStatus = (lastStage && finalFirstTry) ? 'purged' : 'weakened';
+        setPurgeFx({ id: leech.id, card: leech.card, status: finalStatus, t: Date.now() });
 
-      const nextFirstTry = leech.firstTry && ok;
-      const nextCleansed = leech.cleansed + (ok ? 1 : 0);
+        // Use the updater form and derive end state from the *committed*
+        // snapshot — never from the stale outer roster closure.
+        setRoster(prev => {
+          const next = prev.map((l, i) => i === idxAtAnswer
+            ? { ...l, status: finalStatus, firstTry: finalFirstTry, cleansed: nextCleansed }
+            : l
+          );
+          const remaining = next.filter(l => l.status === 'pending').length;
+          const purgedCount = next.filter(l => l.status === 'purged').length;
 
-      if (stageIdx < 2) {
-        // proceed to next stage
-        const nextStageIdx = stageIdx + 1;
-        setRoster(r => r.map((l,i) => i === activeIdx ? { ...l, firstTry: nextFirstTry, cleansed: nextCleansed } : l));
-        setStageIdx(nextStageIdx);
-        setStage(dealStage(leech, nextStageIdx, cards));
+          // Schedule the UI reset + end dispatch. Lock stays held until
+          // dispatch runs, which prevents any second tap from entering
+          // onStageAnswer and racing finish().
+          setTimeout(() => {
+            setPurgeFx(null);
+            setActiveIdx(-1);
+            setStageIdx(0);
+            setStage(null);
+            setFeedback(null);
+            if (missCapHit) {
+              finish(purgedCount, 'fail');
+            } else if (remaining === 0) {
+              finish(purgedCount, 'complete');
+            } else {
+              setPhase('dossier');
+              lockRef.current = false;
+            }
+          }, 400);
+          return next;
+        });
+      } else {
+        // Normal stage advance.
+        setRoster(r => r.map((l, i) => i === idxAtAnswer
+          ? { ...l, firstTry: nextFirstTry, cleansed: nextCleansed }
+          : l
+        ));
+        setStageIdx(stageIdx + 1);
+        setStage(dealStage(leech, stageIdx + 1, cards));
         setFeedback(null);
         lockRef.current = false;
-
-        // check miss cap after updating misses
-        if (!ok && newMisses >= tweaks.missCap && tweaks.missCap !== 99) {
-          // give the player a beat, then finish
-          setTimeout(() => {
-            const purgedCount = roster.filter(l => l.status === 'purged').length;
-            finish(purgedCount, 'fail');
-          }, 400);
-        }
-      } else {
-        // resolve leech
-        const finalFirstTry = leech.firstTry && ok;
-        const finalStatus = finalFirstTry ? 'purged' : 'weakened';
-        setPurgeFx({ id: leech.id, card: leech.card, status: finalStatus, t: Date.now() });
-        setRoster(r => r.map((l,i) => i === activeIdx ? { ...l, status: finalStatus, firstTry: finalFirstTry, cleansed: nextCleansed } : l));
-        setTimeout(() => {
-          setPurgeFx(null);
-          setActiveIdx(-1);
-          setStageIdx(0);
-          setStage(null);
-          setFeedback(null);
-          lockRef.current = false;
-          // check end conditions
-          const nextRoster = roster.map((l,i) => i === activeIdx ? { ...l, status: finalStatus } : l);
-          const remaining = nextRoster.filter(l => l.status === 'pending').length;
-          if (!ok && newMisses >= tweaks.missCap && tweaks.missCap !== 99) {
-            const purgedCount = nextRoster.filter(l => l.status === 'purged').length;
-            finish(purgedCount, 'fail');
-          } else if (remaining === 0) {
-            const purgedCount = nextRoster.filter(l => l.status === 'purged').length;
-            finish(purgedCount, 'complete');
-          } else {
-            setPhase('dossier');
-          }
-        }, 1200);
       }
-    }, ok ? 480 : 780);
+    }, revealMs);
   };
 
   const start = () => setPhase('ready');
   const restart = () => {
     setRoster([]); setActiveIdx(-1); setStageIdx(0); setStage(null);
     setFeedback(null); setMisses(0); setResult(null); setBeatPb(false); setPurgeFx(null);
+    finishedRef.current = false;
+    lockRef.current = false;
     setPhase('ready');
   };
   const quit = () => {
