@@ -14,29 +14,37 @@ const CHALLENGES = [
 const HOT_MULTIPLIER = 3;
 
 const RunPrimary = ({ state, deck, onRun }) => {
-  const loading  = state === 'loading';
-  const clear    = state === 'clear';
-  const disabled = clear || loading;
-  const count    = deck?.total ?? 0;
-  const mins     = count > 0 ? Math.max(1, Math.ceil(count * 9 / 60)) : 0;
+  const loading      = state === 'loading';
+  const clear        = state === 'clear';
+  const overachiever = clear;
+  const disabled     = loading;
+  const count        = deck?.total ?? 0;
+  const mins         = count > 0 ? Math.max(1, Math.ceil(count * 9 / 60)) : 0;
 
-  const topLabel = loading ? '▸ syncing deck…'
-                 : clear   ? '▸ queue clear'
+  const topLabel = loading      ? '▸ syncing deck…'
+                 : overachiever ? '▸ past the limiter'
                  : '▸ resume daily run';
-  const label    = clear ? 'ALL CLEAR' : 'RUN';
-  const subCopy  = loading ? 'loading…'
-                 : clear   ? `next drop in ${window.formatCountdown(window.secondsUntilMidnight())} · optional practice only`
+  const label    = loading      ? 'RUN'
+                 : overachiever ? 'OVERCLOCK'
+                 : 'RUN';
+  const subCopy  = loading      ? 'loading…'
+                 : overachiever ? 'bonus cycle · cooling compromised'
                  : `${count} cards · ~${mins}m · srs priority`;
+
+  const cls = `kb-run-primary`
+    + (disabled     ? ' is-disabled'     : '')
+    + (overachiever ? ' is-overachiever' : '');
 
   return (
     <button
-      className={`kb-run-primary${disabled ? ' is-disabled' : ''}`}
+      className={cls}
       onClick={disabled ? undefined : onRun}
-      data-screen-label="run-primary"
+      data-screen-label={overachiever ? 'run-primary-overclock' : 'run-primary'}
+      data-overachiever={overachiever ? 'true' : undefined}
     >
       <div>
         <div className="kb-rp-top">{topLabel}</div>
-        <div className="kb-rp-label">{label}</div>
+        <div className="kb-rp-label" data-text={label}>{label}</div>
         <div className="kb-rp-sub">{subCopy}</div>
       </div>
       <div className="kb-rp-arrow">▸</div>
