@@ -12,9 +12,21 @@ const CHALLENGES = [
 
 const HOT_MULTIPLIER = 3;
 
-const RunPrimary = ({ state, onRun }) => {
-  const disabled = state === 'clear';
-  const count = state === 'behind' ? 180 : 42;
+const RunPrimary = ({ state, deck, onRun }) => {
+  const loading  = state === 'loading';
+  const clear    = state === 'clear';
+  const disabled = clear || loading;
+  const count    = deck?.total ?? 0;
+  const mins     = count > 0 ? Math.max(1, Math.ceil(count * 9 / 60)) : 0;
+
+  const topLabel = loading ? '▸ syncing deck…'
+                 : clear   ? '▸ queue clear'
+                 : '▸ resume daily run';
+  const label    = clear ? 'ALL CLEAR' : 'RUN';
+  const subCopy  = loading ? 'loading…'
+                 : clear   ? `next drop in ${window.formatCountdown(window.secondsUntilMidnight())} · optional practice only`
+                 : `${count} cards · ~${mins}m · srs priority`;
+
   return (
     <button
       className={`kb-run-primary${disabled ? ' is-disabled' : ''}`}
@@ -22,13 +34,9 @@ const RunPrimary = ({ state, onRun }) => {
       data-screen-label="run-primary"
     >
       <div>
-        <div className="kb-rp-top">{disabled ? '▸ queue clear' : state === 'behind' ? '▸ resume · srs debt' : '▸ resume daily run'}</div>
-        <div className="kb-rp-label">{disabled ? 'ALL CLEAR' : 'RUN'}</div>
-        <div className="kb-rp-sub">
-          {disabled
-            ? 'next drop in 7h · optional practice only'
-            : `${count} cards · ~${Math.ceil(count * 9 / 60)}m · srs priority`}
-        </div>
+        <div className="kb-rp-top">{topLabel}</div>
+        <div className="kb-rp-label">{label}</div>
+        <div className="kb-rp-sub">{subCopy}</div>
       </div>
       <div className="kb-rp-arrow">▸</div>
     </button>
