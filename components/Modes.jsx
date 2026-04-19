@@ -28,7 +28,7 @@ const RunPrimary = ({ state, deck, onRun }) => {
                  : overachiever ? 'OVERCLOCK'
                  : 'RUN';
   const subCopy  = loading      ? 'loading…'
-                 : overachiever ? 'daily quota cleared · ×1.5 xp bonus cycle'
+                 : overachiever ? 'daily quota cleared · extra practice cycle'
                  : `${count} ${count === 1 ? 'card' : 'cards'} · ~${mins}m · srs priority`;
 
   const cls = `kb-run-primary`
