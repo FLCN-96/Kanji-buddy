@@ -62,13 +62,34 @@ body[data-scanlines="on"]::after {
   font-family: var(--font-mono); font-weight: 700; font-size: 14px;
   color: var(--accent-cyan); letter-spacing: -0.01em;
   display: inline-flex; align-items: baseline;
+  white-space: nowrap;
+  min-height: 14px;
 }
 .kb-wm::after {
   content: ''; display: inline-block; width: 7px; height: 12px;
   background: var(--accent-cyan); margin-left: 4px;
   animation: blink 1s steps(2) infinite;
 }
+/* During a greeting the caret tracks the cursor at a typewriter cadence —
+   kill the idle blink so the eye follows the character being typed. */
+.kb-wm.is-typing::after {
+  animation: blink 440ms steps(2) infinite;
+  box-shadow: 0 0 8px var(--accent-cyan);
+}
 @keyframes blink { 50% { opacity: 0; } }
+
+/* Hand the topbar over to the greeter while it's typing — the right-side
+   LIVE / name / clock / cog cluster fades out so long phrases don't get
+   truncated against it. */
+.kb-top.is-greeting .kb-top-right {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(8px);
+}
+.kb-top-right {
+  transition: opacity 220ms var(--ease-snap),
+              transform 220ms var(--ease-snap);
+}
 .kb-top-right { display: flex; align-items: center; gap: var(--sp-3); font-size: 10px; color: var(--fg-2); letter-spacing: .12em; }
 .kb-top-cog {
   display: inline-flex; align-items: center; justify-content: center;

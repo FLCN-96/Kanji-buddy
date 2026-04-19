@@ -16,6 +16,15 @@ const secondsUntilMidnightLocal = () => {
   return Math.max(0, Math.floor((mid - now) / 1000));
 };
 
+// Mirrors RunCard.jsx VERDICTS for the pre-run legend. `int` already lives
+// on the runtime button; `desc` is start-screen-only explainer copy.
+const VERDICT_KEYS = [
+  { id: 'miss', key: '1', label: 'MISS', desc: "didn't know · SRS resets",    int: 'again <1m', cls: 'miss' },
+  { id: 'hard', key: '2', label: 'HARD', desc: 'correct, rough · ease drops', int: 'next 6m',   cls: 'hard' },
+  { id: 'ok',   key: '3', label: 'OK',   desc: 'solid recall',                int: 'next 1d',   cls: 'ok'   },
+  { id: 'easy', key: '4', label: 'EASY', desc: 'instant · ease up',           int: 'next 4d',   cls: 'easy' },
+];
+
 // composition: { new, due, leech, total } from the weighted deck selector.
 const PreRun = ({ composition, onStart }) => {
   const c = composition || { new: 0, due: 0, leech: 0, total: 0 };
@@ -74,6 +83,25 @@ const PreRun = ({ composition, onStart }) => {
           <span><span className="dot new" /><b>new</b>{c.new}</span>
           <span><span className="dot rev" /><b>review</b>{c.due}</span>
           <span><span className="dot lch" /><b>leech</b>{c.leech}</span>
+        </div>
+      </div>
+
+      <div className="run-pre-verdicts">
+        <div className="run-pre-verdicts-head">
+          <span>▸ VERDICTS</span>
+          <span>tap after reveal · keys 1–4</span>
+        </div>
+        <div className="run-pre-verdicts-grid">
+          {VERDICT_KEYS.map(v => (
+            <div key={v.id} className={`run-pre-vk ${v.cls}`}>
+              <div className="run-pre-vk-head">
+                <span className="k">{v.key}</span>
+                <span className="l">{v.label}</span>
+              </div>
+              <div className="run-pre-vk-desc">{v.desc}</div>
+              <div className="run-pre-vk-int">{v.int}</div>
+            </div>
+          ))}
         </div>
       </div>
 
