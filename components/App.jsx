@@ -135,7 +135,13 @@ const App = ({ cards }) => {
       })
       .catch(() => { setUser(null); setUserLoaded(true); });
     window.DB.getDueCards()
-      .then(cs => setDueCount(cs.length))
+      .then(cs => {
+        if (cs.length > 0) { setDueCount(cs.length); return; }
+        // 0 due could mean "all reviewed" or "no cards yet" — distinguish them
+        return window.DB.getAllCardStates().then(all => {
+          setDueCount(all.length === 0 ? null : 0);
+        });
+      })
       .catch(() => {});
   }, []);
 
