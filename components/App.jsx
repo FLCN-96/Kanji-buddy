@@ -9,6 +9,102 @@ const TWEAK_DEFAULTS = {
   hero: 'on',
 };
 
+// ───── Watermark typewriter greeting ─────────────────────────────────
+// Plays once per tab session (sessionStorage gate). Greeting is picked
+// based on streak state — praise on active streaks, jab when the chain
+// broke, a dedicated line for brand-new operators, otherwise a silly
+// generic. Keep phrases < ~40 chars so they fit the topbar on narrow
+// viewports without eating the live clock.
+
+const WM_TITLE = 'kanji-buddy';
+
+const pickGreeting = (name, streak, lastSessionIso) => {
+  const n = (name || 'operator').toLowerCase();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const yesterday = new Date(today.getTime() - 86400000);
+  const last = lastSessionIso ? new Date(lastSessionIso) : null;
+  if (last) last.setHours(0,0,0,0);
+
+  const onStreak    = (streak || 0) >= 2 && last && last >= yesterday;
+  const freshBoot   = !last;
+  const brokeChain  = !freshBoot && (!last || last < yesterday);
+
+  const praise = [
+    `welcome back, ${n}. streak live.`,
+    `${n} online. ${streak}d run intact.`,
+    `daily driver ${n} reporting in.`,
+    `${n}. ${streak} days unbroken.`,
+    `${n}. kernel primed. stack ${streak}.`,
+  ];
+  const harsh = [
+    `${n}. streak zeroed. again.`,
+    `the kanji have not forgotten, ${n}.`,
+    `${n}? barely recognized you.`,
+    `decay detected on operator ${n}.`,
+    `oh. you came back, ${n}.`,
+    `${n}. chain broken. rebuild.`,
+  ];
+  const firstBoot = [
+    `${n} online. first cycle.`,
+    `handshake accepted, ${n}.`,
+    `new operator ${n}. welcome to the grid.`,
+    `${n}. boot sequence complete.`,
+  ];
+  const silly = [
+    `booting ${n}.exe ...`,
+    `the kanji missed you, ${n}.`,
+    `${n}. caffeine: assumed adequate.`,
+    `stand by, ${n}. samurai mode.`,
+    `do not feed the leeches, ${n}.`,
+    `${n}. forecast: 100% kanji.`,
+    `memory palace unlocked, ${n}.`,
+    `${n}. the neon never sleeps.`,
+    `${n}. hydrate before kanji.`,
+    `${n}. brain gym is open.`,
+    `${n}. 忘れないで。`,
+  ];
+
+  const pool = [...silly];
+  if (freshBoot)  pool.push(...firstBoot, ...firstBoot, ...firstBoot); // weight heavily on first boot
+  if (onStreak)   pool.push(...praise, ...praise);
+  if (brokeChain) pool.push(...harsh, ...harsh);
+  return pool[Math.floor(Math.random() * pool.length)];
+};
+
+const useGreeting = (user) => {
+  const [text, setText]       = React.useState(WM_TITLE);
+  const [typing, setTyping]   = React.useState(false);
+  const fired = React.useRef(false);
+
+  React.useEffect(() => {
+    if (fired.current) return;
+    if (!user || !user.display_name) return;
+    try { if (sessionStorage.getItem('kb-greeted') === '1') return; } catch(e) {}
+    fired.current = true;
+    try { sessionStorage.setItem('kb-greeted', '1'); } catch(e) {}
+
+    const greet = pickGreeting(user.display_name, user.current_streak || 0, user.last_session_date);
+    const TYPE = 48, BACK = 26, HOLD = 2100, GAP = 220, START = 300;
+
+    const timers = [];
+    const at = (ms, fn) => timers.push(setTimeout(fn, ms));
+
+    at(START, () => { setText(''); setTyping(true); });
+
+    let t = START + TYPE;
+    for (let i = 1; i <= greet.length; i++) { const slice = greet.slice(0, i); at(t, () => setText(slice)); t += TYPE; }
+    t += HOLD;
+    for (let i = greet.length - 1; i >= 0; i--) { const slice = greet.slice(0, i); at(t, () => setText(slice)); t += BACK; }
+    t += GAP;
+    for (let i = 1; i <= WM_TITLE.length; i++) { const slice = WM_TITLE.slice(0, i); at(t, () => setText(slice)); t += TYPE; }
+    at(t + 150, () => setTyping(false));
+
+    return () => timers.forEach(clearTimeout);
+  }, [user]);
+
+  return [text, typing];
+};
+
 const readTweaks = () => {
   try {
     const saved = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
@@ -77,17 +173,18 @@ const FirstRunModal = ({ onDone }) => {
   );
 };
 
-const Topbar = ({ displayName }) => {
+const Topbar = ({ displayName, user }) => {
   const [time, setTime] = React.useState(() => new Date());
+  const [wm, typing]    = useGreeting(user);
   React.useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 10000);
     return () => clearInterval(t);
   }, []);
   const hhmm = time.toTimeString().slice(0,5).replace(':','');
   return (
-    <header className="kb-top">
-      <div className="kb-wm">kanji-buddy</div>
-      <div className="kb-top-right">
+    <header className={`kb-top${typing ? ' is-greeting' : ''}`}>
+      <div className={`kb-wm${typing ? ' is-typing' : ''}`}>{wm}</div>
+      <div className="kb-top-right" aria-hidden={typing ? 'true' : undefined}>
         <span className="kb-hb">LIVE</span>
         <span style={{color:'var(--fg-2)'}}>{displayName || '—'}</span>
         <span>{hhmm}</span>
@@ -242,7 +339,7 @@ const App = ({ cards }) => {
         />
       )}
       <div className={variantClass}>
-        <Topbar displayName={user?.display_name} />
+        <Topbar displayName={user?.display_name} user={user} />
 
         <main className="kb-main" data-screen-label={`home-${tweaks.variant}`}>
           {tweaks.hero === 'on' && <Hero kanji={todayKanji} />}
