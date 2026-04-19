@@ -245,27 +245,12 @@ const Topbar = ({ displayName, user }) => {
   );
 };
 
-const StatusBar = ({ totalCards, dueCount }) => {
-  const due = dueCount ?? 0;
-  const dueCls = due === 0 ? 'kb-dim' : due > 100 ? 'kb-amb' : 'kb-cyan';
-  return (
-    <footer className="kb-statusbar">
-      <div className="kb-statusbar-l">
-        <span>CARDS · <b>{totalCards ? totalCards.toLocaleString() : '—'}</b></span>
-        <span className={dueCls}>DUE · <b>{due}</b></span>
-      </div>
-      <span>v0.3.1</span>
-    </footer>
-  );
-};
-
 const App = ({ cards }) => {
   const [tweaks] = React.useState(readTweaks);
   const [user, setUser] = React.useState(null);
   const [userLoaded, setUserLoaded] = React.useState(false);
   const [deck, setDeck] = React.useState(null);       // {new, due, leech, total} — today's Run preview
   const [reviewedToday, setReviewedToday] = React.useState(0); // intraday progress for the queue bar
-  const [dueCount, setDueCount] = React.useState(null); // raw SRS backlog for StatusBar
   const [cardStates, setCardStates] = React.useState(null); // full card_states for ProgressPanel tier math
   const [promotion, setPromotion] = React.useState(null);
 
@@ -315,13 +300,6 @@ const App = ({ cards }) => {
           leech: picks.filter(c => c._bucket === 'leech').length,
           total: picks.length,
         });
-
-        const nowIso = new Date().toISOString();
-        const rawDue = states.filter(s =>
-          s.due_date && s.due_date <= nowIso &&
-          (!s.last_reviewed || new Date(s.last_reviewed).toDateString() !== todayStr)
-        ).length;
-        setDueCount(rawDue);
       })
       .catch(() => {});
   }, [cards]);
@@ -420,8 +398,6 @@ const App = ({ cards }) => {
 
           <div style={{height: 8}} />
         </main>
-
-        <StatusBar totalCards={cards?.length} dueCount={dueCount} />
       </div>
     </>
   );
