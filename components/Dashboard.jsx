@@ -186,7 +186,7 @@ const JLPT_TIER_META = {
 
 function computeTierProgress(cards, states) {
   if (!cards || !cards.length) {
-    return { tiers: [], total: 0, done: 0, nextTier: null };
+    return { tiers: [], total: 0, done: 0, nextTier: null, extras: { total: 0, done: 0 } };
   }
   // "Done" = seen at least once in Run (reviews ≥ 1). Survives SM-2
   // lapse resets (which zero interval_days) — a card you've engaged
@@ -196,11 +196,21 @@ function computeTierProgress(cards, states) {
     if ((s.reviews || 0) >= 1) doneIdx.add(s.idx);
   }
   const counts = { 5:{t:0,d:0}, 4:{t:0,d:0}, 3:{t:0,d:0}, 2:{t:0,d:0}, 1:{t:0,d:0} };
+  // Jōyō kanji that aren't in any JLPT tier (cards.json marks them jlpt=0).
+  // 163 such cards in the current deck — they're real, you study them via
+  // Run like any other card, so they have to count toward the overall
+  // total/done. Without this they were silently dropped, capping the
+  // denominator at 1973 instead of the deck's actual 2136.
+  const extras = { total: 0, done: 0 };
   for (const c of cards) {
     const j = c.jlpt;
-    if (!counts[j]) continue;
-    counts[j].t += 1;
-    if (doneIdx.has(c.idx)) counts[j].d += 1;
+    if (counts[j]) {
+      counts[j].t += 1;
+      if (doneIdx.has(c.idx)) counts[j].d += 1;
+    } else {
+      extras.total += 1;
+      if (doneIdx.has(c.idx)) extras.done += 1;
+    }
   }
   const tiers = [5,4,3,2,1].map(j => ({
     jlpt:  j,
@@ -209,11 +219,13 @@ function computeTierProgress(cards, states) {
     total: counts[j].t,
     done:  counts[j].d,
   }));
-  const total = tiers.reduce((a,t)=>a+t.total,0);
-  const done  = tiers.reduce((a,t)=>a+t.done,0);
-  // Next tier = easiest not-yet-complete tier (N5 first, N1 last).
+  const total = tiers.reduce((a,t)=>a+t.total,0) + extras.total;
+  const done  = tiers.reduce((a,t)=>a+t.done,0)  + extras.done;
+  // Next tier = easiest not-yet-complete JLPT tier (N5 first, N1 last).
+  // Extras aren't a "next tier" — they're a post-JLPT flat group, surfaced
+  // separately by the panel when JLPT is fully cleared.
   const nextTier = tiers.find(t => t.total > 0 && t.done < t.total) || null;
-  return { tiers, total, done, nextTier };
+  return { tiers, total, done, nextTier, extras };
 }
 
 const ProgressRing = ({ pct, color }) => {
@@ -239,7 +251,7 @@ const ProgressPanel = ({ cards, states }) => {
     () => computeTierProgress(cards, states),
     [cards, states]
   );
-  const { total, done, nextTier } = progress;
+  const { total, done, nextTier, extras } = progress;
 
   const [frame, setFrame] = React.useState(0);
   const [paused, setPaused] = React.useState(false);
@@ -271,6 +283,13 @@ const ProgressPanel = ({ cards, states }) => {
     : 100;
   const tierColor = nextTier ? nextTier.color : 'cyan';
 
+  // Post-JLPT phase: all 5 JLPT tiers cleared but the 163 jōyō extras
+  // still have cards left. Surface them as their own headline so the
+  // panel doesn't false-flag MAX (and so the user knows there's more
+  // to chew on after N1).
+  const extrasRemaining = Math.max(0, extras.total - extras.done);
+  const inExtrasPhase = !nextTier && extrasRemaining > 0;
+
   let head, headUnit, sub, ringPct;
   if (!nextTier && total === 0) {
     // Cards haven't loaded yet (or DB is empty) — neutral placeholder
@@ -279,10 +298,15 @@ const ProgressPanel = ({ cards, states }) => {
     headUnit = null;
     sub = 'loading ladder…';
     ringPct = 0;
+  } else if (inExtrasPhase) {
+    head = `${extrasRemaining}`;
+    headUnit = 'extras left';
+    sub = `JLPT cleared · ${extras.done.toLocaleString()} / ${extras.total.toLocaleString()} jōyō extras done`;
+    ringPct = overallPct;
   } else if (!nextTier) {
     head = 'MAX';
     headUnit = null;
-    sub = 'ladder complete · all tiers cleared';
+    sub = `all ${total.toLocaleString()} jōyō learned · ladder cleared`;
     ringPct = 100;
   } else if (frame === 0) {
     head = nextTier.label;
