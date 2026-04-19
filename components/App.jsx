@@ -220,7 +220,7 @@ const App = () => {
   };
 
   const onPick = (id) => {
-    const routes = { time: 'TimeAttack.html' };
+    const routes = { time: 'TimeAttack.html', survival: 'Survival.html', streak: 'StreakGuard.html', leech: 'LeechHunt.html', match: 'Match.html' };
     const target = CHALLENGES.find(c=>c.id===id)?.name;
     const nodes = document.querySelectorAll('.kb-chal');
     nodes.forEach(n => {
