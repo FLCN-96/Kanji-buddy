@@ -1,56 +1,4 @@
-// Hero + Boot + Stats components
-
-const BOOT_LINES = [
-  { t: '› mounting OPFS................', v: 'ok', c: 'ok' },
-  { t: '› parsing stack (3 src)........', v: '4,821 cards', c: 'ok' },
-  { t: '› srs schedule scan............', v: 'ok', c: 'ok' },
-  { t: '› due queue.....................', v: null, c: 'dyn' },
-  { t: '› ready.', v: null, c: null },
-];
-
-const BootBanner = ({ state, collapsed, onToggle }) => {
-  const [step, setStep] = React.useState(0);
-  React.useEffect(() => {
-    if (collapsed) return;
-    if (step >= BOOT_LINES.length) return;
-    const t = setTimeout(() => setStep(s => s + 1), step === 0 ? 120 : 140 + Math.random() * 80);
-    return () => clearTimeout(t);
-  }, [step, collapsed]);
-
-  const dueDisplay = () => {
-    if (state === 'clear') return { text: 'queue clear', c: 'ok' };
-    if (state === 'behind') return { text: '180 overdue', c: 'amber' };
-    return { text: '42 due', c: 'ok' };
-  };
-  const d = dueDisplay();
-
-  const visibleLines = BOOT_LINES.slice(0, step + 1);
-
-  return (
-    <div className={`kb-boot${collapsed ? ' is-collapsed' : ''}`} onClick={collapsed ? onToggle : undefined}>
-      <div className="kb-boot-head">
-        <span>▸ BOOT · 0.3.1</span>
-        <span className="kb-boot-head-r">{collapsed ? '▾ expand' : (step >= BOOT_LINES.length ? 'ready · tap to collapse' : 'mounting...')}</span>
-      </div>
-      {visibleLines.map((l, i) => {
-        const isLast = i === step && step < BOOT_LINES.length - 1;
-        const value = l.c === 'dyn' ? d.text : l.v;
-        const valueClass = l.c === 'dyn' ? d.c : l.c;
-        return (
-          <div key={i} className={`kb-boot-line${isLast ? ' is-typing' : ''}`}>
-            {l.t}
-            {value && <span className={valueClass}>{value}</span>}
-          </div>
-        );
-      })}
-      {!collapsed && step >= BOOT_LINES.length && (
-        <div className="kb-boot-line" onClick={onToggle} style={{cursor:'pointer', color:'var(--fg-2)', marginTop:4}}>
-          › _<span style={{opacity:.5}}> tap to collapse</span>
-        </div>
-      )}
-    </div>
-  );
-};
+// Hero + Stats components
 
 const Hero = ({ kanji }) => {
   // `kanji` comes from cards.json: { k, mainOn, mainKun, mean, jlpt, strokes, ... }
@@ -175,9 +123,12 @@ const DuePanel = ({ state, dueCount }) => {
   );
 };
 
-const StreakPanel = ({ state, streak, bestStreak }) => {
-  const days = streak !== undefined ? streak : (state === 'behind' ? 0 : 12);
-  const best = bestStreak !== undefined ? bestStreak : 28;
+const StreakPanel = ({ streak, bestStreak }) => {
+  const days = streak ?? 0;
+  const best = bestStreak ?? 0;
+  const subCopy = days === 0
+    ? (best === 0 ? 'no streak yet · start today' : `broken · best ${best}d`)
+    : (days >= best ? `new best · ${days}d` : `best · ${best}d`);
   return (
     <div className="kb-streak" data-screen-label="streak-panel">
       <div className="kb-streak-flame">
@@ -187,7 +138,7 @@ const StreakPanel = ({ state, streak, bestStreak }) => {
       <div className="kb-streak-val">
         {days}<span className="unit">d</span>
       </div>
-      <div className="kb-streak-sub">{days === 0 ? 'broken · restart today' : `best · ${best}d`}</div>
+      <div className="kb-streak-sub">{subCopy}</div>
     </div>
   );
 };
@@ -237,4 +188,4 @@ const XpBar = ({ xp = 0 }) => {
   );
 };
 
-Object.assign(window, { BootBanner, Hero, Countdown, DuePanel, StreakPanel, XpBar });
+Object.assign(window, { Hero, Countdown, DuePanel, StreakPanel, XpBar, RANK_TABLE, rankFor });

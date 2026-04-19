@@ -245,18 +245,55 @@ body[data-scanlines="on"]::after {
   letter-spacing: .02em;
 }
 
-.run-reveal {
-  margin-top: var(--sp-4);
-  background: transparent;
-  border: 1px dashed var(--line-bright);
-  color: var(--fg-1);
-  padding: var(--sp-2) var(--sp-4);
-  font-family: var(--font-mono);
-  font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+/* Whole card is the tap target when unrevealed */
+.run-card.is-tap {
   cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-snap);
+  -webkit-tap-highlight-color: transparent;
 }
-.run-reveal:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); box-shadow: 0 0 12px rgba(34,211,238,.3); }
+.run-card.is-tap:hover { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(34,211,238,.18); }
+.run-card.is-tap:focus-visible { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 16px rgba(34,211,238,.35); }
+.run-card.is-tap:active { transform: scale(.995); }
+
+.run-reveal-hint {
+  margin-top: var(--sp-3);
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px dashed var(--line-bright);
+  pointer-events: none;
+  opacity: .85;
+  animation: reveal-pulse 2.2s ease-in-out infinite;
+}
+@keyframes reveal-pulse {
+  0%, 100% { opacity: .6; }
+  50%      { opacity: 1; color: var(--accent-cyan); border-color: var(--accent-cyan); }
+}
+
+/* Intro card — learn phase, everything visible, big "got it" cta */
+.run-intro { min-height: 420px; }
+.run-intro-strip { color: var(--accent-magenta); border-bottom-color: var(--accent-magenta); }
+.run-intro-strip b { color: var(--accent-magenta); }
+.run-intro-next {
+  margin: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--sp-3) var(--sp-4);
+  border: 0;
+  border-top: 1px solid var(--accent-magenta);
+  background: var(--accent-magenta);
+  color: var(--bg-0);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter var(--dur-fast) var(--ease-snap);
+}
+.run-intro-next:hover { filter: brightness(1.1); box-shadow: 0 0 20px rgba(233,111,207,.5); }
+.run-intro-next .arrow { font-size: 16px; }
 
 /* Hit / miss flash */
 .run-flash { animation: none; }

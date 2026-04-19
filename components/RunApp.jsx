@@ -1,4 +1,4 @@
-// Run orchestrator
+// Daily Run orchestrator: weighted 5-card deck, learn → quiz phase split.
 
 const TWEAK_DEFAULTS = {
   variant: 'hud',
@@ -7,7 +7,10 @@ const TWEAK_DEFAULTS = {
   density: 'comfortable',
 };
 
-const RUN_SIZE = 12;
+const shuffle = (arr) => arr
+  .map(v => ({ v, k: Math.random() }))
+  .sort((a, b) => a.k - b.k)
+  .map(x => x.v);
 
 const RunTopbar = ({ phase, timer, onQuit, idx, total }) => (
   <header className="run-top">
@@ -16,7 +19,10 @@ const RunTopbar = ({ phase, timer, onQuit, idx, total }) => (
       <span className="run-lbl">▸ RUN</span>
     </div>
     <div className="run-timer">
-      {phase === 'run' ? `${String(idx+1).padStart(2,'0')} / ${String(total).padStart(2,'0')} · ${timer}` : phase === 'pre' ? 'PRE-FLIGHT' : 'COMPLETE'}
+      {phase === 'quiz'  ? `${String(idx+1).padStart(2,'0')} / ${String(total).padStart(2,'0')} · ${timer}`
+        : phase === 'intro' ? `LEARN · ${idx + 1} / ${total}`
+        : phase === 'pre'   ? 'PRE-FLIGHT'
+        : 'COMPLETE'}
     </div>
     <div className="run-top-r">
       <span style={{display:'inline-flex',alignItems:'center',gap:4,color:'var(--accent-cyan)'}}>
@@ -37,7 +43,7 @@ const RunStatusbar = ({ results, combo }) => {
         <span className="run-pill miss">MISS · <b>{c.miss}</b></span>
         <span className="run-pill skip">HARD · <b>{c.hard}</b></span>
       </div>
-      <span>{combo >= 2 ? `combo ×${combo}` : 'kanji-buddy · 0.3.1'}</span>
+      <span>{combo >= 2 ? `combo ×${combo}` : 'daily run'}</span>
     </footer>
   );
 };
@@ -49,8 +55,17 @@ const RunApp = ({ cards }) => {
       return { ...TWEAK_DEFAULTS, ...saved };
     } catch(e) { return { ...TWEAK_DEFAULTS }; }
   });
-  const [phase, setPhase] = React.useState('pre'); // pre | run | end
-  const [idx, setIdx] = React.useState(0);
+
+  const [deck, setDeck] = React.useState([]);        // weighted 5-card deck, new → due → leech
+  const [newCards, setNewCards] = React.useState([]); // subset of deck with _bucket === 'new'
+  const [quizOrder, setQuizOrder] = React.useState([]); // shuffled deck for quiz phase
+  const [composition, setComposition] = React.useState({ new:0, due:0, leech:0, total:0 });
+  const [user, setUser] = React.useState(null);
+  const [streakBefore, setStreakBefore] = React.useState(0);
+
+  const [phase, setPhase] = React.useState('loading'); // loading | pre | intro | quiz | end
+  const [introIdx, setIntroIdx] = React.useState(0);
+  const [quizIdx, setQuizIdx] = React.useState(0);
   const [revealed, setRevealed] = React.useState(false);
   const [results, setResults] = React.useState([]);
   const [flash, setFlash] = React.useState(null);
@@ -60,9 +75,45 @@ const RunApp = ({ cards }) => {
   const [cardStartedAt, setCardStartedAt] = React.useState(null);
   const [now, setNow] = React.useState(Date.now());
   const [duration, setDuration] = React.useState(0);
+  const [xpGained, setXpGained] = React.useState(0);
 
-  // Run deck — simple first-N slice until a proper SRS queue is wired in.
-  const runDeck = React.useMemo(() => (cards || []).slice(0, RUN_SIZE), [cards]);
+  // Build the weighted deck once, after DB + cards are ready.
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!cards || !cards.length || !window.DB || !window.Daily) return;
+      try {
+        await window.DB.open();
+        const [u, states] = await Promise.all([
+          window.DB.getUser(),
+          window.DB.getAllCardStates(),
+        ]);
+        if (cancelled) return;
+        setUser(u);
+        setStreakBefore(u?.current_streak ?? 0);
+        const selected = window.Daily.selectDailyDeck(cards, states);
+        const composed = {
+          new:   selected.filter(c => c._bucket === 'new').length,
+          due:   selected.filter(c => c._bucket === 'due').length,
+          leech: selected.filter(c => c._bucket === 'leech').length,
+          total: selected.length,
+        };
+        setDeck(selected);
+        setNewCards(selected.filter(c => c._bucket === 'new'));
+        setComposition(composed);
+        setPhase('pre');
+      } catch (e) {
+        // Fallback: first-N slice so the UI still works without DB.
+        const fallback = cards.slice(0, window.Daily?.DECK_SIZE || 5)
+          .map(c => ({ ...c, _bucket: 'new' }));
+        setDeck(fallback);
+        setNewCards(fallback);
+        setComposition({ new: fallback.length, due: 0, leech: 0, total: fallback.length });
+        setPhase('pre');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [cards]);
 
   React.useEffect(() => {
     document.body.dataset.accent = tweaks.accent;
@@ -70,20 +121,21 @@ const RunApp = ({ cards }) => {
     document.body.dataset.density = tweaks.density;
   }, [tweaks]);
 
-  // live timer
+  // live timer during quiz
   React.useEffect(() => {
-    if (phase !== 'run') return;
+    if (phase !== 'quiz') return;
     const t = setInterval(() => setNow(Date.now()), 200);
     return () => clearInterval(t);
   }, [phase]);
 
-  // save session + XP to DB when run ends
+  // save session + XP when quiz ends
   React.useEffect(() => {
     if (phase !== 'end' || !window.DB || !startedAt) return;
     const c = { miss:0, hard:0, ok:0, easy:0 };
     results.forEach(r => { if (c[r] != null) c[r]++; });
     const hits = c.ok + c.easy;
     const earned = (hits * 15) + (c.easy * 5) + (c.hard * 3);
+    setXpGained(earned);
     window.DB.saveSession({
       mode: 'run',
       duration_s: duration,
@@ -95,14 +147,38 @@ const RunApp = ({ cards }) => {
     })
       .then(() => window.DB.grantXp(earned))
       .then(() => window.DB.recordSessionStreak())
+      .then(() => window.DB.getUser())
+      .then(u => setUser(u))
       .catch(() => {});
   }, [phase]);
 
-  const startRun = () => {
-    setPhase('run'); setIdx(0); setResults([]); setRevealed(false);
-    setCombo(0); setFlash(null);
+  const beginSession = () => {
+    if (newCards.length > 0) {
+      setIntroIdx(0);
+      setPhase('intro');
+    } else {
+      startQuiz();
+    }
+  };
+
+  const advanceIntro = () => {
+    const next = introIdx + 1;
+    if (next >= newCards.length) startQuiz();
+    else setIntroIdx(next);
+  };
+
+  const startQuiz = () => {
+    setQuizOrder(shuffle(deck));
+    setQuizIdx(0);
+    setResults([]);
+    setRevealed(false);
+    setCombo(0);
+    setFlash(null);
     const t = Date.now();
-    setStartedAt(t); setCardStartedAt(t); setNow(t);
+    setStartedAt(t);
+    setCardStartedAt(t);
+    setNow(t);
+    setPhase('quiz');
   };
 
   const reveal = () => setRevealed(true);
@@ -112,9 +188,8 @@ const RunApp = ({ cards }) => {
     const nextResults = [...results, v];
     setResults(nextResults);
 
-    // stub: persist card state with simple interval (full SM-2 in future pass)
-    if (window.DB && runDeck[idx]) {
-      const card = runDeck[idx];
+    const card = quizOrder[quizIdx];
+    if (window.DB && card) {
       window.DB.getCardState(card.idx).then(existing => {
         const base = existing || { idx: card.idx, interval_days: 1, ease_factor: 2.5, reviews: 0, lapses: 0 };
         const intervalMap = { easy: 4, ok: 1, hard: 0.25, miss: 0 };
@@ -144,43 +219,50 @@ const RunApp = ({ cards }) => {
     }
     setTimeout(() => setFlash(null), 340);
 
-    // advance
     setTimeout(() => {
-      if (idx + 1 >= runDeck.length) {
+      if (quizIdx + 1 >= quizOrder.length) {
         setDuration(Math.round((Date.now() - startedAt) / 1000));
         setPhase('end');
       } else {
-        setIdx(idx + 1);
+        setQuizIdx(quizIdx + 1);
         setRevealed(false);
         setCardStartedAt(Date.now());
       }
     }, v === 'miss' ? 360 : 260);
   };
 
-  // keyboard
+  const restart = () => {
+    setResults([]); setRevealed(false); setCombo(0); setFlash(null);
+    setXpGained(0); setIntroIdx(0); setQuizIdx(0);
+    beginSession();
+  };
+
+  const quit = () => {
+    if ((phase === 'quiz' || phase === 'intro') && !confirm('Quit? Progress will be lost.')) return;
+    window.location.href = 'Home.html';
+  };
+
   React.useEffect(() => {
     const onKey = (e) => {
       if (phase === 'pre') {
-        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); startRun(); }
-      } else if (phase === 'run') {
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); beginSession(); }
+      } else if (phase === 'intro') {
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); advanceIntro(); }
+        else if (e.key === 'Escape') { quit(); }
+      } else if (phase === 'quiz') {
         if (e.key === ' ') { e.preventDefault(); if (!revealed) reveal(); }
         else if (e.key === '1') { if (revealed) verdict('miss'); }
         else if (e.key === '2') { if (revealed) verdict('hard'); }
         else if (e.key === '3') { if (revealed) verdict('ok'); }
         else if (e.key === '4') { if (revealed) verdict('easy'); }
-        else if (e.key === 'Escape') { setPhase('pre'); setResults([]); }
+        else if (e.key === 'Escape') { quit(); }
       } else if (phase === 'end') {
-        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); startRun(); }
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); restart(); }
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, revealed, idx, runDeck, results, combo, startedAt]);
-
-  const quit = () => {
-    if (phase === 'run' && !confirm('Quit run? Progress will be lost.')) return;
-    window.location.href = 'Home.html';
-  };
+  });
 
   const timer = React.useMemo(() => {
     if (!startedAt) return '00:00';
@@ -191,18 +273,50 @@ const RunApp = ({ cards }) => {
   const cardLatency = cardStartedAt ? Math.floor((now - cardStartedAt)/1000) : 0;
   const shellCls = `run-shell variant-${tweaks.variant}`;
 
+  if (phase === 'loading') {
+    return (
+      <div className={shellCls}>
+        <RunTopbar phase="pre" idx={0} total={0} onQuit={quit} timer="00:00" />
+        <main className="run-main" data-screen-label="run-loading">
+          <div style={{padding:'var(--sp-5)', color:'var(--fg-2)', textAlign:'center', fontFamily:'var(--font-mono)', letterSpacing:'.14em'}}>
+            ▸ MOUNTING QUEUE...
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const activeIntro = phase === 'intro' ? newCards[introIdx] : null;
+  const activeQuiz  = phase === 'quiz'  ? quizOrder[quizIdx] : null;
+
   return (
     <div className={shellCls}>
-      <RunTopbar phase={phase} timer={timer} idx={idx} total={runDeck.length} onQuit={quit} />
-      {phase === 'run' && (
-        <SegProgress results={results} current={idx} total={runDeck.length} />
+      <RunTopbar
+        phase={phase}
+        timer={timer}
+        idx={phase === 'intro' ? introIdx : quizIdx}
+        total={phase === 'intro' ? newCards.length : quizOrder.length}
+        onQuit={quit}
+      />
+      {phase === 'quiz' && (
+        <SegProgress results={results} current={quizIdx} total={quizOrder.length} />
       )}
       <main className="run-main" data-screen-label={`run-${phase}`}>
-        {phase === 'pre' && <PreRun total={runDeck.length} onStart={startRun} />}
-        {phase === 'run' && runDeck[idx] && (
+        {phase === 'pre' && (
+          <PreRun composition={composition} onStart={beginSession} />
+        )}
+        {phase === 'intro' && activeIntro && (
+          <IntroCard
+            card={activeIntro}
+            index={introIdx}
+            total={newCards.length}
+            onNext={advanceIntro}
+          />
+        )}
+        {phase === 'quiz' && activeQuiz && (
           <>
             <Card
-              card={runDeck[idx]}
+              card={activeQuiz}
               revealed={revealed}
               onReveal={reveal}
               latency={cardLatency}
@@ -214,16 +328,18 @@ const RunApp = ({ cards }) => {
         {phase === 'end' && (
           <EndRun
             results={results}
-            cards={runDeck}
+            cards={quizOrder}
             duration={duration}
-            onAgain={startRun}
+            onAgain={restart}
             onHome={() => window.location.href = 'Home.html'}
             variant={tweaks.variant}
+            user={user ? { ...user, _streakBefore: streakBefore } : null}
+            xpGained={xpGained}
           />
         )}
       </main>
       <RunStatusbar results={results} combo={combo} />
-      {phase === 'run' && <ComboChip combo={combo} pulse={comboPulse} />}
+      {phase === 'quiz' && <ComboChip combo={combo} pulse={comboPulse} />}
     </div>
   );
 };
