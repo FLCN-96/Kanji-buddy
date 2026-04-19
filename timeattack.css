@@ -632,7 +632,7 @@
 /* ================= HUD ================= */
 .ta-hud {
   position: fixed;
-  right: 10px; top: 96px;
+  right: 10px; top: calc(96px + env(safe-area-inset-top));
   display: flex; flex-direction: column; gap: 6px;
   z-index: 8;
   pointer-events: none;
@@ -898,5 +898,5 @@
 }
 @media (max-width: 360px) {
   .ta-tiles { grid-template-columns: 1fr; }
-  .ta-hud { top: 88px; }
+  .ta-hud { top: calc(88px + env(safe-area-inset-top)); }
 }
