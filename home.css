@@ -467,6 +467,7 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
   background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
   box-shadow: 0 0 10px rgba(34,211,238,.5);
   position: relative;
+  overflow: hidden;
 }
 .variant-xp-fill::after {
   content: ''; position: absolute; inset: 0;
