@@ -354,6 +354,17 @@
   box-shadow: 0 0 14px rgba(34,211,238,.35);
   transform: translateY(-1px);
 }
+/* On a fresh question the pointer is often still over the just-clicked
+   position; suppress :hover until it moves so the new tile doesn't read as
+   the previous selection's lingering glow. */
+.sv-tiles.is-pristine .sv-tile:hover:not(:disabled) {
+  border-color: var(--line-bright); color: var(--fg-0);
+  box-shadow: none;
+  transform: none;
+}
+.sv-tiles.is-pristine .sv-tile:hover:not(:disabled) .sv-tile-key {
+  border-color: var(--line-bright); color: var(--fg-2);
+}
 .sv-tile:disabled { cursor: default; }
 .sv-tile-key {
   font-size: 10px; color: var(--fg-2);
