@@ -310,14 +310,46 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
 .kb-run-primary.is-disabled .kb-rp-top { color: var(--fg-2); }
 .kb-run-primary.is-disabled .kb-rp-arrow { color: var(--fg-2); }
 
-/* Challenge grid */
+/* Challenge grid — 1 wide hero + 4 in 2x2 (or 4 across on wider screens) */
 .kb-chal-grid {
   display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-2);
 }
+.kb-chal-grid > .kb-chal:first-child {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  gap: var(--sp-3);
+  min-height: 90px;
+  padding: var(--sp-3) var(--sp-4);
+}
+.kb-chal-grid > .kb-chal:first-child .kb-chal-glyph {
+  font-size: 44px;
+  margin: 0;
+}
+.kb-chal-grid > .kb-chal:first-child .kb-chal-name { font-size: 13px; }
+.kb-chal-grid > .kb-chal:first-child .kb-chal-sub { margin-top: 4px; }
+.kb-chal-grid > .kb-chal:first-child .kb-chal-meta {
+  display: flex; flex-direction: column;
+  align-items: flex-start; gap: 4px;
+  flex: 1;
+}
+.kb-chal-grid > .kb-chal:first-child .kb-chal-ascii {
+  margin-top: 0;
+  margin-left: auto;
+  align-self: center;
+  font-size: 11px;
+  border-color: var(--line-bright);
+  padding: 6px 10px;
+}
 @media (min-width: 720px) {
-  .kb-chal-grid { grid-template-columns: repeat(3, 1fr); }
+  .kb-chal-grid { grid-template-columns: repeat(4, 1fr); }
+  .kb-chal-grid > .kb-chal:first-child { grid-column: 1 / -1; }
 }
 body[data-density="compact"] .kb-chal-grid { gap: 6px; }
+body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child { min-height: 70px; padding: 10px var(--sp-3); }
+body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph { font-size: 32px; }
 
 .kb-chal {
   border: 1px solid var(--line-dim);

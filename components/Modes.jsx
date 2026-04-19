@@ -36,21 +36,13 @@ const CHALLENGES = [
     ascii: '☠ × 8',
   },
   {
-    id: 'radical',
-    glyph: '部',
-    name: 'RADICAL DRILL',
-    sub: 'components only',
-    tag: 'NEW',
-    tagClass: 'new',
-    ascii: '亻 + 言 = 信',
-  },
-  {
     id: 'match',
     glyph: '合',
     name: 'MATCH',
-    sub: 'pair kanji ↔ meaning',
-    tag: null,
-    ascii: '[字]=[char]',
+    sub: '60s · pair kanji ↔ meaning',
+    tag: 'NEW',
+    tagClass: 'new',
+    ascii: '[字]→[char]',
   },
 ];
 
@@ -83,8 +75,10 @@ const ChallengeGrid = ({ onPick }) => (
       <button key={c.id} className="kb-chal" onClick={() => onPick && onPick(c.id)}>
         {c.tag && <span className={`kb-chal-tag ${c.tagClass || ''}`}>{c.tag}</span>}
         <div className="kb-chal-glyph">{c.glyph}</div>
-        <div className="kb-chal-name">{c.name}</div>
-        <div className="kb-chal-sub">{c.sub}</div>
+        <div className="kb-chal-meta">
+          <div className="kb-chal-name">{c.name}</div>
+          <div className="kb-chal-sub">{c.sub}</div>
+        </div>
         <div className="kb-chal-ascii">{c.ascii}</div>
       </button>
     ))}
