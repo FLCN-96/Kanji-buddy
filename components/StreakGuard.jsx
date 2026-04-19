@@ -89,6 +89,7 @@ const StreakGuardApp = ({ cards }) => {
   });
   const [beatPb, setBeatPb] = React.useState(false);
   const [xpGained, setXpGained] = React.useState(0);
+  const [confirmQuit, setConfirmQuit] = React.useState(false);
   const tickRef = React.useRef(null);
   const lastTickRef = React.useRef(null);
   const lockRef = React.useRef(false);
@@ -254,9 +255,10 @@ const StreakGuardApp = ({ cards }) => {
     setXpGained(0);
     setPhase('ready');
   };
+  const goHome = () => { window.location.href = 'Home.html'; };
   const quit = () => {
-    if (phase === 'play' && !confirm('Quit? Unsaved cards will leak.')) return;
-    window.location.href = 'Home.html';
+    if (phase === 'play') { setConfirmQuit(true); return; }
+    goHome();
   };
 
   React.useEffect(() => {
@@ -330,6 +332,16 @@ const StreakGuardApp = ({ cards }) => {
           )}
         </main>
       </div>
+
+      <ConfirmModal
+        open={confirmQuit}
+        title="QUIT GUARD?"
+        body="Unsaved cards will leak · score won't save."
+        confirmLabel="QUIT"
+        cancelLabel="STAY"
+        onConfirm={goHome}
+        onCancel={() => setConfirmQuit(false)}
+      />
     </>
   );
 };

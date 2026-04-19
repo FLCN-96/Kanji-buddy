@@ -116,6 +116,7 @@ const TimeAttackApp = ({ cards }) => {
   });
   const [beatPb, setBeatPb] = React.useState(false);
   const [xpGained, setXpGained] = React.useState(0);
+  const [confirmQuit, setConfirmQuit] = React.useState(false);
   const questionStart = React.useRef(null);
   const lockedRef = React.useRef(false);
   // Ref (not state) so the ready-phase countdown effect doesn't restart when
@@ -292,9 +293,10 @@ const TimeAttackApp = ({ cards }) => {
     setXpGained(0);
     setPhase('ready');
   };
+  const goHome = () => { window.location.href = 'Home.html'; };
   const quit = () => {
-    if (phase === 'play' && !confirm('Quit? Progress lost.')) return;
-    window.location.href = 'Home.html';
+    if (phase === 'play') { setConfirmQuit(true); return; }
+    goHome();
   };
 
   // keyboard
@@ -367,6 +369,16 @@ const TimeAttackApp = ({ cards }) => {
 
         {phase === 'play' && <TAHud hits={hits} misses={misses} combo={combo} />}
       </div>
+
+      <ConfirmModal
+        open={confirmQuit}
+        title="QUIT TIME ATTACK?"
+        body="Progress will be lost · score won't save."
+        confirmLabel="QUIT"
+        cancelLabel="STAY"
+        onConfirm={goHome}
+        onCancel={() => setConfirmQuit(false)}
+      />
     </>
   );
 };

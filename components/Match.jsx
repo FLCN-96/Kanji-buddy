@@ -127,6 +127,7 @@ const MatchApp = ({ cards }) => {
   });
   const [beatPb, setBeatPb] = React.useState(false);
   const [xpGained, setXpGained] = React.useState(0);
+  const [confirmQuit, setConfirmQuit] = React.useState(false);
 
   const lastMatchAtRef = React.useRef(0);
   const startedAtRef = React.useRef(0);
@@ -378,9 +379,10 @@ const MatchApp = ({ cards }) => {
     penaltyAccumRef.current = 0;
     finishedRef.current = false;
   };
+  const goHome = () => { window.location.href = 'Home.html'; };
   const quit = () => {
-    if (phase === 'play' && !confirm('Abort match? Score will not save.')) return;
-    window.location.href = 'Home.html';
+    if (phase === 'play') { setConfirmQuit(true); return; }
+    goHome();
   };
 
   React.useEffect(() => {
@@ -461,6 +463,15 @@ const MatchApp = ({ cards }) => {
         </main>
       </div>
 
+      <ConfirmModal
+        open={confirmQuit}
+        title="ABORT MATCH?"
+        body="Score won't save."
+        confirmLabel="ABORT"
+        cancelLabel="STAY"
+        onConfirm={goHome}
+        onCancel={() => setConfirmQuit(false)}
+      />
     </>
   );
 };

@@ -129,6 +129,7 @@ const SurvivalApp = ({ cards }) => {
   });
   const [beatPb, setBeatPb] = React.useState(false);
   const [xpGained, setXpGained] = React.useState(0);
+  const [confirmQuit, setConfirmQuit] = React.useState(false);
   const [modeIdx, setModeIdx] = React.useState(0); // for rotate
   const lockedRef = React.useRef(false);
   const qStart = React.useRef(null);
@@ -257,9 +258,10 @@ const SurvivalApp = ({ cards }) => {
     setXpGained(0);
     setPhase('ready');
   };
+  const goHome = () => { window.location.href = 'Home.html'; };
   const quit = () => {
-    if (phase === 'play' && !confirm('Quit? Run ends.')) return;
-    window.location.href = 'Home.html';
+    if (phase === 'play') { setConfirmQuit(true); return; }
+    goHome();
   };
 
   React.useEffect(() => {
@@ -320,6 +322,16 @@ const SurvivalApp = ({ cards }) => {
         {/* Dread vignette — intensifies with depth */}
         {phase === 'play' && <div className="sv-vignette" aria-hidden />}
       </div>
+
+      <ConfirmModal
+        open={confirmQuit}
+        title="QUIT THE DESCENT?"
+        body="Run ends here · depth won't save."
+        confirmLabel="QUIT"
+        cancelLabel="STAY"
+        onConfirm={goHome}
+        onCancel={() => setConfirmQuit(false)}
+      />
     </>
   );
 };
