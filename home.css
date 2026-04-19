@@ -402,7 +402,12 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
   animation: kb-oc-scan 3.2s linear infinite;
   opacity: .35;
 }
-.kb-run-primary.is-overachiever .kb-rp-top   { color: var(--accent-magenta-dim); letter-spacing: .22em; }
+.kb-run-primary.is-overachiever .kb-rp-top   {
+  color: var(--accent-amber);
+  letter-spacing: .22em;
+  font-weight: var(--fw-bold);
+  text-shadow: 0 0 6px rgba(245,165,36,.45);
+}
 .kb-run-primary.is-overachiever .kb-rp-label {
   color: var(--accent-magenta-dim);
   text-shadow: 0 0 4px rgba(255,61,255,.4), 0 0 10px rgba(255,61,255,.18);
