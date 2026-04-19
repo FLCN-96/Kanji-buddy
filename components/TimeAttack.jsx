@@ -1,13 +1,26 @@
 // TimeAttack orchestrator — phase machine, scoring, timer, deck dealer
 
 const TWEAK_DEFAULTS_TA = {
-  variant: 'hud',
+  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
   duration: 60,
   countdown: 'dissolve',
 };
+
+// XP balance for Time Attack. Base hit/miss pay drives the floor;
+// single-highest combo tier keeps late-run combos meaningful without
+// stacking. PB and clean-sweep are completion rewards.
+const TA_XP_HIT = 4;
+const TA_XP_MISS = -1;
+const TA_XP_PB = 30;
+const TA_XP_CLEAN = 25;
+const taComboTier = (maxCombo) =>
+  maxCombo >= 20 ? 40 :
+  maxCombo >= 15 ? 25 :
+  maxCombo >= 10 ? 15 :
+  maxCombo >= 5  ? 5  : 0;
 
 const DURATION_OPTS = [
   { id: 30, label: '30s' },
@@ -110,8 +123,12 @@ const TimeAttackApp = ({ cards }) => {
     if (phase !== 'end' || !window.DB) return;
     if (hits + misses === 0) return; // didn't actually play
     const isHot = window.Daily && window.Daily.hotChallengeId() === 'time';
-    const base = 60;
-    const earned = base * (isHot ? window.Daily.HOT_MULTIPLIER : 1);
+    const cleanBonus = misses === 0 ? TA_XP_CLEAN : 0;
+    const pbBonus    = beatPb ? TA_XP_PB : 0;
+    const base = Math.max(0,
+      hits * TA_XP_HIT + misses * TA_XP_MISS + taComboTier(maxCombo) + cleanBonus + pbBonus
+    );
+    const earned = Math.round(base * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
     window.DB.saveScore({
       mode: 'time_attack',
       score,

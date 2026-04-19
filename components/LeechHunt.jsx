@@ -1,7 +1,7 @@
 // LeechHunt — 3-stage cleanse per leech. 8 leeches, 3-miss fail limit.
 
 const TWEAK_DEFAULTS_LH = {
-  variant: 'hud',
+  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -239,10 +239,11 @@ const LeechHuntApp = ({ cards }) => {
     setPhase('end');
     if (window.DB && roster.length > 0) {
       const isHot = window.Daily && window.Daily.hotChallengeId() === 'leech';
-      const base = 70;
-      const perfMult = purged / roster.length;
-      const bonus = res === 'complete' ? 1.2 : 1.0;
-      const earned = Math.round(base * (0.3 + perfMult * 0.7) * bonus * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+      // Per-leech pay + completion/PB bonuses to make full sweeps feel earned.
+      const base = 30 + purged * 10;
+      const completeBonus = res === 'complete' ? 20 : 0;
+      const pbBonus = (purged > pb) ? 20 : 0;
+      const earned = Math.round((base + completeBonus + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
       window.DB.saveScore({ mode: 'leech_hunt', score: purged, result: res }).catch(() => {});
       window.DB.saveSession({
         mode: 'leech_hunt',

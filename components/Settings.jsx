@@ -2,7 +2,7 @@
 
 const TWEAK_KEYS = ['variant', 'accent', 'scanlines', 'density', 'hero'];
 const TWEAK_DEFAULTS = {
-  variant: 'hud',
+  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',

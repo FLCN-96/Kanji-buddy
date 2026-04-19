@@ -1,7 +1,7 @@
 // Survival orchestrator — single life, depth ladder
 
 const TWEAK_DEFAULTS_SV = {
-  variant: 'hud',
+  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -180,8 +180,10 @@ const SurvivalApp = ({ cards }) => {
     } catch(e) {}
     if (window.DB && depthAtDeath > 0) {
       const isHot = window.Daily && window.Daily.hotChallengeId() === 'survival';
-      const base = 80;
-      const earned = base * (isHot ? window.Daily.HOT_MULTIPLIER : 1);
+      // Depth-scaled so deeper runs pay more; PB bonus rewards records.
+      const base = 40 + depthAtDeath * 3;
+      const pbBonus = (depthAtDeath > pb) ? 30 : 0;
+      const earned = Math.round((base + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
       window.DB.saveScore({ mode: 'survival', score: depthAtDeath, tier: pickDepthTier(depthAtDeath).id })
         .catch(() => {});
       window.DB.saveSession({

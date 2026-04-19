@@ -1,11 +1,17 @@
 // Daily Run orchestrator: weighted 5-card deck, learn → quiz phase split.
 
 const TWEAK_DEFAULTS = {
-  variant: 'hud',
+  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
 };
+
+// XP weights for Run mode — miss penalizes, easy rewards confidence,
+// clean sweep and 90%+ accuracy give meaningful completion bonuses.
+const RUN_XP = { miss: -3, hard: 6, ok: 14, easy: 22 };
+const RUN_BONUS_CLEAN = 25;
+const RUN_BONUS_ACC90 = 15;
 
 const shuffle = (arr) => arr
   .map(v => ({ v, k: Math.random() }))
@@ -133,8 +139,13 @@ const RunApp = ({ cards }) => {
     if (phase !== 'end' || !window.DB || !startedAt) return;
     const c = { miss:0, hard:0, ok:0, easy:0 };
     results.forEach(r => { if (c[r] != null) c[r]++; });
-    const hits = c.ok + c.easy;
-    const earned = (hits * 15) + (c.easy * 5) + (c.hard * 3);
+    const total = results.length;
+    const hits = c.ok + c.easy + c.hard;
+    const acc = total === 0 ? 0 : Math.round(100 * hits / total);
+    const base = c.miss * RUN_XP.miss + c.hard * RUN_XP.hard + c.ok * RUN_XP.ok + c.easy * RUN_XP.easy;
+    const cleanBonus = (total > 0 && c.miss === 0) ? RUN_BONUS_CLEAN : 0;
+    const accBonus   = (total > 0 && acc >= 90) ? RUN_BONUS_ACC90 : 0;
+    const earned = Math.max(0, base + cleanBonus + accBonus);
     setXpGained(earned);
     window.DB.saveSession({
       mode: 'run',
