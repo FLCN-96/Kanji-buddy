@@ -2,7 +2,7 @@
 // Wrong pair → -2s penalty. Speed bonus per match.
 
 const TWEAK_DEFAULTS_MT = {
-  variant: 'hud',
+  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -200,10 +200,10 @@ const MatchApp = ({ cards }) => {
     }
     if (window.DB && matches + misses > 0) {
       const isHot = window.Daily && window.Daily.hotChallengeId() === 'match';
-      const base = 55;
-      // Perf scale: 1 base XP per 10 score, capped at 3x base
-      const perfMult = Math.min(3, 1 + score / 300);
-      const earned = Math.round(base * perfMult * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+      // Score-scaled base + PB bonus — strong play should be obviously rewarded.
+      const base = 20 + score * 2;
+      const pbBonus = (score > pb) ? 20 : 0;
+      const earned = Math.round((base + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
       window.DB.saveScore({ mode: 'match', score, duration_s: tweaks.duration }).catch(() => {});
       window.DB.saveSession({
         mode: 'match',

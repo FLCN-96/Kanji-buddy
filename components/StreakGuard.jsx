@@ -3,7 +3,7 @@
 // Correct = SAVED (locked). Wrong = LEAKED immediately. Decay timeout = LEAKED.
 
 const TWEAK_DEFAULTS_SG = {
-  variant: 'hud',
+  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -161,10 +161,11 @@ const StreakGuardApp = ({ cards }) => {
       }
       if (window.DB && deck.length > 0) {
         const isHot = window.Daily && window.Daily.hotChallengeId() === 'streak';
-        const base = 50;
-        // Pay per saved card (proportional to performance)
-        const perfMult = savedCount / deck.length;
-        const earned = Math.round(base * (0.3 + perfMult * 0.7) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+        // Pay per saved card, with a clean-sweep bonus for the full grid.
+        const base = 40 + savedCount * 8;
+        const cleanBonus = (savedCount === deck.length) ? 20 : 0;
+        const pbBonus = (savedCount > pb) ? 20 : 0;
+        const earned = Math.round((base + cleanBonus + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
         window.DB.saveScore({ mode: 'streak_guard', score: savedCount }).catch(() => {});
         window.DB.saveSession({
           mode: 'streak_guard',
