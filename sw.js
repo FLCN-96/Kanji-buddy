@@ -3,7 +3,7 @@
 // for heavy/stable assets (cards.json, icons, manifest, fonts).
 
 const CACHE = 'kb-v11';
-const CDN_CACHE = 'kb-cdn-v1';
+const CDN_CACHE = 'kb-cdn-v2';
 const NAV_FALLBACK = './Home.html';
 
 const LOCAL_ASSETS = [
@@ -66,8 +66,8 @@ const LOCAL_ASSETS = [
 ];
 
 const CDN_ASSETS = [
-  'https://unpkg.com/react@18.3.1/umd/react.development.js',
-  'https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js',
+  'https://unpkg.com/react@18.3.1/umd/react.production.min.js',
+  'https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js',
   'https://unpkg.com/@babel/standalone@7.29.0/babel.min.js',
 ];
 
