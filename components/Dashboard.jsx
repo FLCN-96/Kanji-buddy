@@ -159,49 +159,32 @@ const StreakPanel = ({ streak, bestStreak }) => {
   );
 };
 
-const RANK_TABLE = [
-  { min:     0, label: 'RANK Ⅰ · NOVICE' },
-  { min:   250, label: 'RANK Ⅱ · APPRENTICE' },
-  { min:  1000, label: 'RANK Ⅲ · ADEPT' },
-  { min:  2500, label: 'RANK Ⅳ · SAVANT' },
-  { min:  5000, label: 'RANK Ⅴ · MASTER' },
-  { min: 10000, label: 'RANK Ⅵ · SENSEI' },
-  { min: 20000, label: 'RANK Ⅶ · LEGEND' },
-];
-
-const rankFor = (xp) => {
-  let cur = RANK_TABLE[0];
-  let next = RANK_TABLE[1] || null;
-  for (let i = 0; i < RANK_TABLE.length; i++) {
-    if (xp >= RANK_TABLE[i].min) {
-      cur = RANK_TABLE[i];
-      next = RANK_TABLE[i + 1] || null;
-    }
-  }
-  return { cur, next };
-};
+// Rank table and rankFor() live in data/rank.js (loaded in every HTML).
 
 const XpBar = ({ xp = 0 }) => {
-  const { cur, next } = rankFor(xp);
-  const floor = cur.min;
-  const ceil = next ? next.min : cur.min;
-  const span = Math.max(1, ceil - floor);
-  const into = Math.max(0, xp - floor);
-  const pct = next ? Math.min(100, Math.round((into / span) * 100)) : 100;
+  const R = window.Rank;
+  const { cur, next, into, window: span, pct } = R
+    ? R.getRankProgress(xp)
+    : { cur: { label: 'RANK —', color: 'cyan', glyph: '·', threshold: 0 }, next: null, into: 0, window: 1, pct: 0 };
   return (
-    <div className="variant-xp">
+    <div className={`variant-xp tier-${cur.color}`} data-screen-label="xp-bar">
       <div className="variant-xp-head">
-        <span>▸ OPERATOR // <span className="rank">{cur.label}</span></span>
+        <span>
+          ▸ OPERATOR // <span className="rank">
+            <span className="variant-xp-rank-glyph">{cur.glyph}</span>
+            {cur.label}
+          </span>
+        </span>
         <span style={{color:'var(--accent-cyan)'}}>{xp.toLocaleString()} XP</span>
       </div>
       <div className="variant-xp-bar"><div className="variant-xp-fill" style={{width:`${pct}%`}} /></div>
       <div className="variant-xp-meta">
         {next
           ? <><span>next: <b>{next.label}</b></span><span>{into.toLocaleString()} / {span.toLocaleString()} XP</span></>
-          : <><span>max rank reached</span><span>{xp.toLocaleString()} XP</span></>}
+          : <><span>— MAX RANK —</span><span>{xp.toLocaleString()} XP</span></>}
       </div>
     </div>
   );
 };
 
-Object.assign(window, { Hero, Countdown, DuePanel, StreakPanel, XpBar, RANK_TABLE, rankFor, formatCountdown, secondsUntilMidnight });
+Object.assign(window, { Hero, Countdown, DuePanel, StreakPanel, XpBar, formatCountdown, secondsUntilMidnight });

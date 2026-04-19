@@ -2,7 +2,7 @@
 // Appearance preferences (variant/accent/scanlines/density/hero) live in Settings.
 
 const TWEAK_DEFAULTS = {
-  variant: 'hud',
+  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -117,6 +117,13 @@ const App = ({ cards }) => {
   const [userLoaded, setUserLoaded] = React.useState(false);
   const [deck, setDeck] = React.useState(null);       // {new, due, leech, total} — today's Run preview
   const [dueCount, setDueCount] = React.useState(null); // raw SRS backlog for StatusBar
+  const [promotion, setPromotion] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!window.Rank) return;
+    const p = window.Rank.consumePromotion();
+    if (p) setPromotion(p);
+  }, []);
 
   React.useEffect(() => {
     // Drop any ?reset=TS left over from a hard-reset redirect.
@@ -221,6 +228,14 @@ const App = ({ cards }) => {
     <>
       {userLoaded && !user && (
         <FirstRunModal onDone={(name) => setUser({ display_name: name })} />
+      )}
+      {promotion && window.RankUpModal && (
+        <RankUpModal
+          from={promotion.from}
+          to={promotion.to}
+          totalXp={user?.total_xp ?? 0}
+          onClose={() => setPromotion(null)}
+        />
       )}
       <div className={variantClass}>
         <Topbar displayName={user?.display_name} />

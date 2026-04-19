@@ -3,7 +3,7 @@
 // Correct = SAVED (locked). Wrong = LEAKED immediately. Decay timeout = LEAKED.
 
 const TWEAK_DEFAULTS_SG = {
-  variant: 'hud',
+  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -14,11 +14,15 @@ const TWEAK_DEFAULTS_SG = {
 
 const PB_KEY_SG = 'kb-sg-pb';
 
-function buildDeck(cards, n, difficulty) {
+function buildDeck(cards, n, difficulty, cardStates) {
+  const nearPool = (window.Daily && window.Daily.nearUserPool)
+    ? window.Daily.nearUserPool(cards, cardStates || [])
+    : cards.slice();
   let pool;
-  if (difficulty === 'easy') pool = cards.filter(c => c.jlpt >= 4);
-  else if (difficulty === 'hard') pool = cards.filter(c => c.jlpt <= 3);
-  else pool = cards.slice();
+  if (difficulty === 'easy') pool = nearPool.filter(c => c.jlpt >= 4);
+  else if (difficulty === 'hard') pool = nearPool.filter(c => c.jlpt <= 3);
+  else pool = nearPool.slice();
+  if (pool.length < n) pool = nearPool.slice();
   const shuffled = pool.map(c => ({c, k: Math.random()})).sort((a,b)=>a.k-b.k).map(x=>x.c);
   return shuffled.slice(0, n).map((c, i) => {
     // spread decay windows: first few drain fastest to create urgency
@@ -36,10 +40,10 @@ function buildDeck(cards, n, difficulty) {
   });
 }
 
-function dealQuiz(card, allCards) {
+function dealQuiz(card, pool) {
   const correct = card.mean.split(',')[0].trim();
-  const candidates = allCards.filter(c => c.idx !== card.idx && c.jlpt === card.jlpt);
-  const dsrc = candidates.length >= 3 ? candidates : allCards.filter(c => c.idx !== card.idx);
+  const candidates = pool.filter(c => c.idx !== card.idx && c.jlpt === card.jlpt);
+  const dsrc = candidates.length >= 3 ? candidates : pool.filter(c => c.idx !== card.idx);
   const seen = new Set([correct.toLowerCase()]);
   const dis = [];
   while (dis.length < 3 && dsrc.length) {
@@ -88,6 +92,18 @@ const StreakGuardApp = ({ cards }) => {
   const tickRef = React.useRef(null);
   const lastTickRef = React.useRef(null);
   const lockRef = React.useRef(false);
+  // Ref (not state) so the ready-phase countdown effect doesn't restart when
+  // card_states finish loading — buildDeck/dealQuiz only read it at deal time.
+  const cardStatesRef = React.useRef([]);
+  const nearPoolRef = React.useRef(cards);
+
+  React.useEffect(() => {
+    if (!window.DB) return;
+    window.DB.open()
+      .then(() => window.DB.getAllCardStates())
+      .then(s => { cardStatesRef.current = s || []; })
+      .catch(() => {});
+  }, []);
 
   React.useEffect(() => {
     document.body.dataset.accent = tweaks.accent;
@@ -104,7 +120,10 @@ const StreakGuardApp = ({ cards }) => {
       n -= 1;
       if (n <= 0) {
         setCountdown(0);
-        const d = buildDeck(cards, tweaks.cellCount, tweaks.difficulty);
+        nearPoolRef.current = (window.Daily && window.Daily.nearUserPool)
+          ? window.Daily.nearUserPool(cards, cardStatesRef.current)
+          : cards;
+        const d = buildDeck(cards, tweaks.cellCount, tweaks.difficulty, cardStatesRef.current);
         setDeck(d);
         setActiveId(null);
         setFeedback(null);
@@ -161,10 +180,11 @@ const StreakGuardApp = ({ cards }) => {
       }
       if (window.DB && deck.length > 0) {
         const isHot = window.Daily && window.Daily.hotChallengeId() === 'streak';
-        const base = 50;
-        // Pay per saved card (proportional to performance)
-        const perfMult = savedCount / deck.length;
-        const earned = Math.round(base * (0.3 + perfMult * 0.7) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+        // Pay per saved card, with a clean-sweep bonus for the full grid.
+        const base = 40 + savedCount * 8;
+        const cleanBonus = (savedCount === deck.length) ? 20 : 0;
+        const pbBonus = (savedCount > pb) ? 20 : 0;
+        const earned = Math.round((base + cleanBonus + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
         window.DB.saveScore({ mode: 'streak_guard', score: savedCount }).catch(() => {});
         window.DB.saveSession({
           mode: 'streak_guard',
@@ -187,7 +207,7 @@ const StreakGuardApp = ({ cards }) => {
     if (phase !== 'play' || activeId || lockRef.current) return;
     const cell = deck.find(c => c.id === id);
     if (!cell || cell.status !== 'live') return;
-    const { tiles, correctIdx } = dealQuiz(cell.card, cards);
+    const { tiles, correctIdx } = dealQuiz(cell.card, nearPoolRef.current);
     setDeck(prev => prev.map(c => c.id === id ? { ...c, tiles, correctIdx, status: 'active' } : c));
     setActiveId(id);
     setFeedback(null);

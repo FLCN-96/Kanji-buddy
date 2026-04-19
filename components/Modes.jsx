@@ -1,13 +1,14 @@
 // Mode selection: primary RUN + challenge grid
-// CHALLENGES carry base XP rewards. A "HOT" pick is chosen per day by the
-// caller and triples that mode's XP; the HOT card floats to the top.
+// CHALLENGES carry an average XP hint shown on the tile. Actual per-session
+// XP is performance-based and computed inside each mode's orchestrator.
+// A "HOT" pick is chosen per day and triples that mode's XP; HOT floats up.
 
 const CHALLENGES = [
-  { id: 'time',     glyph: '秒', name: 'TIME ATTACK',   sub: '60s · max cards',           ascii: '■■■■□□□□ 60s', xp: 60 },
-  { id: 'survival', glyph: '命', name: 'SURVIVAL',      sub: '1 miss · run ends',         ascii: '♥ ♥ ♥ → ╳',   xp: 80 },
-  { id: 'streak',   glyph: '忘', name: 'STREAK GUARD',  sub: '12 cards about to leak',    ascii: '▮▮▮▮▯▯ 12',    xp: 50 },
-  { id: 'leech',    glyph: '蛭', name: 'LEECH HUNT',    sub: '8 worst · target & purge',  ascii: '☠ × 8',        xp: 70 },
-  { id: 'match',    glyph: '合', name: 'MATCH',         sub: '60s · pair kanji ↔ meaning', ascii: '[字]→[char]',  xp: 55 },
+  { id: 'time',     glyph: '秒', name: 'TIME ATTACK',   sub: '60s · max cards',           ascii: '■■■■□□□□ 60s', xp: 150 },
+  { id: 'survival', glyph: '命', name: 'SURVIVAL',      sub: '1 miss · run ends',         ascii: '♥ ♥ ♥ → ╳',   xp: 120 },
+  { id: 'streak',   glyph: '忘', name: 'STREAK GUARD',  sub: '12 cards about to leak',    ascii: '▮▮▮▮▯▯ 12',    xp: 90  },
+  { id: 'leech',    glyph: '蛭', name: 'LEECH HUNT',    sub: '8 worst · target & purge',  ascii: '☠ × 8',        xp: 100 },
+  { id: 'match',    glyph: '合', name: 'MATCH',         sub: '60s · pair kanji ↔ meaning', ascii: '[字]→[char]',  xp: 90  },
 ];
 
 const HOT_MULTIPLIER = 3;
