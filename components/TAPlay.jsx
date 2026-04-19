@@ -17,18 +17,19 @@ const TAHud = ({ hits, misses, combo }) => (
   </div>
 );
 
-const TAPlay = ({ q, onPick, feedback, clockMs, totalMs, danger, combo, comboBurst, isUnseen }) => {
+const TAPlay = ({ q, onPick, feedback, clockMs, totalMs, danger, penaltyTick, combo, comboBurst, isUnseen }) => {
   const barTotal = totalMs > 0 ? totalMs : 60_000;
   const barPct = Math.max(0, Math.min(100, (clockMs / barTotal) * 100));
 
   return (
     <div className="ta-play" data-screen-label="ta-play">
-      <div className={`ta-clock-bar${danger ? ' is-danger' : ''}`}>
+      <div className={`ta-clock-bar${danger ? ' is-danger' : ''}${penaltyTick ? ' is-penalty' : ''}`}>
         <div className="ta-clock-bar-fill" style={{ width: `${barPct}%` }} />
         <div className="ta-clock-ticks">
           {[...Array(12)].map((_, i) => <span key={i} />)}
         </div>
       </div>
+      {penaltyTick && <div className="ta-penalty-fx">−3s</div>}
 
       <div className={`ta-card${feedback ? (feedback.ok ? ' is-hit' : ' is-miss') : ''}${isUnseen ? ' is-unseen-frame' : ''}`}>
         <div className="ta-card-meta">

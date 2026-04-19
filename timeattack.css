@@ -424,13 +424,50 @@
   position: absolute; inset: 0 auto 0 0;
   background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
   box-shadow: 0 0 10px rgba(34,211,238,.5);
-  transition: width 120ms linear;
+  /* No width transition — RAF updates 60×/s already render smoothly, and a
+     transition would smear -3s penalty jumps into a gentle slide. */
 }
 .ta-clock-bar.is-danger { border-color: var(--danger); }
 .ta-clock-bar.is-danger .ta-clock-bar-fill {
   background: var(--danger);
   box-shadow: 0 0 16px rgba(255,92,106,.7);
   animation: ta-bar-pulse .5s var(--ease-snap) infinite;
+}
+.ta-clock-bar.is-penalty {
+  border-color: var(--danger);
+  box-shadow: 0 0 18px rgba(255,92,106,.55);
+  animation: ta-bar-penalty-shake .36s var(--ease-snap);
+}
+.ta-clock-bar.is-penalty .ta-clock-bar-fill {
+  animation: ta-bar-penalty-flash .36s var(--ease-snap);
+}
+@keyframes ta-bar-penalty-shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+}
+@keyframes ta-bar-penalty-flash {
+  0%   { filter: brightness(1); }
+  40%  { filter: brightness(1.6) hue-rotate(-30deg); box-shadow: 0 0 22px var(--danger); }
+  100% { filter: brightness(1); }
+}
+.ta-penalty-fx {
+  position: fixed;
+  top: calc(80px + env(safe-area-inset-top)); left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: 56px;
+  color: var(--danger);
+  text-shadow: 0 0 16px rgba(255,92,106,.8), 0 0 32px rgba(255,92,106,.4);
+  pointer-events: none;
+  z-index: 100;
+  animation: ta-penalty-pop .6s var(--ease-snap) forwards;
+}
+@keyframes ta-penalty-pop {
+  0%   { opacity: 0; transform: translate(-50%, 20px) scale(.5); }
+  20%  { opacity: 1; transform: translate(-50%, 0) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -20px) scale(1); }
 }
 @keyframes ta-bar-pulse {
   0%, 100% { opacity: 1; }
