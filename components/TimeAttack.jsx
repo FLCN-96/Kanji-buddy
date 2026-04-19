@@ -173,7 +173,11 @@ const TimeAttackApp = ({ cards }) => {
 
   const dealNext = React.useCallback((usedSet, pool) => {
     const p = pool || poolRef.current || cards;
-    const q = dealQuestion(p, usedSet);
+    // Pool drained — wipe `used` so the next lap is a clean reshuffle
+    // rather than dealQuestion's silent same-card fallback.
+    const u = (usedSet && usedSet.size >= p.length) ? new Set() : usedSet;
+    if (u !== usedSet) setUsedIdx(u);
+    const q = dealQuestion(p, u);
     setQuestion(q);
     setTileFeedback(null);
     lockedRef.current = false;

@@ -2,7 +2,7 @@
 // land on next visit without forcing cache-version bumps. Cache-first
 // for heavy/stable assets (cards.json, icons, manifest, fonts).
 
-const CACHE = 'kb-v10';
+const CACHE = 'kb-v11';
 const CDN_CACHE = 'kb-cdn-v1';
 const NAV_FALLBACK = './Home.html';
 
