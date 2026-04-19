@@ -1,16 +1,16 @@
 // MATCH — 60s lane match. Pair kanji ↔ meaning OR kanji ↔ reading.
 // Wrong pair → -2s penalty. Speed bonus per match.
 
-const TWEAK_DEFAULTS_MT = /*EDITMODE-BEGIN*/{
-  "variant": "game",
-  "accent": "cyan",
-  "scanlines": "off",
-  "density": "comfortable",
-  "countdown": "dissolve",
-  "boardSize": 7,
-  "axis": "mix",
-  "duration": 60
-}/*EDITMODE-END*/;
+const TWEAK_DEFAULTS_MT = {
+  variant: 'hud',
+  accent: 'cyan',
+  scanlines: 'off',
+  density: 'comfortable',
+  countdown: 'dissolve',
+  boardSize: 7,
+  axis: 'mix',
+  duration: 60,
+};
 
 const PB_KEY_MT = 'kb-mt-pb';
 
@@ -95,15 +95,12 @@ const MTTopbar = ({ timeLeft, total, score, multiplier, penaltyTick, onQuit }) =
 };
 
 const MatchApp = ({ cards }) => {
-  const [tweaks, setTweaks] = React.useState(() => {
+  const [tweaks] = React.useState(() => {
     try {
       const shared = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
-      const local = JSON.parse(localStorage.getItem('kb-mt-tweaks') || '{}');
-      return { ...TWEAK_DEFAULTS_MT, ...shared, ...local };
-    } catch(e) { return TWEAK_DEFAULTS_MT; }
+      return { ...TWEAK_DEFAULTS_MT, ...shared };
+    } catch(e) { return { ...TWEAK_DEFAULTS_MT }; }
   });
-  const [tweaksOpen, setTweaksOpen] = React.useState(false);
-  const [editMode, setEditMode] = React.useState(false);
 
   const [phase, setPhase] = React.useState('pre'); // pre | ready | play | end
   const [countdown, setCountdown] = React.useState(3);
@@ -137,29 +134,7 @@ const MatchApp = ({ cards }) => {
     document.body.dataset.accent = tweaks.accent;
     document.body.dataset.scanlines = tweaks.scanlines;
     document.body.dataset.density = tweaks.density;
-    try {
-      localStorage.setItem('kb-mt-tweaks', JSON.stringify(tweaks));
-      const shared = { variant: tweaks.variant, accent: tweaks.accent, scanlines: tweaks.scanlines, density: tweaks.density };
-      const existing = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
-      localStorage.setItem('kb-tweaks', JSON.stringify({ ...existing, ...shared }));
-    } catch(e) {}
   }, [tweaks]);
-
-  React.useEffect(() => {
-    const h = (e) => {
-      if (e.data?.type === '__activate_edit_mode') { setEditMode(true); setTweaksOpen(true); }
-      else if (e.data?.type === '__deactivate_edit_mode') { setEditMode(false); setTweaksOpen(false); }
-    };
-    window.addEventListener('message', h);
-    window.parent.postMessage({type: '__edit_mode_available'}, '*');
-    return () => window.removeEventListener('message', h);
-  }, []);
-
-  const setTweak = (k, v) => {
-    const next = { ...tweaks, [k]: v };
-    setTweaks(next);
-    try { window.parent.postMessage({type:'__edit_mode_set_keys', edits:{[k]: v}}, '*'); } catch(e) {}
-  };
 
   // Countdown ready phase
   React.useEffect(() => {
@@ -222,6 +197,26 @@ const MatchApp = ({ cards }) => {
       setBeatPb(true);
       try { localStorage.setItem(PB_KEY_MT, String(score)); } catch(e) {}
       setPb(score);
+    }
+    if (window.DB && matches + misses > 0) {
+      const isHot = window.Daily && window.Daily.hotChallengeId() === 'match';
+      const base = 55;
+      // Perf scale: 1 base XP per 10 score, capped at 3x base
+      const perfMult = Math.min(3, 1 + score / 300);
+      const earned = Math.round(base * perfMult * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+      window.DB.saveScore({ mode: 'match', score, duration_s: tweaks.duration }).catch(() => {});
+      window.DB.saveSession({
+        mode: 'match',
+        duration_s: tweaks.duration,
+        cards_reviewed: matches + misses,
+        hits: matches,
+        misses,
+        hard: 0,
+        xp_earned: earned,
+      })
+        .then(() => window.DB.grantXp(earned))
+        .then(() => window.DB.recordSessionStreak())
+        .catch(() => {});
     }
   };
 
@@ -431,35 +426,7 @@ const MatchApp = ({ cards }) => {
         </main>
       </div>
 
-      {!editMode && <button className="tweaks-float" onClick={() => setTweaksOpen(o => !o)}>▸ tweaks</button>}
-      <TweaksPanelMT open={tweaksOpen} onClose={() => setTweaksOpen(false)} tweaks={tweaks} onSet={setTweak} />
     </>
-  );
-};
-
-const TweaksPanelMT = ({ open, onClose, tweaks, onSet }) => {
-  const opt = (key, options) => (
-    <div className="tweaks-row">
-      <div className="tweaks-lbl">▸ {key.toUpperCase()}</div>
-      <div className="tweaks-opts">
-        {options.map(o => (
-          <button key={o.id} className={`tweaks-btn${tweaks[key] === o.id ? ' is-active' : ''}`} onClick={() => onSet(key, o.id)}>{o.label}</button>
-        ))}
-      </div>
-    </div>
-  );
-  return (
-    <div className={`tweaks${open ? ' is-open' : ''}`}>
-      <div className="tweaks-head"><span>TWEAKS</span><button className="tweaks-close" onClick={onClose}>╳</button></div>
-      <div className="tweaks-body">
-        {opt('boardSize', [{id:5,label:'5'},{id:7,label:'7'},{id:9,label:'9'}])}
-        {opt('axis', [{id:'mean',label:'mean only'},{id:'read',label:'read only'},{id:'mix',label:'mix'}])}
-        {opt('duration', [{id:60,label:'60s'},{id:90,label:'90s'},{id:120,label:'120s'}])}
-        {opt('variant', [{id:'calm',label:'calm'},{id:'hud',label:'hud'},{id:'game',label:'game'}])}
-        {opt('accent', [{id:'cyan',label:'cyan+mag'},{id:'dim',label:'teal+rose'}])}
-        {opt('scanlines', [{id:'off',label:'off'},{id:'on',label:'on'}])}
-      </div>
-    </div>
   );
 };
 

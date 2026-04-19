@@ -1,13 +1,13 @@
 // Survival orchestrator — single life, depth ladder
 
-const TWEAK_DEFAULTS_SV = /*EDITMODE-BEGIN*/{
-  "variant": "game",
-  "accent": "cyan",
-  "scanlines": "off",
-  "density": "comfortable",
-  "countdown": "dissolve",
-  "promptMode": "rotate"
-}/*EDITMODE-END*/;
+const TWEAK_DEFAULTS_SV = {
+  variant: 'hud',
+  accent: 'cyan',
+  scanlines: 'off',
+  density: 'comfortable',
+  countdown: 'dissolve',
+  promptMode: 'rotate',
+};
 
 const PB_KEY_SV = 'kb-sv-pb';
 
@@ -83,31 +83,6 @@ function dealSurvQuestion(cards, used, depth, mode) {
   return { card, prompt, tiles, correct, correctIdx: tiles.indexOf(correct) };
 }
 
-const TweaksPanelSV = ({ open, onClose, tweaks, onSet }) => {
-  const opt = (key, options) => (
-    <div className="tweaks-row">
-      <div className="tweaks-lbl">▸ {key.toUpperCase()}</div>
-      <div className="tweaks-opts">
-        {options.map(o => (
-          <button key={o.id} className={`tweaks-btn${tweaks[key] === o.id ? ' is-active' : ''}`} onClick={() => onSet(key, o.id)}>{o.label}</button>
-        ))}
-      </div>
-    </div>
-  );
-  return (
-    <div className={`tweaks${open ? ' is-open' : ''}`}>
-      <div className="tweaks-head"><span>TWEAKS</span><button className="tweaks-close" onClick={onClose}>╳</button></div>
-      <div className="tweaks-body">
-        {opt('promptMode', [{id:'rotate',label:'rotate'},{id:'mean2k',label:'mean→kanji'},{id:'read2k',label:'reading→k'},{id:'k2mean',label:'kanji→mean'}])}
-        {opt('variant', [{id:'calm',label:'calm'},{id:'hud',label:'hud'},{id:'game',label:'game'}])}
-        {opt('accent', [{id:'cyan',label:'cyan+mag'},{id:'dim',label:'teal+rose'}])}
-        {opt('scanlines', [{id:'off',label:'off'},{id:'on',label:'on'}])}
-        {opt('density', [{id:'comfortable',label:'comfort'},{id:'compact',label:'compact'}])}
-      </div>
-    </div>
-  );
-};
-
 const SVTopbar = ({ phase, depth, best, onQuit }) => (
   <header className="run-top sv-top">
     <div className="run-top-l">
@@ -125,15 +100,12 @@ const SVTopbar = ({ phase, depth, best, onQuit }) => (
 );
 
 const SurvivalApp = ({ cards }) => {
-  const [tweaks, setTweaks] = React.useState(() => {
+  const [tweaks] = React.useState(() => {
     try {
       const shared = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
-      const svLocal = JSON.parse(localStorage.getItem('kb-sv-tweaks') || '{}');
-      return { ...TWEAK_DEFAULTS_SV, ...shared, ...svLocal };
-    } catch(e) { return TWEAK_DEFAULTS_SV; }
+      return { ...TWEAK_DEFAULTS_SV, ...shared };
+    } catch(e) { return { ...TWEAK_DEFAULTS_SV }; }
   });
-  const [tweaksOpen, setTweaksOpen] = React.useState(false);
-  const [editMode, setEditMode] = React.useState(false);
 
   const [phase, setPhase] = React.useState('pre'); // pre | ready | play | end
   const [countdown, setCountdown] = React.useState(3);
@@ -156,29 +128,7 @@ const SurvivalApp = ({ cards }) => {
     document.body.dataset.accent = tweaks.accent;
     document.body.dataset.scanlines = tweaks.scanlines;
     document.body.dataset.density = tweaks.density;
-    try {
-      localStorage.setItem('kb-sv-tweaks', JSON.stringify(tweaks));
-      const shared = { variant: tweaks.variant, accent: tweaks.accent, scanlines: tweaks.scanlines, density: tweaks.density };
-      const existing = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
-      localStorage.setItem('kb-tweaks', JSON.stringify({ ...existing, ...shared }));
-    } catch(e) {}
   }, [tweaks]);
-
-  React.useEffect(() => {
-    const h = (e) => {
-      if (e.data?.type === '__activate_edit_mode') { setEditMode(true); setTweaksOpen(true); }
-      else if (e.data?.type === '__deactivate_edit_mode') { setEditMode(false); setTweaksOpen(false); }
-    };
-    window.addEventListener('message', h);
-    window.parent.postMessage({type: '__edit_mode_available'}, '*');
-    return () => window.removeEventListener('message', h);
-  }, []);
-
-  const setTweak = (k, v) => {
-    const next = { ...tweaks, [k]: v };
-    setTweaks(next);
-    try { window.parent.postMessage({type:'__edit_mode_set_keys', edits:{[k]: v}}, '*'); } catch(e) {}
-  };
 
   const pickMode = React.useCallback((d) => {
     if (tweaks.promptMode === 'rotate') {
@@ -228,6 +178,25 @@ const SurvivalApp = ({ cards }) => {
         setPb(depthAtDeath);
       }
     } catch(e) {}
+    if (window.DB && depthAtDeath > 0) {
+      const isHot = window.Daily && window.Daily.hotChallengeId() === 'survival';
+      const base = 80;
+      const earned = base * (isHot ? window.Daily.HOT_MULTIPLIER : 1);
+      window.DB.saveScore({ mode: 'survival', score: depthAtDeath, tier: pickDepthTier(depthAtDeath).id })
+        .catch(() => {});
+      window.DB.saveSession({
+        mode: 'survival',
+        duration_s: 0,
+        cards_reviewed: depthAtDeath,
+        hits: depthAtDeath,
+        misses: 1,
+        hard: 0,
+        xp_earned: earned,
+      })
+        .then(() => window.DB.grantXp(earned))
+        .then(() => window.DB.recordSessionStreak())
+        .catch(() => {});
+    }
   };
 
   const onTilePick = (tileIdx) => {
@@ -326,8 +295,6 @@ const SurvivalApp = ({ cards }) => {
         {/* Dread vignette — intensifies with depth */}
         {phase === 'play' && <div className="sv-vignette" aria-hidden />}
       </div>
-      {!editMode && <button className="tweaks-float" onClick={() => setTweaksOpen(o => !o)}>▸ tweaks</button>}
-      <TweaksPanelSV open={tweaksOpen} onClose={() => setTweaksOpen(false)} tweaks={tweaks} onSet={setTweak} />
     </>
   );
 };

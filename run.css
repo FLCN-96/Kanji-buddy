@@ -549,34 +549,3 @@ body[data-density="compact"] .run-card-body { padding: var(--sp-3); }
   .run-kanji-ghost { font-size: 132px; }
 }
 
-/* tweaks panel (reused) */
-.tweaks {
-  position: fixed; right: 12px; bottom: 48px; width: 240px;
-  background: var(--bg-1); border: 1px solid var(--accent-cyan);
-  box-shadow: var(--glow-cyan); z-index: 50; display: none;
-}
-.tweaks.is-open { display: block; }
-.tweaks-head { padding: 6px var(--sp-3); border-bottom: 1px solid var(--line-dim); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-cyan); display: flex; justify-content: space-between; align-items: center; }
-.tweaks-close { background: transparent; border: 0; color: var(--fg-2); cursor: pointer; font-family: var(--font-mono); font-size: 14px; }
-.tweaks-body { padding: var(--sp-3); display: flex; flex-direction: column; gap: var(--sp-3); }
-.tweaks-row { display: flex; flex-direction: column; gap: 4px; }
-.tweaks-lbl { font-size: 10px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; }
-.tweaks-opts { display: flex; gap: 4px; flex-wrap: wrap; }
-.tweaks-btn {
-  flex: 1; min-width: 0; font-family: var(--font-mono);
-  font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
-  padding: 6px 8px; border: 1px solid var(--line-dim);
-  background: transparent; color: var(--fg-1); cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-snap);
-}
-.tweaks-btn:hover { color: var(--fg-0); border-color: var(--line-bright); }
-.tweaks-btn.is-active { border-color: var(--accent-cyan); color: var(--accent-cyan); background: var(--accent-cyan-bg); }
-
-.tweaks-float {
-  position:fixed; right:12px; bottom:12px; z-index:49;
-  background:var(--bg-1); border:1px solid var(--accent-cyan);
-  color:var(--accent-cyan); padding:8px 12px;
-  font-family:var(--font-mono); font-size:10px; letter-spacing:.12em;
-  text-transform:uppercase; cursor:pointer;
-  box-shadow:0 0 12px rgba(34,211,238,.35);
-}

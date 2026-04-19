@@ -52,35 +52,50 @@ const BootBanner = ({ state, collapsed, onToggle }) => {
   );
 };
 
-const KANJI_OF_DAY = {
-  k: '刃',
-  on: 'ジン',
-  kun: 'は',
-  mean: '"Blade · edge of a sword"',
-  tag: 'JLPT N1 · 3 strokes',
-};
-
-const Hero = () => (
-  <section className="kb-hero" data-screen-label="hero-kanji">
-    <div className="kb-hero-strip">
-      <span>▸ KANJI // today</span>
-      <span className="mag">「{KANJI_OF_DAY.kun}」</span>
-    </div>
-    <div className="kb-hero-body">
-      <div className="kb-hero-meta">
-        <div className="kb-hero-reading">
-          <span className="on">ON</span>{KANJI_OF_DAY.on}
+const Hero = ({ kanji }) => {
+  // `kanji` comes from cards.json: { k, mainOn, mainKun, mean, jlpt, strokes, ... }
+  if (!kanji) {
+    return (
+      <section className="kb-hero" data-screen-label="hero-kanji">
+        <div className="kb-hero-strip">
+          <span>▸ KANJI // today</span>
+          <span className="mag">「—」</span>
         </div>
-        <div className="kb-hero-reading">
-          <span className="on">KUN</span>{KANJI_OF_DAY.kun}
+        <div className="kb-hero-body">
+          <div className="kb-hero-meta"><div className="kb-hero-tag">loading…</div></div>
+          <div className="kb-hero-kanji">·</div>
         </div>
-        <div className="kb-hero-mean">{KANJI_OF_DAY.mean}</div>
-        <div className="kb-hero-tag">{KANJI_OF_DAY.tag}</div>
+      </section>
+    );
+  }
+  const on = kanji.mainOn || '—';
+  const kun = kanji.mainKun || '—';
+  const mean = kanji.mean ? `"${kanji.mean}"` : '';
+  const jlptLbl = kanji.jlpt ? `JLPT N${kanji.jlpt}` : 'JLPT —';
+  const strokeLbl = kanji.strokes ? `${kanji.strokes} strokes` : '';
+  const tag = [jlptLbl, strokeLbl].filter(Boolean).join(' · ');
+  return (
+    <section className="kb-hero" data-screen-label="hero-kanji">
+      <div className="kb-hero-strip">
+        <span>▸ KANJI // today</span>
+        <span className="mag">「{kun}」</span>
       </div>
-      <div className="kb-hero-kanji" data-k={KANJI_OF_DAY.k}>{KANJI_OF_DAY.k}</div>
-    </div>
-  </section>
-);
+      <div className="kb-hero-body">
+        <div className="kb-hero-meta">
+          <div className="kb-hero-reading">
+            <span className="on">ON</span>{on}
+          </div>
+          <div className="kb-hero-reading">
+            <span className="on">KUN</span>{kun}
+          </div>
+          {mean && <div className="kb-hero-mean">{mean}</div>}
+          <div className="kb-hero-tag">{tag}</div>
+        </div>
+        <div className="kb-hero-kanji" data-k={kanji.k}>{kanji.k}</div>
+      </div>
+    </section>
+  );
+};
 
 const formatCountdown = (seconds) => {
   const h = Math.floor(seconds / 3600);
@@ -90,27 +105,37 @@ const formatCountdown = (seconds) => {
   return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 };
 
+// Seconds until next local midnight — "daily drop" time.
+const secondsUntilMidnight = () => {
+  const now = new Date();
+  const mid = new Date(now);
+  mid.setHours(24, 0, 0, 0);
+  return Math.max(0, Math.floor((mid - now) / 1000));
+};
+
 const Countdown = ({ state }) => {
-  const initial = state === 'clear' ? 7 * 3600 + 14 * 60 : state === 'behind' ? 0 : 4 * 3600 + 22 * 60;
-  const [sec, setSec] = React.useState(initial);
-  React.useEffect(() => { setSec(initial); }, [state]);
+  const [sec, setSec] = React.useState(secondsUntilMidnight);
   React.useEffect(() => {
-    const t = setInterval(() => setSec(s => Math.max(0, s - 1)), 1000);
+    const t = setInterval(() => setSec(secondsUntilMidnight()), 1000);
     return () => clearInterval(t);
   }, []);
   let lbl, val, cls = '';
-  if (state === 'clear') { lbl = 'NEXT DROP // in'; val = 'queue clear. review any time.'; cls = 'is-clear'; }
-  else if (state === 'behind') { lbl = 'OVERDUE // since 0700'; val = 'srs debt accumulating.'; cls = 'is-overdue'; }
-  else { lbl = 'DUE REVIEW // in'; val = 'next card unlocks soon.'; cls = ''; }
+  if (state === 'clear') {
+    lbl = 'NEXT DROP // in'; val = 'queue clear · review any time';
+    cls = 'is-clear';
+  } else if (state === 'behind') {
+    lbl = 'OVERDUE // srs debt'; val = 'catch up before the next drop';
+    cls = 'is-overdue';
+  } else {
+    lbl = 'NEXT DROP // in'; val = 'new reviews unlock at 00:00';
+  }
   return (
     <div className={`kb-countdown ${cls}`}>
       <div className="kb-countdown-l">
         <div className="kb-countdown-lbl">{lbl}</div>
         <div className="kb-countdown-val">{val}</div>
       </div>
-      <div className="kb-countdown-time">
-        {state === 'clear' ? formatCountdown(sec) : state === 'behind' ? '+02:14' : formatCountdown(sec)}
-      </div>
+      <div className="kb-countdown-time">{formatCountdown(sec)}</div>
     </div>
   );
 };
@@ -167,18 +192,49 @@ const StreakPanel = ({ state, streak, bestStreak }) => {
   );
 };
 
-const XpBar = () => (
-  <div className="variant-xp">
-    <div className="variant-xp-head">
-      <span>▸ OPERATOR // <span className="rank">RANK Ⅲ · ADEPT</span></span>
-      <span style={{color:'var(--accent-cyan)'}}>2,140 XP</span>
+const RANK_TABLE = [
+  { min:     0, label: 'RANK Ⅰ · NOVICE' },
+  { min:   250, label: 'RANK Ⅱ · APPRENTICE' },
+  { min:  1000, label: 'RANK Ⅲ · ADEPT' },
+  { min:  2500, label: 'RANK Ⅳ · SAVANT' },
+  { min:  5000, label: 'RANK Ⅴ · MASTER' },
+  { min: 10000, label: 'RANK Ⅵ · SENSEI' },
+  { min: 20000, label: 'RANK Ⅶ · LEGEND' },
+];
+
+const rankFor = (xp) => {
+  let cur = RANK_TABLE[0];
+  let next = RANK_TABLE[1] || null;
+  for (let i = 0; i < RANK_TABLE.length; i++) {
+    if (xp >= RANK_TABLE[i].min) {
+      cur = RANK_TABLE[i];
+      next = RANK_TABLE[i + 1] || null;
+    }
+  }
+  return { cur, next };
+};
+
+const XpBar = ({ xp = 0 }) => {
+  const { cur, next } = rankFor(xp);
+  const floor = cur.min;
+  const ceil = next ? next.min : cur.min;
+  const span = Math.max(1, ceil - floor);
+  const into = Math.max(0, xp - floor);
+  const pct = next ? Math.min(100, Math.round((into / span) * 100)) : 100;
+  return (
+    <div className="variant-xp">
+      <div className="variant-xp-head">
+        <span>▸ OPERATOR // <span className="rank">{cur.label}</span></span>
+        <span style={{color:'var(--accent-cyan)'}}>{xp.toLocaleString()} XP</span>
+      </div>
+      <div className="variant-xp-bar"><div className="variant-xp-fill" style={{width:`${pct}%`}} /></div>
+      <div className="variant-xp-meta">
+        {next
+          ? <><span>next: <b>{next.label}</b></span><span>{into.toLocaleString()} / {span.toLocaleString()} XP</span></>
+          : <><span>max rank reached</span><span>{xp.toLocaleString()} XP</span></>}
+      </div>
     </div>
-    <div className="variant-xp-bar"><div className="variant-xp-fill" style={{width:'68%'}} /></div>
-    <div className="variant-xp-meta">
-      <span>next: <b>RANK Ⅳ · SAVANT</b></span>
-      <span>680 / 1000 XP</span>
-    </div>
-  </div>
-);
+  );
+};
 
 Object.assign(window, { BootBanner, Hero, Countdown, DuePanel, StreakPanel, XpBar });

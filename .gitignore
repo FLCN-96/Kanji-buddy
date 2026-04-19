@@ -1,6 +1,10 @@
 # Anki deck source — imported via browser, not needed in repo
 uploads/*.apkg
 
+# Scratch / handoff artifacts
+tmp/
+Kanji-buddy-handoff.zip
+
 # OS
 .DS_Store
 Thumbs.db
