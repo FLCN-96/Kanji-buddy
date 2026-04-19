@@ -2,7 +2,7 @@
   "name": "Kanji-buddy",
   "short_name": "KB",
   "description": "Personal kanji study app with spaced repetition",
-  "start_url": "./",
+  "start_url": "./Home.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
