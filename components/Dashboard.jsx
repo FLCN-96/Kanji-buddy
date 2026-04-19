@@ -167,22 +167,168 @@ const DuePanel = ({ state, deck, reviewedToday = 0 }) => {
   );
 };
 
-const StreakPanel = ({ streak, bestStreak }) => {
-  const days = streak ?? 0;
-  const best = bestStreak ?? 0;
-  const subCopy = days === 0
-    ? (best === 0 ? 'no streak yet · start today' : `broken · best ${best}d`)
-    : (days >= best ? `new best · ${days}d` : `best · ${best}d`);
+// Progress panel — your position on the JLPT ladder.
+// Rotates through four framings of the same truth so players can read
+// their position as a tier name, a percentage, or a distance-remaining.
+// Arc colour tracks the tier you're currently working on, so even a
+// glance at the ring tells you where you are on the ladder.
+
+// Per-tier accent for ring colour + headline glow. Cyan = easiest,
+// magenta = hardest, mirroring the rank-ladder cyan→magenta→amber
+// progression so the colour language stays consistent with XpBar.
+const JLPT_TIER_META = {
+  5: { label: 'N5', color: 'cyan'    },
+  4: { label: 'N4', color: 'cyan'    },
+  3: { label: 'N3', color: 'amber'   },
+  2: { label: 'N2', color: 'magenta' },
+  1: { label: 'N1', color: 'magenta' },
+};
+
+function computeTierProgress(cards, states) {
+  if (!cards || !cards.length) {
+    return { tiers: [], total: 0, done: 0, nextTier: null };
+  }
+  // "Done" = seen at least once in Run (reviews ≥ 1). Survives SM-2
+  // lapse resets (which zero interval_days) — a card you've engaged
+  // with is still progress, even if it's since slipped.
+  const doneIdx = new Set();
+  for (const s of (states || [])) {
+    if ((s.reviews || 0) >= 1) doneIdx.add(s.idx);
+  }
+  const counts = { 5:{t:0,d:0}, 4:{t:0,d:0}, 3:{t:0,d:0}, 2:{t:0,d:0}, 1:{t:0,d:0} };
+  for (const c of cards) {
+    const j = c.jlpt;
+    if (!counts[j]) continue;
+    counts[j].t += 1;
+    if (doneIdx.has(c.idx)) counts[j].d += 1;
+  }
+  const tiers = [5,4,3,2,1].map(j => ({
+    jlpt:  j,
+    label: JLPT_TIER_META[j].label,
+    color: JLPT_TIER_META[j].color,
+    total: counts[j].t,
+    done:  counts[j].d,
+  }));
+  const total = tiers.reduce((a,t)=>a+t.total,0);
+  const done  = tiers.reduce((a,t)=>a+t.done,0);
+  // Next tier = easiest not-yet-complete tier (N5 first, N1 last).
+  const nextTier = tiers.find(t => t.total > 0 && t.done < t.total) || null;
+  return { tiers, total, done, nextTier };
+}
+
+const ProgressRing = ({ pct, color }) => {
+  const r = 18;
+  const circ = 2 * Math.PI * r;
+  const p = Math.max(0, Math.min(100, pct || 0));
+  const offset = circ * (1 - p / 100);
   return (
-    <div className="kb-streak" data-screen-label="streak-panel">
-      <div className="kb-streak-flame">
-        <span /><span /><span /><span />
+    <svg className={`kb-progress-ring tier-${color}`} viewBox="0 0 48 48" width="48" height="48" aria-hidden="true">
+      <circle cx="24" cy="24" r={r} className="kb-progress-ring-track" />
+      <circle
+        cx="24" cy="24" r={r}
+        className="kb-progress-ring-arc"
+        style={{ strokeDasharray: circ, strokeDashoffset: offset }}
+        transform="rotate(-90 24 24)"
+      />
+    </svg>
+  );
+};
+
+const ProgressPanel = ({ cards, states }) => {
+  const progress = React.useMemo(
+    () => computeTierProgress(cards, states),
+    [cards, states]
+  );
+  const { total, done, nextTier } = progress;
+
+  const [frame, setFrame] = React.useState(0);
+  const [paused, setPaused] = React.useState(false);
+  const [reducedMotion, setReducedMotion] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const apply = () => setReducedMotion(!!mq.matches);
+    apply();
+    if (mq.addEventListener) mq.addEventListener('change', apply);
+    else if (mq.addListener) mq.addListener(apply);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', apply);
+      else if (mq.removeListener) mq.removeListener(apply);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (paused || reducedMotion || !nextTier) return;
+    const id = setInterval(() => setFrame(f => (f + 1) % 4), 4000);
+    return () => clearInterval(id);
+  }, [paused, reducedMotion, nextTier]);
+
+  const overallPct = total > 0 ? Math.floor((done / total) * 100) : 0;
+  const tierRemaining = nextTier ? Math.max(0, nextTier.total - nextTier.done) : 0;
+  const tierPct = nextTier && nextTier.total > 0
+    ? Math.floor((nextTier.done / nextTier.total) * 100)
+    : 100;
+  const tierColor = nextTier ? nextTier.color : 'cyan';
+
+  let head, headUnit, sub, ringPct;
+  if (!nextTier && total === 0) {
+    // Cards haven't loaded yet (or DB is empty) — neutral placeholder
+    // so we don't flash "MAX" during the first paint.
+    head = '—';
+    headUnit = null;
+    sub = 'loading ladder…';
+    ringPct = 0;
+  } else if (!nextTier) {
+    head = 'MAX';
+    headUnit = null;
+    sub = 'ladder complete · all tiers cleared';
+    ringPct = 100;
+  } else if (frame === 0) {
+    head = nextTier.label;
+    headUnit = 'next tier';
+    sub = `${tierRemaining} ${tierRemaining === 1 ? 'card' : 'cards'} til clear`;
+    ringPct = overallPct;
+  } else if (frame === 1) {
+    head = `${overallPct}`;
+    headUnit = '% overall';
+    sub = `${done.toLocaleString()} / ${total.toLocaleString()} learned`;
+    ringPct = overallPct;
+  } else if (frame === 2) {
+    head = `${tierPct}`;
+    headUnit = `% ${nextTier.label}`;
+    sub = `${nextTier.done} / ${nextTier.total} in ${nextTier.label}`;
+    ringPct = tierPct;
+  } else {
+    head = `${tierRemaining}`;
+    headUnit = `til ${nextTier.label}`;
+    sub = `${nextTier.done} / ${nextTier.total} in ${nextTier.label}`;
+    ringPct = tierPct;
+  }
+
+  return (
+    <div
+      className={`kb-progress tier-${tierColor}`}
+      data-screen-label="progress-panel"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <div className="kb-progress-ring-wrap">
+        <ProgressRing pct={ringPct} color={tierColor} />
       </div>
-      <div className="kb-streak-lbl">▸ STREAK</div>
-      <div className="kb-streak-val">
-        {days}<span className="unit">d</span>
+      <div className="kb-progress-lbl">▸ PROGRESS</div>
+      <div className="kb-progress-val">
+        {head}
+        {headUnit && <span className="unit">{headUnit}</span>}
       </div>
-      <div className="kb-streak-sub">{subCopy}</div>
+      <div className="kb-progress-sub">{sub}</div>
+      {nextTier && (
+        <div className="kb-progress-dots" aria-hidden="true">
+          {[0,1,2,3].map(i => (
+            <span key={i} className={i === frame ? 'is-on' : ''} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -215,4 +361,4 @@ const XpBar = ({ xp = 0 }) => {
   );
 };
 
-Object.assign(window, { Hero, Countdown, DuePanel, StreakPanel, XpBar, formatCountdown, secondsUntilMidnight });
+Object.assign(window, { Hero, Countdown, DuePanel, ProgressPanel, XpBar, formatCountdown, secondsUntilMidnight });
