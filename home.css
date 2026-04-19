@@ -280,35 +280,86 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
   border-color: var(--line-dim);
 }
 
-/* Streak — geometric flame: stacked chevrons */
-.kb-streak {
+/* Progress — JLPT ladder position. Rotating headline + SVG ring
+   whose arc colour encodes the tier you're currently clearing. The
+   copy cycles every 4s through four views of the same truth
+   (position → overall % → in-tier % → cards remaining). Hover
+   pauses; reduced-motion freezes on frame 0. */
+.kb-progress {
   border: 1px solid var(--line-dim); background: var(--bg-1);
   padding: var(--sp-3); display: flex; flex-direction: column; gap: 4px;
   position: relative; overflow: hidden;
+  min-width: 0;
 }
-.kb-streak-lbl { font-size: 10px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; }
-.kb-streak-val {
+.kb-progress-lbl { font-size: 10px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; }
+.kb-progress-val {
   font-family: var(--font-mono); font-weight: 700; font-size: 40px; line-height: 1;
-  color: var(--accent-amber); display: inline-flex; align-items: baseline; gap: 4px;
-  text-shadow: 0 0 10px rgba(245,165,36,0.4);
+  color: var(--accent-cyan); display: inline-flex; align-items: baseline; gap: 4px;
+  text-shadow: 0 0 10px rgba(34,211,238,0.4);
+  min-width: 0;
+  /* Headline swap is a value-change, not a slide — let the digits
+     settle cleanly so the dot indicator is what reads as "rotating". */
+  transition: color var(--dur-base) var(--ease-snap),
+              text-shadow var(--dur-base) var(--ease-snap);
 }
-.kb-streak-val .unit { font-size: 11px; color: var(--fg-2); font-weight: 400; letter-spacing: .12em; text-transform: uppercase; text-shadow: none; }
-.kb-streak-sub { font-size: 10px; color: var(--fg-2); letter-spacing: .08em; }
-.kb-streak-flame {
+.kb-progress.tier-cyan    .kb-progress-val { color: var(--accent-cyan);    text-shadow: 0 0 10px rgba(34,211,238,0.4); }
+.kb-progress.tier-amber   .kb-progress-val { color: var(--accent-amber);   text-shadow: 0 0 10px rgba(245,165,36,0.4); }
+.kb-progress.tier-magenta .kb-progress-val { color: var(--accent-magenta); text-shadow: 0 0 10px rgba(255,61,255,0.4); }
+.kb-progress-val .unit {
+  font-size: 11px; color: var(--fg-2); font-weight: 400;
+  letter-spacing: .12em; text-transform: uppercase; text-shadow: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  min-width: 0;
+}
+.kb-progress-sub {
+  font-size: 10px; color: var(--fg-2); letter-spacing: .08em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding-right: 52px; /* clear the ring */
+}
+.kb-progress-dots {
+  display: flex; gap: 4px; margin-top: 4px;
+}
+.kb-progress-dots span {
+  width: 5px; height: 5px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-dim);
+  transition: background var(--dur-fast) var(--ease-snap),
+              border-color var(--dur-fast) var(--ease-snap),
+              box-shadow var(--dur-fast) var(--ease-snap);
+}
+.kb-progress.tier-cyan    .kb-progress-dots span.is-on { background: var(--accent-cyan);    border-color: var(--accent-cyan);    box-shadow: 0 0 5px rgba(34,211,238,.6); }
+.kb-progress.tier-amber   .kb-progress-dots span.is-on { background: var(--accent-amber);   border-color: var(--accent-amber);   box-shadow: 0 0 5px rgba(245,165,36,.6); }
+.kb-progress.tier-magenta .kb-progress-dots span.is-on { background: var(--accent-magenta); border-color: var(--accent-magenta); box-shadow: 0 0 5px rgba(255,61,255,.6); }
+
+.kb-progress-ring-wrap {
   position: absolute; right: 10px; top: 10px;
-  width: 44px; height: 52px;
-  display: flex; flex-direction: column-reverse; gap: 2px;
-  opacity: .9;
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
 }
-.kb-streak-flame span {
-  display: block;
-  background: var(--accent-amber);
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+.kb-progress-ring { display: block; }
+.kb-progress-ring-track {
+  fill: none;
+  stroke: var(--line-dim);
+  stroke-width: 3;
 }
-.kb-streak-flame span:nth-child(1) { height: 20px; opacity: 1; box-shadow: 0 0 10px var(--accent-amber); }
-.kb-streak-flame span:nth-child(2) { height: 14px; opacity: .75; background: var(--accent-magenta); }
-.kb-streak-flame span:nth-child(3) { height: 10px; opacity: .55; background: var(--accent-cyan); }
-.kb-streak-flame span:nth-child(4) { height: 6px; opacity: .35; }
+.kb-progress-ring-arc {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: square;
+  transition: stroke-dashoffset var(--dur-slow) var(--ease-snap),
+              stroke var(--dur-base) var(--ease-snap),
+              filter var(--dur-base) var(--ease-snap);
+}
+.kb-progress-ring.tier-cyan    .kb-progress-ring-arc { stroke: var(--accent-cyan);    filter: drop-shadow(0 0 3px rgba(34,211,238,.7)); }
+.kb-progress-ring.tier-amber   .kb-progress-ring-arc { stroke: var(--accent-amber);   filter: drop-shadow(0 0 3px rgba(245,165,36,.7)); }
+.kb-progress-ring.tier-magenta .kb-progress-ring-arc { stroke: var(--accent-magenta); filter: drop-shadow(0 0 3px rgba(255,61,255,.7)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-progress-val,
+  .kb-progress-ring-arc,
+  .kb-progress-dots span { transition: none; }
+}
 
 /* =========================================================
    PRIMARY RUN + CHALLENGES
@@ -674,8 +725,6 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
   box-shadow: none;
 }
 .variant-calm .kb-run-primary:hover { box-shadow: 0 0 12px rgba(34,211,238,.3); }
-.variant-calm .kb-streak-flame { display: none; }
-.variant-calm .kb-streak-val { text-shadow: none; color: var(--fg-0); }
 .variant-calm .kb-hero-kanji::before { display: none; }
 .variant-calm .kb-countdown-time { text-shadow: none; }
 .variant-calm .kb-boot { display: none; }
@@ -734,7 +783,10 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
 body[data-density="compact"] .kb-hero-kanji { font-size: 96px; }
 body[data-density="compact"] .kb-hero-body { padding: var(--sp-3) var(--sp-3); }
 body[data-density="compact"] .kb-due-count,
-body[data-density="compact"] .kb-streak-val { font-size: 28px; }
+body[data-density="compact"] .kb-progress-val { font-size: 28px; }
+body[data-density="compact"] .kb-progress-ring-wrap { width: 40px; height: 40px; right: 8px; top: 8px; }
+body[data-density="compact"] .kb-progress-ring { width: 40px; height: 40px; }
+body[data-density="compact"] .kb-progress-sub { padding-right: 44px; }
 body[data-density="compact"] .kb-run-primary { padding: var(--sp-3); }
 body[data-density="compact"] .kb-run-primary .kb-rp-label { font-size: 18px; }
 body[data-density="compact"] .kb-chal { min-height: 70px; padding: 10px; }
