@@ -5,9 +5,8 @@ Produces three PNGs under icons/ matching the Canvas logic:
   - icon-512.png           (standard, with border)
   - icon-512-maskable.png  (safe-zone friendly, no border, kanji scaled 0.5)
 
-Run with the Python 3.10 install that has Pillow:
-  "C:/Users/REDACTED/AppData/Local/Programs/Python/Python310/python.exe" \
-      tools/gen_icons.py
+Run with a Python 3.10+ install that has Pillow:
+  python tools/gen_icons.py
 """
 import os
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
