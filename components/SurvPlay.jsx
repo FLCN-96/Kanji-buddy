@@ -52,6 +52,16 @@ const SVPrompt = ({ prompt, jlpt, isUnseen }) => {
 
 const SVPlay = ({ q, depth, jlpt, onPick, feedback, heartBreak, pressure, sectorFlash, isUnseen }) => {
   const bigTile = q.prompt.kind !== 'kanji'; // tiles show kanji — make them big
+  // Suppress :hover until the user moves the pointer: after a pick the cursor
+  // often stays over the same screen position, and the freshly-mounted tile
+  // there would otherwise inherit :hover and read as the prior selection's glow.
+  const [pristine, setPristine] = React.useState(true);
+  React.useEffect(() => {
+    setPristine(true);
+    const onMove = () => setPristine(false);
+    window.addEventListener('pointermove', onMove, { once: true });
+    return () => window.removeEventListener('pointermove', onMove);
+  }, [q.card.idx]);
   return (
     <div className="sv-play" data-screen-label="sv-play">
       <div className="sv-play-top">
@@ -65,7 +75,7 @@ const SVPlay = ({ q, depth, jlpt, onPick, feedback, heartBreak, pressure, sector
 
       <SVPrompt prompt={q.prompt} jlpt={jlpt} isUnseen={isUnseen} />
 
-      <div key={q.card.idx} className={`sv-tiles${bigTile ? ' is-big' : ''}`}>
+      <div key={q.card.idx} className={`sv-tiles${bigTile ? ' is-big' : ''}${pristine ? ' is-pristine' : ''}`}>
         {q.tiles.map((t, i) => {
           let state = '';
           if (feedback) {
