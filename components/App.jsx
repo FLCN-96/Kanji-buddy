@@ -194,14 +194,17 @@ const Topbar = ({ displayName, user }) => {
   );
 };
 
-const StatusBar = ({ totalCards, dueCount }) => {
+const StatusBar = ({ totalCards, dueCount, streak }) => {
   const due = dueCount ?? 0;
-  const cls = due === 0 ? 'kb-dim' : due > 100 ? 'kb-amb' : 'kb-cyan';
+  const dueCls = due === 0 ? 'kb-dim' : due > 100 ? 'kb-amb' : 'kb-cyan';
+  const days = streak ?? 0;
+  const streakCls = days > 0 ? 'kb-amb' : 'kb-dim';
   return (
     <footer className="kb-statusbar">
       <div className="kb-statusbar-l">
         <span>CARDS · <b>{totalCards ? totalCards.toLocaleString() : '—'}</b></span>
-        <span className={cls}>DUE · <b>{due}</b></span>
+        <span className={streakCls}>STREAK · <b>{days}d</b></span>
+        <span className={dueCls}>DUE · <b>{due}</b></span>
       </div>
       <span>v0.3.1</span>
     </footer>
@@ -215,6 +218,7 @@ const App = ({ cards }) => {
   const [deck, setDeck] = React.useState(null);       // {new, due, leech, total} — today's Run preview
   const [reviewedToday, setReviewedToday] = React.useState(0); // intraday progress for the queue bar
   const [dueCount, setDueCount] = React.useState(null); // raw SRS backlog for StatusBar
+  const [cardStates, setCardStates] = React.useState(null); // full card_states for ProgressPanel tier math
   const [promotion, setPromotion] = React.useState(null);
 
   React.useEffect(() => {
@@ -246,6 +250,7 @@ const App = ({ cards }) => {
     window.DB.open()
       .then(() => window.DB.getAllCardStates())
       .then(states => {
+        setCardStates(states);
         const todayStr = new Date().toDateString();
         const reviewed = states.filter(s =>
           s.last_reviewed && new Date(s.last_reviewed).toDateString() === todayStr
@@ -349,7 +354,7 @@ const App = ({ cards }) => {
 
           <div className="kb-stats-row">
             <DuePanel state={state} deck={deck} reviewedToday={reviewedToday} />
-            <StreakPanel state={state} streak={user?.current_streak} bestStreak={user?.best_streak} />
+            <ProgressPanel cards={cards} states={cardStates} />
           </div>
 
           <XpBar xp={user?.total_xp ?? 0} />
@@ -369,7 +374,7 @@ const App = ({ cards }) => {
           <div style={{height: 8}} />
         </main>
 
-        <StatusBar totalCards={cards?.length} dueCount={dueCount} />
+        <StatusBar totalCards={cards?.length} dueCount={dueCount} streak={user?.current_streak} />
       </div>
     </>
   );
