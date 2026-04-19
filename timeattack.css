@@ -215,38 +215,6 @@
   letter-spacing: .4em; text-transform: uppercase;
   text-shadow: 0 0 8px rgba(34,211,238,.5);
 }
-.ta-cd-switcher {
-  position: absolute;
-  bottom: 14px; left: 50%;
-  transform: translateX(-50%);
-  display: flex; gap: 4px; align-items: center;
-  padding: 6px 8px;
-  background: var(--bg-1);
-  border: 1px solid var(--line-dim);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  z-index: 20;
-}
-.ta-cd-switcher-lbl {
-  font-size: 9px; color: var(--fg-2);
-  letter-spacing: .14em; text-transform: uppercase;
-  margin-right: 4px;
-}
-.ta-cd-switcher-btn {
-  background: transparent; border: 1px solid var(--line-bright);
-  color: var(--fg-1);
-  padding: 3px 7px;
-  font-family: var(--font-mono); font-size: 10px;
-  letter-spacing: .06em; text-transform: uppercase;
-  cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-snap);
-}
-.ta-cd-switcher-btn:hover { color: var(--fg-0); border-color: var(--accent-cyan); }
-.ta-cd-switcher-btn.is-active {
-  border-color: var(--accent-cyan); color: var(--accent-cyan);
-  background: var(--accent-cyan-bg);
-}
-
 /* ---- dissolve ---- */
 .ta-cd-dissolve { }
 .ta-cd-num-d {
