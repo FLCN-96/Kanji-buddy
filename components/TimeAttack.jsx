@@ -1,13 +1,13 @@
 // TimeAttack orchestrator — phase machine, scoring, timer, deck dealer
 
-const TWEAK_DEFAULTS_TA = /*EDITMODE-BEGIN*/{
-  "variant": "game",
-  "accent": "cyan",
-  "scanlines": "off",
-  "density": "comfortable",
-  "duration": 60,
-  "countdown": "dissolve"
-}/*EDITMODE-END*/;
+const TWEAK_DEFAULTS_TA = {
+  variant: 'hud',
+  accent: 'cyan',
+  scanlines: 'off',
+  density: 'comfortable',
+  duration: 60,
+  countdown: 'dissolve',
+};
 
 const DURATION_OPTS = [
   { id: 30, label: '30s' },
@@ -53,31 +53,6 @@ function dealQuestion(cards, used) {
   return { card, tiles, correctIdx: tiles.indexOf(correct) };
 }
 
-const TweaksPanelTA = ({ open, onClose, tweaks, onSet }) => {
-  const opt = (key, options) => (
-    <div className="tweaks-row">
-      <div className="tweaks-lbl">▸ {key.toUpperCase()}</div>
-      <div className="tweaks-opts">
-        {options.map(o => (
-          <button key={o.id} className={`tweaks-btn${tweaks[key] === o.id ? ' is-active' : ''}`} onClick={() => onSet(key, o.id)}>{o.label}</button>
-        ))}
-      </div>
-    </div>
-  );
-  return (
-    <div className={`tweaks${open ? ' is-open' : ''}`}>
-      <div className="tweaks-head"><span>TWEAKS</span><button className="tweaks-close" onClick={onClose}>╳</button></div>
-      <div className="tweaks-body">
-        {opt('duration', DURATION_OPTS)}
-        {opt('variant', [{id:'calm',label:'calm'},{id:'hud',label:'hud'},{id:'game',label:'game'}])}
-        {opt('accent', [{id:'cyan',label:'cyan+mag'},{id:'dim',label:'teal+rose'}])}
-        {opt('scanlines', [{id:'off',label:'off'},{id:'on',label:'on'}])}
-        {opt('density', [{id:'comfortable',label:'comfort'},{id:'compact',label:'compact'}])}
-      </div>
-    </div>
-  );
-};
-
 const TATopbar = ({ phase, clockMs, score, onQuit }) => {
   const s = Math.max(0, Math.ceil(clockMs / 1000));
   const mm = String(Math.floor(s/60)).padStart(2,'0');
@@ -102,14 +77,10 @@ const TATopbar = ({ phase, clockMs, score, onQuit }) => {
 const TimeAttackApp = ({ cards }) => {
   const [tweaks, setTweaks] = React.useState(() => {
     try {
-      const saved = localStorage.getItem('kb-tweaks');
-      const base = saved ? { ...TWEAK_DEFAULTS_TA, ...JSON.parse(saved) } : TWEAK_DEFAULTS_TA;
-      const savedTa = localStorage.getItem('kb-ta-tweaks');
-      return savedTa ? { ...base, ...JSON.parse(savedTa) } : base;
-    } catch(e) { return TWEAK_DEFAULTS_TA; }
+      const shared = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
+      return { ...TWEAK_DEFAULTS_TA, ...shared };
+    } catch(e) { return { ...TWEAK_DEFAULTS_TA }; }
   });
-  const [tweaksOpen, setTweaksOpen] = React.useState(false);
-  const [editMode, setEditMode] = React.useState(false);
 
   const [phase, setPhase] = React.useState('pre'); // pre | ready | play | end
   const [countdown, setCountdown] = React.useState(3); // 3-2-1-GO
@@ -134,9 +105,13 @@ const TimeAttackApp = ({ cards }) => {
   const questionStart = React.useRef(null);
   const lockedRef = React.useRef(false);
 
-  // save score + session to DB when game ends
+  // save score + session + XP to DB when game ends
   React.useEffect(() => {
     if (phase !== 'end' || !window.DB) return;
+    if (hits + misses === 0) return; // didn't actually play
+    const isHot = window.Daily && window.Daily.hotChallengeId() === 'time';
+    const base = 60;
+    const earned = base * (isHot ? window.Daily.HOT_MULTIPLIER : 1);
     window.DB.saveScore({
       mode: 'time_attack',
       score,
@@ -150,39 +125,21 @@ const TimeAttackApp = ({ cards }) => {
       hits,
       misses,
       hard: 0,
-      xp_earned: score * 10,
-    }).then(() => window.DB.recordSessionStreak()).catch(() => {});
+      xp_earned: earned,
+    })
+      .then(() => window.DB.grantXp(earned))
+      .then(() => window.DB.recordSessionStreak())
+      .catch(() => {});
   }, [phase]);
 
-  // persist tweaks
+  // apply visual tweaks to body (read-only; settings controls them)
   React.useEffect(() => {
     document.body.dataset.accent = tweaks.accent;
     document.body.dataset.scanlines = tweaks.scanlines;
     document.body.dataset.density = tweaks.density;
-    try {
-      localStorage.setItem('kb-ta-tweaks', JSON.stringify(tweaks));
-      // also sync shared keys
-      const shared = { variant: tweaks.variant, accent: tweaks.accent, scanlines: tweaks.scanlines, density: tweaks.density };
-      const existing = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
-      localStorage.setItem('kb-tweaks', JSON.stringify({ ...existing, ...shared }));
-    } catch(e) {}
   }, [tweaks]);
 
-  React.useEffect(() => {
-    const h = (e) => {
-      if (e.data?.type === '__activate_edit_mode') { setEditMode(true); setTweaksOpen(true); }
-      else if (e.data?.type === '__deactivate_edit_mode') { setEditMode(false); setTweaksOpen(false); }
-    };
-    window.addEventListener('message', h);
-    window.parent.postMessage({type: '__edit_mode_available'}, '*');
-    return () => window.removeEventListener('message', h);
-  }, []);
-
-  const setTweak = (k, v) => {
-    const next = { ...tweaks, [k]: v };
-    setTweaks(next);
-    try { window.parent.postMessage({type:'__edit_mode_set_keys', edits:{[k]: v}}, '*'); } catch(e) {}
-  };
+  const setTweak = (k, v) => setTweaks(t => ({ ...t, [k]: v }));
 
   const dealNext = React.useCallback((usedSet) => {
     const q = dealQuestion(cards, usedSet);
@@ -368,8 +325,6 @@ const TimeAttackApp = ({ cards }) => {
 
         {phase === 'play' && <TAHud hits={hits} misses={misses} combo={combo} />}
       </div>
-      {!editMode && <button className="tweaks-float" onClick={() => setTweaksOpen(o => !o)}>▸ tweaks</button>}
-      <TweaksPanelTA open={tweaksOpen} onClose={() => setTweaksOpen(false)} tweaks={tweaks} onSet={setTweak} />
     </>
   );
 };

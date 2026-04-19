@@ -1,4 +1,4 @@
-const CACHE = 'kb-v4';
+const CACHE = 'kb-v5';
 const CDN_CACHE = 'kb-cdn-v1';
 
 const LOCAL_ASSETS = [
@@ -11,6 +11,7 @@ const LOCAL_ASSETS = [
   './StreakGuard.html',
   './LeechHunt.html',
   './Match.html',
+  './Settings.html',
   './home.css',
   './run.css',
   './timeattack.css',
@@ -18,6 +19,7 @@ const LOCAL_ASSETS = [
   './streakguard.css',
   './leechhunt.css',
   './match.css',
+  './settings.css',
   './design_system/colors_and_type.css',
   './design_system/logo-mark.svg',
   './design_system/scanlines.svg',
@@ -27,9 +29,11 @@ const LOCAL_ASSETS = [
   './data/cards.json',
   './data/db.js',
   './data/load-cards.js',
+  './data/daily.js',
   './components/App.jsx',
   './components/Dashboard.jsx',
   './components/Modes.jsx',
+  './components/Settings.jsx',
   './components/RunApp.jsx',
   './components/RunCard.jsx',
   './components/RunFlow.jsx',

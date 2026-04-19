@@ -157,6 +157,29 @@ const DB = {
     }));
   },
 
+  // ── XP ────────────────────────────────────────────────────────────
+
+  grantXp(amount) {
+    if (!amount || amount <= 0) return Promise.resolve(null);
+    return DB.getUser().then(user => {
+      if (!user) return null;
+      const total = (user.total_xp || 0) + amount;
+      return DB.updateUser({ total_xp: total });
+    });
+  },
+
+  // ── full reset ────────────────────────────────────────────────────
+
+  resetAllData() {
+    return openDB().then(db => new Promise((resolve, reject) => {
+      const stores = ['user_profile', 'card_states', 'sessions', 'scores'];
+      const t = db.transaction(stores, 'readwrite');
+      stores.forEach(s => t.objectStore(s).clear());
+      t.oncomplete = () => resolve();
+      t.onerror    = (e) => reject(e.target.error);
+    }));
+  },
+
   // ── streak helpers ────────────────────────────────────────────────
 
   recordSessionStreak() {

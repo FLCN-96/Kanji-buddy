@@ -1,12 +1,11 @@
 // Run orchestrator
 
-const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "variant": "hud",
-  "accent": "cyan",
-  "scanlines": "off",
-  "density": "comfortable",
-  "state": "fresh"
-}/*EDITMODE-END*/;
+const TWEAK_DEFAULTS = {
+  variant: 'hud',
+  accent: 'cyan',
+  scanlines: 'off',
+  density: 'comfortable',
+};
 
 const RUN_SIZE = 12;
 
@@ -43,41 +42,13 @@ const RunStatusbar = ({ results, combo }) => {
   );
 };
 
-const TweaksPanel = ({ open, onClose, tweaks, onSet }) => {
-  const opt = (key, options) => (
-    <div className="tweaks-row">
-      <div className="tweaks-lbl">▸ {key.toUpperCase()}</div>
-      <div className="tweaks-opts">
-        {options.map(o => (
-          <button key={o.id} className={`tweaks-btn${tweaks[key] === o.id ? ' is-active' : ''}`} onClick={() => onSet(key, o.id)}>{o.label}</button>
-        ))}
-      </div>
-    </div>
-  );
-  return (
-    <div className={`tweaks${open ? ' is-open' : ''}`}>
-      <div className="tweaks-head"><span>TWEAKS</span><button className="tweaks-close" onClick={onClose}>╳</button></div>
-      <div className="tweaks-body">
-        {opt('variant', [{id:'calm',label:'calm'},{id:'hud',label:'hud'},{id:'game',label:'game'}])}
-        {opt('state', [{id:'fresh',label:'fresh'},{id:'clear',label:'clear'},{id:'behind',label:'behind'}])}
-        {opt('accent', [{id:'cyan',label:'cyan+mag'},{id:'dim',label:'teal+rose'}])}
-        {opt('scanlines', [{id:'off',label:'off'},{id:'on',label:'on'}])}
-        {opt('density', [{id:'comfortable',label:'comfort'},{id:'compact',label:'compact'}])}
-      </div>
-    </div>
-  );
-};
-
 const RunApp = ({ cards }) => {
-  const [tweaks, setTweaks] = React.useState(() => {
+  const [tweaks] = React.useState(() => {
     try {
-      const saved = localStorage.getItem('kb-tweaks');
-      if (saved) return { ...TWEAK_DEFAULTS, ...JSON.parse(saved) };
-    } catch(e) {}
-    return TWEAK_DEFAULTS;
+      const saved = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
+      return { ...TWEAK_DEFAULTS, ...saved };
+    } catch(e) { return { ...TWEAK_DEFAULTS }; }
   });
-  const [tweaksOpen, setTweaksOpen] = React.useState(false);
-  const [editMode, setEditMode] = React.useState(false);
   const [phase, setPhase] = React.useState('pre'); // pre | run | end
   const [idx, setIdx] = React.useState(0);
   const [revealed, setRevealed] = React.useState(false);
@@ -90,30 +61,14 @@ const RunApp = ({ cards }) => {
   const [now, setNow] = React.useState(Date.now());
   const [duration, setDuration] = React.useState(0);
 
-  // Build run deck: take RUN_SIZE cards; if state=behind take later indices; if clear, fewer
-  const runDeck = React.useMemo(() => {
-    if (!cards) return [];
-    const n = tweaks.state === 'clear' ? 6 : tweaks.state === 'behind' ? 15 : RUN_SIZE;
-    const start = tweaks.state === 'behind' ? 40 : tweaks.state === 'clear' ? 60 : 0;
-    return cards.slice(start, start + n);
-  }, [cards, tweaks.state]);
+  // Run deck — simple first-N slice until a proper SRS queue is wired in.
+  const runDeck = React.useMemo(() => (cards || []).slice(0, RUN_SIZE), [cards]);
 
   React.useEffect(() => {
     document.body.dataset.accent = tweaks.accent;
     document.body.dataset.scanlines = tweaks.scanlines;
     document.body.dataset.density = tweaks.density;
-    try { localStorage.setItem('kb-tweaks', JSON.stringify(tweaks)); } catch(e) {}
   }, [tweaks]);
-
-  React.useEffect(() => {
-    const handler = (e) => {
-      if (e.data?.type === '__activate_edit_mode') { setEditMode(true); setTweaksOpen(true); }
-      else if (e.data?.type === '__deactivate_edit_mode') { setEditMode(false); setTweaksOpen(false); }
-    };
-    window.addEventListener('message', handler);
-    window.parent.postMessage({type: '__edit_mode_available'}, '*');
-    return () => window.removeEventListener('message', handler);
-  }, []);
 
   // live timer
   React.useEffect(() => {
@@ -122,12 +77,13 @@ const RunApp = ({ cards }) => {
     return () => clearInterval(t);
   }, [phase]);
 
-  // save session to DB when run ends
+  // save session + XP to DB when run ends
   React.useEffect(() => {
     if (phase !== 'end' || !window.DB || !startedAt) return;
     const c = { miss:0, hard:0, ok:0, easy:0 };
     results.forEach(r => { if (c[r] != null) c[r]++; });
     const hits = c.ok + c.easy;
+    const earned = (hits * 15) + (c.easy * 5) + (c.hard * 3);
     window.DB.saveSession({
       mode: 'run',
       duration_s: duration,
@@ -135,15 +91,12 @@ const RunApp = ({ cards }) => {
       hits,
       misses: c.miss,
       hard: c.hard,
-      xp_earned: (hits * 15) + (c.easy * 5),
-    }).then(() => window.DB.recordSessionStreak()).catch(() => {});
+      xp_earned: earned,
+    })
+      .then(() => window.DB.grantXp(earned))
+      .then(() => window.DB.recordSessionStreak())
+      .catch(() => {});
   }, [phase]);
-
-  const setTweak = (k, v) => {
-    const next = { ...tweaks, [k]: v };
-    setTweaks(next);
-    try { window.parent.postMessage({type:'__edit_mode_set_keys', edits:{[k]: v}}, '*'); } catch(e) {}
-  };
 
   const startRun = () => {
     setPhase('run'); setIdx(0); setResults([]); setRevealed(false);
@@ -239,45 +192,39 @@ const RunApp = ({ cards }) => {
   const shellCls = `run-shell variant-${tweaks.variant}`;
 
   return (
-    <>
-      <div className={shellCls}>
-        <RunTopbar phase={phase} timer={timer} idx={idx} total={runDeck.length} onQuit={quit} />
-        {phase === 'run' && (
-          <SegProgress results={results} current={idx} total={runDeck.length} />
-        )}
-        <main className="run-main" data-screen-label={`run-${phase}`}>
-          {phase === 'pre' && <PreRun state={tweaks.state} total={runDeck.length} onStart={startRun} />}
-          {phase === 'run' && runDeck[idx] && (
-            <>
-              <Card
-                card={runDeck[idx]}
-                revealed={revealed}
-                onReveal={reveal}
-                latency={cardLatency}
-                flash={flash}
-              />
-              <VerdictBar enabled={revealed} onVerdict={verdict} />
-            </>
-          )}
-          {phase === 'end' && (
-            <EndRun
-              results={results}
-              cards={runDeck}
-              duration={duration}
-              onAgain={startRun}
-              onHome={() => window.location.href = 'Home.html'}
-              variant={tweaks.variant}
-            />
-          )}
-        </main>
-        <RunStatusbar results={results} combo={combo} />
-      </div>
-      {phase === 'run' && <ComboChip combo={combo} pulse={comboPulse} />}
-      {!editMode && (
-        <button className="tweaks-float" onClick={() => setTweaksOpen(o => !o)}>▸ tweaks</button>
+    <div className={shellCls}>
+      <RunTopbar phase={phase} timer={timer} idx={idx} total={runDeck.length} onQuit={quit} />
+      {phase === 'run' && (
+        <SegProgress results={results} current={idx} total={runDeck.length} />
       )}
-      <TweaksPanel open={tweaksOpen} onClose={() => setTweaksOpen(false)} tweaks={tweaks} onSet={setTweak} />
-    </>
+      <main className="run-main" data-screen-label={`run-${phase}`}>
+        {phase === 'pre' && <PreRun total={runDeck.length} onStart={startRun} />}
+        {phase === 'run' && runDeck[idx] && (
+          <>
+            <Card
+              card={runDeck[idx]}
+              revealed={revealed}
+              onReveal={reveal}
+              latency={cardLatency}
+              flash={flash}
+            />
+            <VerdictBar enabled={revealed} onVerdict={verdict} />
+          </>
+        )}
+        {phase === 'end' && (
+          <EndRun
+            results={results}
+            cards={runDeck}
+            duration={duration}
+            onAgain={startRun}
+            onHome={() => window.location.href = 'Home.html'}
+            variant={tweaks.variant}
+          />
+        )}
+      </main>
+      <RunStatusbar results={results} combo={combo} />
+      {phase === 'run' && <ComboChip combo={combo} pulse={comboPulse} />}
+    </div>
   );
 };
 
