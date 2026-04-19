@@ -527,7 +527,7 @@
 /* Penalty floater */
 .mt-penalty-fx {
   position: fixed;
-  top: 80px; left: 50%;
+  top: calc(80px + env(safe-area-inset-top)); left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-mono); font-weight: 700;
   font-size: 56px;
