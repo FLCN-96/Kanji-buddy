@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(node -e ' *)",
+      "Bash(powershell -Command '$PSVersionTable.PSVersion')",
+      "Bash(powershell -Command \"Get-Command Expand-Archive | Select-Object -ExpandProperty Version\")",
+      "Bash('C:/Users/Jose Arroyo/AppData/Local/Programs/Python/Python310/python.exe' -c 'import zstandard; print\\('\\\\''zstandard OK'\\\\''\\)')",
+      "Bash('C:/Users/Jose Arroyo/AppData/Local/Programs/Python/Python310/python.exe' -c 'import zstd; print\\('\\\\''zstd OK'\\\\''\\)')",
+      "Bash('C:/Users/Jose Arroyo/AppData/Local/Programs/Python/Python310/python.exe' -c ' *)"
+    ]
+  }
+}

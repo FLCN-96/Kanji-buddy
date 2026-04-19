@@ -122,6 +122,23 @@ const RunApp = ({ cards }) => {
     return () => clearInterval(t);
   }, [phase]);
 
+  // save session to DB when run ends
+  React.useEffect(() => {
+    if (phase !== 'end' || !window.DB || !startedAt) return;
+    const c = { miss:0, hard:0, ok:0, easy:0 };
+    results.forEach(r => { if (c[r] != null) c[r]++; });
+    const hits = c.ok + c.easy;
+    window.DB.saveSession({
+      mode: 'run',
+      duration_s: duration,
+      cards_reviewed: results.length,
+      hits,
+      misses: c.miss,
+      hard: c.hard,
+      xp_earned: (hits * 15) + (c.easy * 5),
+    }).then(() => window.DB.recordSessionStreak()).catch(() => {});
+  }, [phase]);
+
   const setTweak = (k, v) => {
     const next = { ...tweaks, [k]: v };
     setTweaks(next);
@@ -141,6 +158,25 @@ const RunApp = ({ cards }) => {
     if (!revealed) return;
     const nextResults = [...results, v];
     setResults(nextResults);
+
+    // stub: persist card state with simple interval (full SM-2 in future pass)
+    if (window.DB && runDeck[idx]) {
+      const card = runDeck[idx];
+      window.DB.getCardState(card.idx).then(existing => {
+        const base = existing || { idx: card.idx, interval_days: 1, ease_factor: 2.5, reviews: 0, lapses: 0 };
+        const intervalMap = { easy: 4, ok: 1, hard: 0.25, miss: 0 };
+        const daysAhead = intervalMap[v] ?? 1;
+        const due = new Date();
+        due.setDate(due.getDate() + daysAhead);
+        return window.DB.upsertCardState({
+          ...base,
+          reviews: base.reviews + 1,
+          lapses: v === 'miss' ? base.lapses + 1 : base.lapses,
+          due_date: due.toISOString(),
+          last_reviewed: new Date().toISOString(),
+        });
+      }).catch(() => {});
+    }
 
     if (v === 'ok' || v === 'easy') {
       setFlash('hit');

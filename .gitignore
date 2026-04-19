@@ -1,0 +1,10 @@
+# Anki deck source — imported via browser, not needed in repo
+uploads/*.apkg
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
