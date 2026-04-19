@@ -248,3 +248,146 @@ a:hover { color: #fff; border-bottom-color: var(--accent-cyan); }
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ============================================================
+   Shared component: ConfirmModal (kb-confirm-*)
+   In-app replacement for native window.confirm()/alert(). Lives
+   here (rather than per-mode CSS) because every mode page that
+   imports a top-level CSS pulls colors_and_type.css transitively.
+   ============================================================ */
+.kb-confirm-scrim {
+  position: fixed; inset: 0; z-index: var(--z-modal);
+  background: rgba(10,14,20,.78);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--sp-4);
+  animation: kb-confirm-scrim-in 140ms var(--ease-snap);
+}
+@keyframes kb-confirm-scrim-in { from { opacity: 0; } to { opacity: 1; } }
+
+.kb-confirm {
+  position: relative;
+  width: 100%; max-width: 420px;
+  background: var(--bg-1);
+  border: 1px solid var(--accent-magenta);
+  box-shadow:
+    0 0 0 1px var(--bg-0),
+    0 0 28px rgba(255,61,255,.30),
+    inset 0 0 60px rgba(255,61,255,.04);
+  font-family: var(--font-mono);
+  color: var(--fg-0);
+  animation: kb-confirm-in 180ms var(--ease-snap);
+  overflow: hidden;
+}
+.kb-confirm.tone-info {
+  border-color: var(--accent-cyan);
+  box-shadow:
+    0 0 0 1px var(--bg-0),
+    0 0 24px rgba(34,211,238,.30),
+    inset 0 0 60px rgba(34,211,238,.04);
+}
+.kb-confirm::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(0deg,  rgba(255,255,255,.022) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.022) 0 1px, transparent 1px 24px);
+  pointer-events: none;
+}
+.kb-confirm > * { position: relative; }
+
+@keyframes kb-confirm-in {
+  from { opacity: 0; transform: translateY(6px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.kb-confirm-corner {
+  position: absolute;
+  font-size: 10px;
+  color: var(--accent-magenta);
+  text-shadow: 0 0 6px var(--accent-magenta);
+  pointer-events: none;
+}
+.kb-confirm.tone-info .kb-confirm-corner {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 6px var(--accent-cyan);
+}
+.kb-confirm-corner.tl { top: 5px; left: 5px; }
+.kb-confirm-corner.tr { top: 5px; right: 5px; }
+.kb-confirm-corner.bl { bottom: 5px; left: 5px; }
+.kb-confirm-corner.br { bottom: 5px; right: 5px; }
+
+.kb-confirm-top {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px var(--sp-4);
+  border-bottom: 1px solid var(--line-dim);
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--accent-magenta);
+  background: var(--bg-2);
+}
+.kb-confirm.tone-info .kb-confirm-top { color: var(--accent-cyan); }
+
+.kb-confirm-body {
+  padding: var(--sp-5) var(--sp-4) var(--sp-4);
+  display: flex; flex-direction: column; gap: var(--sp-2);
+}
+.kb-confirm-title {
+  font-size: 18px; font-weight: var(--fw-bold);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--fg-0);
+  text-shadow: 0 0 8px rgba(255,61,255,.25);
+}
+.kb-confirm.tone-info .kb-confirm-title {
+  text-shadow: 0 0 8px rgba(34,211,238,.25);
+}
+.kb-confirm-msg {
+  font-size: 13px; color: var(--fg-1); letter-spacing: .02em;
+  line-height: var(--lh-snug);
+}
+
+.kb-confirm-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  border-top: 1px solid var(--line-dim);
+  background: var(--line-dim);
+}
+.kb-confirm-actions.is-info { grid-template-columns: 1fr; }
+
+.kb-confirm-btn {
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-1);
+  border: 0;
+  font-family: var(--font-mono); font-weight: var(--fw-bold);
+  font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-snap),
+              color      var(--dur-fast) var(--ease-snap);
+}
+.kb-confirm-btn:focus { outline: none; }
+.kb-confirm-btn:focus-visible {
+  outline: 1px dashed currentColor;
+  outline-offset: -4px;
+}
+.kb-confirm-btn-cancel {
+  color: var(--fg-1);
+}
+.kb-confirm-btn-cancel:hover {
+  color: var(--fg-0);
+  background: var(--bg-2);
+}
+.kb-confirm-btn-confirm.tone-danger {
+  color: var(--accent-magenta);
+  text-shadow: 0 0 6px rgba(255,61,255,.45);
+}
+.kb-confirm-btn-confirm.tone-danger:hover {
+  background: var(--accent-magenta-bg);
+  color: #fff;
+}
+.kb-confirm-btn-confirm.tone-info {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 6px rgba(34,211,238,.45);
+}
+.kb-confirm-btn-confirm.tone-info:hover {
+  background: var(--accent-cyan-bg);
+  color: #fff;
+}

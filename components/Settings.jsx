@@ -171,6 +171,7 @@ const DangerZone = () => {
 const HardResetSwitch = () => {
   const [armed, setArmed] = React.useState(false);
   const [firing, setFiring] = React.useState(false);
+  const [errorOpen, setErrorOpen] = React.useState(false);
 
   const performHardReset = async () => {
     setFiring(true);
@@ -215,8 +216,7 @@ const HardResetSwitch = () => {
       window.location.replace(`${base}Home.html?reset=${bust}`);
     } catch(e) {
       setFiring(false);
-      // eslint-disable-next-line no-alert
-      alert('Hard reset failed — try closing the tab and reopening.');
+      setErrorOpen(true);
     }
   };
 
@@ -263,6 +263,15 @@ const HardResetSwitch = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        open={errorOpen}
+        tone="info"
+        title="RESET FAILED"
+        body="Try closing the tab and reopening."
+        confirmLabel="OK"
+        onConfirm={() => setErrorOpen(false)}
+      />
     </section>
   );
 };

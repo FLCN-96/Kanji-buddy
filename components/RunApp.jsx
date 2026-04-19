@@ -81,6 +81,7 @@ const RunApp = ({ cards }) => {
   const [now, setNow] = React.useState(Date.now());
   const [duration, setDuration] = React.useState(0);
   const [xpGained, setXpGained] = React.useState(0);
+  const [confirmQuit, setConfirmQuit] = React.useState(false);
 
   // Build the weighted deck once, after DB + cards are ready.
   React.useEffect(() => {
@@ -237,9 +238,10 @@ const RunApp = ({ cards }) => {
     beginSession();
   };
 
+  const goHome = () => { window.location.href = 'Home.html'; };
   const quit = () => {
-    if ((phase === 'quiz' || phase === 'intro') && !confirm('Quit? Progress will be lost.')) return;
-    window.location.href = 'Home.html';
+    if (phase === 'quiz' || phase === 'intro') { setConfirmQuit(true); return; }
+    goHome();
   };
 
   React.useEffect(() => {
@@ -339,6 +341,16 @@ const RunApp = ({ cards }) => {
       </main>
       <RunStatusbar results={results} combo={combo} />
       {phase === 'quiz' && <ComboChip combo={combo} pulse={comboPulse} />}
+
+      <ConfirmModal
+        open={confirmQuit}
+        title="QUIT THE RUN?"
+        body="Progress this session won't save."
+        confirmLabel="QUIT"
+        cancelLabel="STAY"
+        onConfirm={goHome}
+        onCancel={() => setConfirmQuit(false)}
+      />
     </div>
   );
 };

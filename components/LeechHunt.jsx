@@ -165,6 +165,7 @@ const LeechHuntApp = ({ cards }) => {
   });
   const [beatPb, setBeatPb] = React.useState(false);
   const [xpGained, setXpGained] = React.useState(0);
+  const [confirmQuit, setConfirmQuit] = React.useState(false);
   const lockRef = React.useRef(false);
   const finishedRef = React.useRef(false);
   // Ref (not state) so the ready-phase countdown effect doesn't restart when
@@ -342,9 +343,10 @@ const LeechHuntApp = ({ cards }) => {
     lockRef.current = false;
     setPhase('ready');
   };
+  const goHome = () => { window.location.href = 'Home.html'; };
   const quit = () => {
-    if ((phase === 'dossier' || phase === 'hunt') && !confirm('Abort mission? Leeches remain at large.')) return;
-    window.location.href = 'Home.html';
+    if (phase === 'dossier' || phase === 'hunt') { setConfirmQuit(true); return; }
+    goHome();
   };
 
   React.useEffect(() => {
@@ -415,6 +417,16 @@ const LeechHuntApp = ({ cards }) => {
           )}
         </main>
       </div>
+
+      <ConfirmModal
+        open={confirmQuit}
+        title="ABORT MISSION?"
+        body="Leeches remain at large · run won't save."
+        confirmLabel="ABORT"
+        cancelLabel="STAY"
+        onConfirm={goHome}
+        onCancel={() => setConfirmQuit(false)}
+      />
     </>
   );
 };
