@@ -12,3 +12,6 @@ Thumbs.db
 # Editor
 .vscode/
 *.swp
+
+# Agent / local assistant state (never commit — contains host-specific paths)
+.claude/
