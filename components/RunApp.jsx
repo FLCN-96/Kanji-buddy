@@ -33,7 +33,7 @@ const RunTopbar = ({ phase, timer, onQuit, idx, total, isOverclock }) => {
       <div className="run-top-r">
         <span style={{display:'inline-flex',alignItems:'center',gap:4,color:dotClr}}>
           <span style={{width:6,height:6,background:dotClr,boxShadow:dotShadow}} />
-          {isOverclock ? 'BONUS' : 'LIVE'}
+          {isOverclock ? 'EXTRA' : 'LIVE'}
         </span>
       </div>
     </header>
@@ -139,8 +139,7 @@ const RunApp = ({ cards }) => {
     const base = c.miss * RUN_XP.miss + c.hard * RUN_XP.hard + c.ok * RUN_XP.ok + c.easy * RUN_XP.easy;
     const cleanBonus = (total > 0 && c.miss === 0) ? RUN_BONUS_CLEAN : 0;
     const accBonus   = (total > 0 && acc >= 90) ? RUN_BONUS_ACC90 : 0;
-    const preMult = Math.max(0, base + cleanBonus + accBonus);
-    const earned = isOverclock ? Math.round(preMult * 1.5) : preMult;
+    const earned = Math.max(0, base + cleanBonus + accBonus);
     setXpGained(earned);
     window.DB.saveSession({
       mode: 'run',

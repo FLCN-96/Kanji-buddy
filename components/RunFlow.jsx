@@ -38,7 +38,7 @@ const PreRun = ({ composition, onStart, isOverclock }) => {
   const hasLeech  = c.leech > 0;
 
   const title = isOverclock
-    ? 'OVERCLOCK · BONUS CYCLE'
+    ? 'OVERCLOCK · EXTRA CYCLE'
     : total === 0
       ? 'NOTHING QUEUED'
       : hasNew && !hasDue && !hasLeech
@@ -55,17 +55,13 @@ const PreRun = ({ composition, onStart, isOverclock }) => {
         <div className="run-pre-title">{title}</div>
         {isOverclock && (
           <div className="run-pre-overclock-sub">
-            daily quota cleared · cooling compromised · bonus cycle keeps cards fresh
+            daily quota cleared · cooling compromised · extra cycle keeps cards fresh
           </div>
         )}
       </div>
 
       {isOverclock && (
         <div className="run-pre-overclock-callout">
-          <div className="run-pre-overclock-callout-row">
-            <span className="run-pre-overclock-tag">×1.5</span>
-            <span className="run-pre-overclock-msg">XP multiplier · the only bonus cycle modifier</span>
-          </div>
           <div className="run-pre-overclock-callout-row is-meta">
             <span className="run-pre-overclock-tag is-meta">▸</span>
             <span className="run-pre-overclock-msg">streak already locked in for today · this is pure practice</span>
