@@ -98,13 +98,17 @@ const StreakGuardApp = ({ cards }) => {
   // Ref (not state) so the ready-phase countdown effect doesn't restart when
   // card_states finish loading — buildDeck/dealQuiz only read it at deal time.
   const cardStatesRef = React.useRef([]);
+  const seenSetRef = React.useRef(new Set());
   const nearPoolRef = React.useRef(cards);
 
   React.useEffect(() => {
     if (!window.DB) return;
     window.DB.open()
       .then(() => window.DB.getAllCardStates())
-      .then(s => { cardStatesRef.current = s || []; })
+      .then(s => {
+        cardStatesRef.current = s || [];
+        seenSetRef.current = (window.Daily?.seenIdxSet || (() => new Set()))(cardStatesRef.current);
+      })
       .catch(() => {});
   }, []);
 
@@ -298,6 +302,7 @@ const StreakGuardApp = ({ cards }) => {
               activeId={activeId}
               onPickCell={pickCell}
               live={live}
+              seenSet={seenSetRef.current}
             />
           )}
           {phase === 'play' && activeCell && (
@@ -306,6 +311,7 @@ const StreakGuardApp = ({ cards }) => {
               onPick={onTilePick}
               onCancel={backToGrid}
               feedback={feedback}
+              isUnseen={!seenSetRef.current.has(activeCell.card.idx)}
             />
           )}
           {phase === 'end' && (

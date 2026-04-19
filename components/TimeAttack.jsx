@@ -122,12 +122,16 @@ const TimeAttackApp = ({ cards }) => {
   // card_states finish loading — pool is read at game-start time only.
   const cardStatesRef = React.useRef([]);
   const poolRef = React.useRef(null);
+  const seenSetRef = React.useRef(new Set());
 
   React.useEffect(() => {
     if (!window.DB) return;
     window.DB.open()
       .then(() => window.DB.getAllCardStates())
-      .then(s => { cardStatesRef.current = s || []; })
+      .then(s => {
+        cardStatesRef.current = s || [];
+        seenSetRef.current = (window.Daily?.seenIdxSet || (() => new Set()))(cardStatesRef.current);
+      })
       .catch(() => {});
   }, []);
 
@@ -344,6 +348,7 @@ const TimeAttackApp = ({ cards }) => {
               danger={clockMs <= 10_000}
               combo={combo}
               comboBurst={comboBurst}
+              isUnseen={!seenSetRef.current.has(question.card.idx)}
             />
           )}
           {phase === 'end' && (

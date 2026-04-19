@@ -177,6 +177,15 @@
     return result;
   }
 
+  // O(1) lookup for "has this card been encountered through Run?". Challenge
+  // modes draw from nearUserPool, which can include cards the user has never
+  // actually studied — those should be flagged in-play so the user knows the
+  // attempt is a guess (and that the result isn't graded into SRS, since
+  // challenges don't touch card_states regardless).
+  function seenIdxSet(cardStates) {
+    return new Set((cardStates || []).map(s => s.idx));
+  }
+
   window.Daily = {
     daySeed,
     hotChallengeId,
@@ -185,6 +194,7 @@
     DECK_SIZE,
     LEECH_LAPSES,
     nearUserPool,
+    seenIdxSet,
     MIN_POOL_DEFAULT,
     FRONTIER_DEFAULT,
   };

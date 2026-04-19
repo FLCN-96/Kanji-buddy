@@ -1,6 +1,6 @@
 // StreakGuard — grid of 12 cells + active quiz overlay
 
-const SGCell = ({ cell, onPick, index }) => {
+const SGCell = ({ cell, onPick, index, isUnseen }) => {
   const pct = Math.max(0, Math.min(1, cell.remainMs / cell.totalMs));
   const secondsLeft = Math.max(0, cell.remainMs / 1000);
   const riskClass = cell.status === 'live' && pct < 0.25 ? 'is-critical'
@@ -8,13 +8,13 @@ const SGCell = ({ cell, onPick, index }) => {
                   : '';
   return (
     <button
-      className={`sg-cell sg-cell-${cell.status} ${riskClass}`}
+      className={`sg-cell sg-cell-${cell.status} ${riskClass}${isUnseen ? ' is-unseen-frame' : ''}`}
       onClick={() => onPick(cell.id)}
       disabled={cell.status !== 'live'}
       style={{'--pct': pct, '--throb-delay': `${(index * 0.13) % 2}s`}}
     >
       <span className="sg-cell-idx">{String(index+1).padStart(2,'0')}</span>
-      <span className="sg-cell-k">{cell.card.k}</span>
+      <span className={`sg-cell-k${isUnseen ? ' is-unseen-glyph' : ''}`}>{cell.card.k}</span>
       <span className="sg-cell-jlpt">N{cell.card.jlpt}</span>
       <span className="sg-cell-bar"><span className="sg-cell-bar-fill" /></span>
       <span className="sg-cell-tag">
@@ -27,7 +27,7 @@ const SGCell = ({ cell, onPick, index }) => {
   );
 };
 
-const SGGrid = ({ deck, activeId, onPickCell, live }) => {
+const SGGrid = ({ deck, activeId, onPickCell, live, seenSet }) => {
   return (
     <div className={`sg-grid-wrap${activeId ? ' is-dim' : ''}`} data-screen-label="sg-grid">
       <div className="sg-grid-head">
@@ -36,7 +36,13 @@ const SGGrid = ({ deck, activeId, onPickCell, live }) => {
       </div>
       <div className={`sg-grid sg-grid-${deck.length}`}>
         {deck.map((cell, i) => (
-          <SGCell key={cell.id} cell={cell} onPick={onPickCell} index={i} />
+          <SGCell
+            key={cell.id}
+            cell={cell}
+            onPick={onPickCell}
+            index={i}
+            isUnseen={seenSet ? !seenSet.has(cell.card.idx) : false}
+          />
         ))}
       </div>
       <div className="sg-grid-foot">
@@ -46,16 +52,16 @@ const SGGrid = ({ deck, activeId, onPickCell, live }) => {
   );
 };
 
-const SGQuiz = ({ cell, onPick, onCancel, feedback }) => {
+const SGQuiz = ({ cell, onPick, onCancel, feedback, isUnseen }) => {
   const card = cell.card;
   const pct = Math.max(0, Math.min(1, cell.remainMs / cell.totalMs));
   const secondsLeft = Math.max(0, cell.remainMs / 1000);
   return (
     <div className="sg-quiz-overlay" data-screen-label="sg-quiz">
-      <div className="sg-quiz">
+      <div className={`sg-quiz${isUnseen ? ' is-unseen-frame' : ''}`}>
         <div className="sg-quiz-head">
           <div className="sg-quiz-head-l">
-            <span className="sg-quiz-eyebrow">▸ TRIAGE · PATIENT</span>
+            <span className="sg-quiz-eyebrow">▸ TRIAGE · {isUnseen ? 'UNSEEN PATIENT' : 'PATIENT'}</span>
             <span className="sg-quiz-jlpt">N{card.jlpt}</span>
           </div>
           <button className="sg-quiz-close" onClick={onCancel} title="back to grid (esc)">╳</button>
@@ -63,7 +69,7 @@ const SGQuiz = ({ cell, onPick, onCancel, feedback }) => {
 
         <div className="sg-quiz-body">
           <div className="sg-quiz-glyph">
-            <span>{card.k}</span>
+            <span className={isUnseen ? 'is-unseen-glyph' : undefined}>{card.k}</span>
           </div>
           <div className="sg-quiz-readings">
             {card.on.slice(0,2).map((r,i) => <span key={'o'+i} className="sg-read on">オン {r.r}</span>)}

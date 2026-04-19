@@ -146,6 +146,7 @@ const MatchApp = ({ cards }) => {
   // Ref (not state) so the ready-phase countdown effect doesn't restart when
   // card_states finish loading — Match only reads it at pool-build time.
   const cardStatesRef = React.useRef([]);
+  const seenSetRef = React.useRef(new Set());
   // Cached near-user pool for the current play session — avoids recomputing
   // the helper every shuffle-pool refill.
   const nearPoolRef = React.useRef(null);
@@ -154,7 +155,10 @@ const MatchApp = ({ cards }) => {
     if (!window.DB) return;
     window.DB.open()
       .then(() => window.DB.getAllCardStates())
-      .then(s => { cardStatesRef.current = s || []; })
+      .then(s => {
+        cardStatesRef.current = s || [];
+        seenSetRef.current = (window.Daily?.seenIdxSet || (() => new Set()))(cardStatesRef.current);
+      })
       .catch(() => {});
   }, []);
 
@@ -436,6 +440,7 @@ const MatchApp = ({ cards }) => {
               shake={shake}
               combo={combo}
               onPick={tryMatch}
+              seenSet={seenSetRef.current}
             />
           )}
           {phase === 'end' && (
