@@ -548,14 +548,14 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
   background: linear-gradient(
     115deg,
     transparent 42%,
-    rgba(255,210,120,.28) 48%,
-    rgba(255,245,210,.78) 50%,
-    rgba(255,210,120,.28) 52%,
+    rgba(255,210,120,.13) 48%,
+    rgba(255,240,200,.4)  50%,
+    rgba(255,210,120,.13) 52%,
     transparent 58%
   );
   background-size: 250% 100%;
   background-position: -100% 0;
-  animation: kb-hot-glimmer 5.2s cubic-bezier(.55,.1,.45,.95) infinite;
+  animation: kb-hot-glimmer 9s cubic-bezier(.55,.1,.45,.95) infinite;
   mix-blend-mode: screen;
   z-index: 1;
 }
@@ -564,13 +564,13 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
   position: absolute;
   top: 8px;
   right: 10px;
-  font-size: 13px;
-  color: #fff3d1;
+  font-size: 12px;
+  color: #ffe9b8;
   text-shadow:
-    0 0 6px rgba(255,210,120,.95),
-    0 0 14px rgba(245,165,36,.7);
+    0 0 5px rgba(255,210,120,.7),
+    0 0 12px rgba(245,165,36,.45);
   opacity: 0;
-  animation: kb-hot-twinkle 5.2s ease-out infinite;
+  animation: kb-hot-twinkle 9s ease-out infinite;
   pointer-events: none;
   z-index: 2;
 }
@@ -584,16 +584,16 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
 
 @keyframes kb-hot-glimmer {
   0%   { background-position: -100% 0; }
-  28%  { background-position: 200% 0;  }
+  22%  { background-position: 200% 0;  }
   100% { background-position: 200% 0;  }
 }
 
 @keyframes kb-hot-twinkle {
-  0%, 22%  { opacity: 0;  transform: scale(.55) rotate(-12deg); }
-  26%      { opacity: 1;  transform: scale(1.35) rotate(18deg); }
-  32%      { opacity: .95; transform: scale(1) rotate(0deg); }
-  40%      { opacity: 0;  transform: scale(.7) rotate(-8deg); }
-  100%     { opacity: 0;  transform: scale(.55); }
+  0%, 17%  { opacity: 0;   transform: scale(.55) rotate(-12deg); }
+  21%      { opacity: .85; transform: scale(1.25) rotate(16deg); }
+  26%      { opacity: .75; transform: scale(1)    rotate(0deg);  }
+  33%      { opacity: 0;   transform: scale(.7)  rotate(-8deg); }
+  100%     { opacity: 0;   transform: scale(.55); }
 }
 
 @media (prefers-reduced-motion: reduce) {
