@@ -40,12 +40,12 @@ const TIER_TABLE = [
 const pickTier = (score) => TIER_TABLE.find(t => score >= t.min) || TIER_TABLE[3];
 
 // Deal a question: pick a card, then pull 3 distractor meanings from other cards
-function dealQuestion(cards, used) {
-  const pool = cards.filter(c => !used.has(c.idx));
-  const card = pool[Math.floor(Math.random() * pool.length)] || cards[Math.floor(Math.random()*cards.length)];
+function dealQuestion(nearPool, used) {
+  const pool = nearPool.filter(c => !used.has(c.idx));
+  const card = pool[Math.floor(Math.random() * pool.length)] || nearPool[Math.floor(Math.random()*nearPool.length)];
   const jlpt = card.jlpt;
-  // distractors — prefer same jlpt, fall back to any
-  const candidates = cards.filter(c => c.idx !== card.idx);
+  // distractors — prefer same jlpt within the near-user pool, fall back to the rest of the pool
+  const candidates = nearPool.filter(c => c.idx !== card.idx);
   const sameTier = candidates.filter(c => c.jlpt === jlpt);
   const distractors = [];
   const sourcePool = sameTier.length >= 3 ? sameTier : candidates;
@@ -117,6 +117,18 @@ const TimeAttackApp = ({ cards }) => {
   const [beatPb, setBeatPb] = React.useState(false);
   const questionStart = React.useRef(null);
   const lockedRef = React.useRef(false);
+  // Ref (not state) so the ready-phase countdown effect doesn't restart when
+  // card_states finish loading — pool is read at game-start time only.
+  const cardStatesRef = React.useRef([]);
+  const poolRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!window.DB) return;
+    window.DB.open()
+      .then(() => window.DB.getAllCardStates())
+      .then(s => { cardStatesRef.current = s || []; })
+      .catch(() => {});
+  }, []);
 
   // save score + session + XP to DB when game ends
   React.useEffect(() => {
@@ -158,8 +170,9 @@ const TimeAttackApp = ({ cards }) => {
 
   const setTweak = (k, v) => setTweaks(t => ({ ...t, [k]: v }));
 
-  const dealNext = React.useCallback((usedSet) => {
-    const q = dealQuestion(cards, usedSet);
+  const dealNext = React.useCallback((usedSet, pool) => {
+    const p = pool || poolRef.current || cards;
+    const q = dealQuestion(p, usedSet);
     setQuestion(q);
     setTileFeedback(null);
     lockedRef.current = false;
@@ -182,7 +195,11 @@ const TimeAttackApp = ({ cards }) => {
         setClockMs(tweaks.duration * 1000);
         const used = new Set();
         setUsedIdx(used);
-        dealNext(used);
+        const pool = (window.Daily && window.Daily.nearUserPool)
+          ? window.Daily.nearUserPool(cards, cardStatesRef.current)
+          : cards;
+        poolRef.current = pool;
+        dealNext(used, pool);
         setPhase('play');
       } else {
         setCountdown(n);
