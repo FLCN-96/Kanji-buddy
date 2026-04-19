@@ -98,11 +98,89 @@
     return [...newSel, ...dueSel, ...leechSel];
   }
 
+  // ──────────────────────────────────────────────────────────────
+  // nearUserPool — shared "level-appropriate cards" filter for the
+  // challenge modes. Without this, brand-new operators would face the
+  // full ~2200-card library on day one (e.g. JLPT-1 kanji as a Match
+  // pair, or as a TimeAttack distractor).
+  //
+  // Composition (in priority order):
+  //   1. Discovered cards — anything in card_states (the user has seen
+  //      it at least once via Run).
+  //   2. Frontier — the next FRONTIER_DEFAULT cards by idx that share a
+  //      JLPT tier with what the user already knows. Lets the pool
+  //      grow with the user without sudden tier jumps.
+  //   3. Floor pad — if the pool is still under MIN_POOL_DEFAULT, pad
+  //      from the start of cards.json (which is roughly easy → hard).
+  //
+  // Brand-new users (no card_states): just the first MIN_POOL_DEFAULT
+  // cards, so games still have enough material to deal a question.
+  //
+  // Options:
+  //   minPool      floor for the returned pool (default 40)
+  //   frontier     upcoming-new cards to include (default 30)
+  //   jlpt         restrict the result to a specific JLPT tier (used
+  //                by Survival's depth scaffolding)
+  // ──────────────────────────────────────────────────────────────
+
+  const MIN_POOL_DEFAULT = 40;
+  const FRONTIER_DEFAULT = 30;
+
+  function nearUserPool(cards, cardStates, opts) {
+    const o = opts || {};
+    const minPool = o.minPool || MIN_POOL_DEFAULT;
+    const frontier = o.frontier == null ? FRONTIER_DEFAULT : o.frontier;
+    const jlpt = o.jlpt;
+
+    if (!cards || !cards.length) return [];
+
+    const seenIdx = new Set();
+    for (const s of (cardStates || [])) {
+      if (s && s.idx != null) seenIdx.add(s.idx);
+    }
+
+    let result;
+    if (seenIdx.size === 0) {
+      // Brand-new operator: hand them the first slice of the deck.
+      // cards.json is roughly ordered easy → hard, so this is JLPT-5-ish.
+      result = cards.slice(0, Math.max(minPool, 1));
+    } else {
+      const seen = cards.filter(c => seenIdx.has(c.idx));
+      const seenJlpts = new Set(seen.map(c => c.jlpt));
+      const upcoming = cards
+        .filter(c => !seenIdx.has(c.idx) && seenJlpts.has(c.jlpt))
+        .sort((a, b) => a.idx - b.idx)
+        .slice(0, frontier);
+      result = [...seen, ...upcoming];
+
+      if (result.length < minPool) {
+        const haveIdx = new Set(result.map(c => c.idx));
+        const pad = cards
+          .filter(c => !haveIdx.has(c.idx))
+          .sort((a, b) => a.idx - b.idx)
+          .slice(0, minPool - result.length);
+        result = [...result, ...pad];
+      }
+    }
+
+    if (jlpt != null) {
+      const tiered = result.filter(c => c.jlpt === jlpt);
+      // Don't return an unusable pool — fall back to the full near-user
+      // pool if the requested tier is empty/too small. Caller can still
+      // inspect length to decide whether to deal.
+      if (tiered.length >= 4) return tiered;
+    }
+    return result;
+  }
+
   window.Daily = {
     daySeed,
     hotChallengeId,
     HOT_MULTIPLIER: 3,
     selectDailyDeck,
     DECK_SIZE,
+    nearUserPool,
+    MIN_POOL_DEFAULT,
+    FRONTIER_DEFAULT,
   };
 })();

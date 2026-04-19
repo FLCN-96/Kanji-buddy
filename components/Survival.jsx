@@ -1,7 +1,7 @@
 // Survival orchestrator — single life, depth ladder
 
 const TWEAK_DEFAULTS_SV = {
-  variant: 'hud',
+  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -29,15 +29,24 @@ const jlptForDepth = (d) => {
 
 const PROMPT_MODES = ['mean2k', 'read2k', 'k2mean'];
 
-function dealSurvQuestion(cards, used, depth, mode) {
+function dealSurvQuestion(cards, cardStates, used, depth, mode) {
   const targetJlpt = jlptForDepth(depth);
-  const pool = cards.filter(c => !used.has(c.idx) && c.jlpt === targetJlpt);
-  const fallback = cards.filter(c => !used.has(c.idx));
-  const src = pool.length >= 4 ? pool : (fallback.length >= 4 ? fallback : cards);
+  // Near-user pool keeps brand-new operators away from the full ~80-card
+  // JLPT-5 deck; helper handles the "no card_states yet" cold start.
+  const tierPool = window.Daily.nearUserPool(cards, cardStates, { jlpt: targetJlpt });
+  const nearPool = window.Daily.nearUserPool(cards, cardStates);
+  const pool = tierPool.filter(c => !used.has(c.idx));
+  const fallback = nearPool.filter(c => !used.has(c.idx));
+  // Deep runs may exhaust both filtered pools — relax `used` rather than crash.
+  const src = pool.length >= 4
+    ? pool
+    : (fallback.length >= 4
+        ? fallback
+        : (tierPool.length ? tierPool : (nearPool.length ? nearPool : cards)));
   const card = src[Math.floor(Math.random() * src.length)];
 
-  const candidates = cards.filter(c => c.idx !== card.idx && c.jlpt === card.jlpt);
-  const dsrc = candidates.length >= 3 ? candidates : cards.filter(c => c.idx !== card.idx);
+  const candidates = nearPool.filter(c => c.idx !== card.idx && c.jlpt === card.jlpt);
+  const dsrc = candidates.length >= 3 ? candidates : nearPool.filter(c => c.idx !== card.idx);
 
   let prompt, correct, tilesRaw;
   if (mode === 'mean2k') {
@@ -123,6 +132,17 @@ const SurvivalApp = ({ cards }) => {
   const [modeIdx, setModeIdx] = React.useState(0); // for rotate
   const lockedRef = React.useRef(false);
   const qStart = React.useRef(null);
+  // Ref (not state) so loading card_states mid-mount doesn't re-trigger the
+  // ready-phase countdown effect. Survival reads it at deal-time only.
+  const cardStatesRef = React.useRef([]);
+
+  React.useEffect(() => {
+    if (!window.DB) return;
+    window.DB.open()
+      .then(() => window.DB.getAllCardStates())
+      .then(s => { cardStatesRef.current = s || []; })
+      .catch(() => {});
+  }, []);
 
   React.useEffect(() => {
     document.body.dataset.accent = tweaks.accent;
@@ -139,7 +159,7 @@ const SurvivalApp = ({ cards }) => {
 
   const dealNext = React.useCallback((usedSet, d) => {
     const mode = pickMode(d);
-    const q = dealSurvQuestion(cards, usedSet, d, mode);
+    const q = dealSurvQuestion(cards, cardStatesRef.current, usedSet, d, mode);
     setQuestion(q);
     setFeedback(null);
     lockedRef.current = false;
@@ -180,8 +200,10 @@ const SurvivalApp = ({ cards }) => {
     } catch(e) {}
     if (window.DB && depthAtDeath > 0) {
       const isHot = window.Daily && window.Daily.hotChallengeId() === 'survival';
-      const base = 80;
-      const earned = base * (isHot ? window.Daily.HOT_MULTIPLIER : 1);
+      // Depth-scaled so deeper runs pay more; PB bonus rewards records.
+      const base = 40 + depthAtDeath * 3;
+      const pbBonus = (depthAtDeath > pb) ? 30 : 0;
+      const earned = Math.round((base + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
       window.DB.saveScore({ mode: 'survival', score: depthAtDeath, tier: pickDepthTier(depthAtDeath).id })
         .catch(() => {});
       window.DB.saveSession({

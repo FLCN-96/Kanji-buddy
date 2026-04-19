@@ -19,7 +19,7 @@ const TAPre = ({ duration, onDuration, onStart, pb }) => {
           <div className="ta-rv">speed bonus · under 1.0s</div>
         </div>
         <div className="ta-pre-rule">
-          <div className="ta-rk ta-rk-danger">−1s</div>
+          <div className="ta-rk ta-rk-danger">−3s</div>
           <div className="ta-rv">from clock per miss</div>
         </div>
         <div className="ta-pre-rule">
@@ -62,13 +62,6 @@ const TAPre = ({ duration, onDuration, onStart, pb }) => {
     </div>
   );
 };
-
-const COUNTDOWN_VARIANTS = [
-  { id: 'dissolve', label: 'dissolve' },
-  { id: 'matrix', label: 'matrix rain' },
-  { id: 'shatter', label: 'shatter' },
-  { id: 'blocks', label: 'block decode' },
-];
 
 const TAReadyDissolve = ({ n, display }) => {
   const shards = React.useMemo(() => {
@@ -164,7 +157,7 @@ const TAReadyBlocks = ({ n, display }) => {
   );
 };
 
-const TAReady = ({ n, variant = 'dissolve', onVariant }) => {
+const TAReady = ({ n, variant = 'dissolve' }) => {
   const label = n === 3 ? 'FOCUS' : n === 2 ? 'READY' : n === 1 ? 'SET' : 'GO';
   const display = n > 0 ? String(n) : 'GO';
   const V = { dissolve: TAReadyDissolve, matrix: TAReadyMatrix, shatter: TAReadyShatter, blocks: TAReadyBlocks }[variant] || TAReadyDissolve;
@@ -174,16 +167,6 @@ const TAReady = ({ n, variant = 'dissolve', onVariant }) => {
         <V n={n} display={display} />
       </div>
       <div className="ta-ready-lbl" key={`l-${n}`}>{label}</div>
-      {onVariant && (
-        <div className="ta-cd-switcher">
-          <span className="ta-cd-switcher-lbl">▸ countdown</span>
-          {COUNTDOWN_VARIANTS.map(v => (
-            <button key={v.id}
-              className={`ta-cd-switcher-btn${variant === v.id ? ' is-active' : ''}`}
-              onClick={() => onVariant(v.id)}>{v.label}</button>
-          ))}
-        </div>
-      )}
     </div>
   );
 };

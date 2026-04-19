@@ -1,7 +1,7 @@
 // LeechHunt — 3-stage cleanse per leech. 8 leeches, 3-miss fail limit.
 
 const TWEAK_DEFAULTS_LH = {
-  variant: 'hud',
+  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -50,7 +50,16 @@ function buildLeeches(cards, n, cardStates) {
   if (needed <= 0) return realLeeches;
 
   const realIdxSet = new Set(realLeeches.map(l => l.card.idx));
-  const pool = cards.filter(c => c.ex && c.ex.length >= 1 && !realIdxSet.has(c.idx));
+  // Pull synthetic targets from the user's study frontier (discovered cards +
+  // upcoming JLPT-tier neighbours) instead of the full ~2200-card library, so
+  // brand-new operators don't face JLPT-1 kanji they've never seen.
+  const nearPool = (window.Daily && window.Daily.nearUserPool)
+    ? window.Daily.nearUserPool(cards, cardStates)
+    : cards;
+  let pool = nearPool.filter(c => c.ex && c.ex.length >= 1 && !realIdxSet.has(c.idx));
+  if (pool.length < needed) {
+    pool = cards.filter(c => c.ex && c.ex.length >= 1 && !realIdxSet.has(c.idx));
+  }
   const scored = pool.map(c => ({ c, s: Math.random() + (5 - c.jlpt) * 0.2 }));
   scored.sort((a, b) => b.s - a.s);
 
@@ -77,10 +86,10 @@ function buildLeeches(cards, n, cardStates) {
   return [...realLeeches, ...synthetic];
 }
 
-function dealStage(leech, stageIdx, allCards) {
+function dealStage(leech, stageIdx, pool) {
   const card = leech.card;
-  const sameJlpt = allCards.filter(c => c.idx !== card.idx && c.jlpt === card.jlpt);
-  const fallback = allCards.filter(c => c.idx !== card.idx);
+  const sameJlpt = pool.filter(c => c.idx !== card.idx && c.jlpt === card.jlpt);
+  const fallback = pool.filter(c => c.idx !== card.idx);
   const dsrc = sameJlpt.length >= 3 ? sameJlpt : fallback;
 
   if (stageIdx === 0) {
@@ -179,6 +188,9 @@ const LeechHuntApp = ({ cards }) => {
   // Ref (not state) so the ready-phase countdown effect doesn't restart when
   // card_states finish loading — the hunt only reads it at roster-build time.
   const cardStatesRef = React.useRef([]);
+  // Cached near-user pool used for synthetic padding + distractors. Computed
+  // once per hunt (in the ready countdown) so dealStage stays cheap.
+  const nearPoolRef = React.useRef(null);
 
   React.useEffect(() => {
     if (!window.DB) return;
@@ -202,6 +214,9 @@ const LeechHuntApp = ({ cards }) => {
       n -= 1;
       if (n <= 0) {
         setCountdown(0);
+        nearPoolRef.current = (window.Daily && window.Daily.nearUserPool)
+          ? window.Daily.nearUserPool(cards, cardStatesRef.current)
+          : cards;
         const r = buildLeeches(cards, tweaks.leechCount, cardStatesRef.current);
         setRoster(r);
         setMisses(0);
@@ -221,7 +236,7 @@ const LeechHuntApp = ({ cards }) => {
     setRoster(r => r.map((l,i) => i === idx ? { ...l, status: 'active', cleansed: 0, firstTry: true } : l));
     setActiveIdx(idx);
     setStageIdx(0);
-    setStage(dealStage(leech, 0, cards));
+    setStage(dealStage(leech, 0, nearPoolRef.current || cards));
     setFeedback(null);
     lockRef.current = false;
     setPhase('hunt');
@@ -239,10 +254,11 @@ const LeechHuntApp = ({ cards }) => {
     setPhase('end');
     if (window.DB && roster.length > 0) {
       const isHot = window.Daily && window.Daily.hotChallengeId() === 'leech';
-      const base = 70;
-      const perfMult = purged / roster.length;
-      const bonus = res === 'complete' ? 1.2 : 1.0;
-      const earned = Math.round(base * (0.3 + perfMult * 0.7) * bonus * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+      // Per-leech pay + completion/PB bonuses to make full sweeps feel earned.
+      const base = 30 + purged * 10;
+      const completeBonus = res === 'complete' ? 20 : 0;
+      const pbBonus = (purged > pb) ? 20 : 0;
+      const earned = Math.round((base + completeBonus + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
       window.DB.saveScore({ mode: 'leech_hunt', score: purged, result: res }).catch(() => {});
       window.DB.saveSession({
         mode: 'leech_hunt',
@@ -327,7 +343,7 @@ const LeechHuntApp = ({ cards }) => {
           : l
         ));
         setStageIdx(stageIdx + 1);
-        setStage(dealStage(leech, stageIdx + 1, cards));
+        setStage(dealStage(leech, stageIdx + 1, nearPoolRef.current || cards));
         setFeedback(null);
         lockRef.current = false;
       }

@@ -182,7 +182,13 @@ const DB = {
     if (!amount || amount <= 0) return Promise.resolve(null);
     return DB.getUser().then(user => {
       if (!user) return null;
-      const total = (user.total_xp || 0) + amount;
+      const prev = user.total_xp || 0;
+      const total = prev + amount;
+      // Record a one-shot promotion marker if a rank was crossed; Home.html
+      // consumes it on next mount and fires the RankUpModal.
+      if (window.Rank && typeof window.Rank.flagPromotion === 'function') {
+        try { window.Rank.flagPromotion(prev, total); } catch(e) {}
+      }
       return DB.updateUser({ total_xp: total });
     });
   },

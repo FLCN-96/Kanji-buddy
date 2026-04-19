@@ -2,7 +2,7 @@
 // Wrong pair → -2s penalty. Speed bonus per match.
 
 const TWEAK_DEFAULTS_MT = {
-  variant: 'hud',
+  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -32,9 +32,10 @@ function pickReading(card) {
 }
 
 // Build N pair entries. Each entry = { id, kanji, side (mean|read), value }
-// All values must be unique within the board.
-function buildPairs(cards, n, axis) {
-  const pool = cards.filter(c => c.k && c.mean);
+// All values must be unique within the board. `sourcePool` is the
+// near-user-frontier slice supplied by the caller (see Daily.nearUserPool).
+function buildPairs(sourcePool, n, axis) {
+  const pool = (sourcePool || []).filter(c => c.k && c.mean);
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
   const pairs = [];
   const usedValues = new Set();
@@ -129,6 +130,20 @@ const MatchApp = ({ cards }) => {
   const lastMatchAtRef = React.useRef(0);
   const startedAtRef = React.useRef(0);
   const rafRef = React.useRef(0);
+  // Ref (not state) so the ready-phase countdown effect doesn't restart when
+  // card_states finish loading — Match only reads it at pool-build time.
+  const cardStatesRef = React.useRef([]);
+  // Cached near-user pool for the current play session — avoids recomputing
+  // the helper every shuffle-pool refill.
+  const nearPoolRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!window.DB) return;
+    window.DB.open()
+      .then(() => window.DB.getAllCardStates())
+      .then(s => { cardStatesRef.current = s || []; })
+      .catch(() => {});
+  }, []);
 
   React.useEffect(() => {
     document.body.dataset.accent = tweaks.accent;
@@ -145,9 +160,13 @@ const MatchApp = ({ cards }) => {
       n -= 1;
       if (n <= 0) {
         setCountdown(0);
-        // build initial board + pool
-        const totalNeeded = Math.min(cards.length, Math.max(tweaks.boardSize * 4, 28));
-        const pool = buildPairs(cards, totalNeeded, tweaks.axis);
+        // build initial board + pool from the user's frontier slice
+        const nearPool = (window.Daily && window.Daily.nearUserPool)
+          ? window.Daily.nearUserPool(cards, cardStatesRef.current)
+          : cards;
+        nearPoolRef.current = nearPool;
+        const totalNeeded = Math.min(nearPool.length, Math.max(tweaks.boardSize * 4, 28));
+        const pool = buildPairs(nearPool, totalNeeded, tweaks.axis);
         const initial = pool.slice(0, tweaks.boardSize);
         setPairs(initial);
         setShufflePool(pool);
@@ -200,10 +219,10 @@ const MatchApp = ({ cards }) => {
     }
     if (window.DB && matches + misses > 0) {
       const isHot = window.Daily && window.Daily.hotChallengeId() === 'match';
-      const base = 55;
-      // Perf scale: 1 base XP per 10 score, capped at 3x base
-      const perfMult = Math.min(3, 1 + score / 300);
-      const earned = Math.round(base * perfMult * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+      // Score-scaled base + PB bonus — strong play should be obviously rewarded.
+      const base = 20 + score * 2;
+      const pbBonus = (score > pb) ? 20 : 0;
+      const earned = Math.round((base + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
       window.DB.saveScore({ mode: 'match', score, duration_s: tweaks.duration }).catch(() => {});
       window.DB.saveSession({
         mode: 'match',
@@ -230,9 +249,10 @@ const MatchApp = ({ cards }) => {
       for (const id of matchedIds) {
         const slot = next.findIndex(p => p.id === id);
         if (slot >= 0) {
+          const src = nearPoolRef.current || cards;
           if (pIdx >= pool.length) {
             // regenerate pool
-            const fresh = buildPairs(cards, Math.max(tweaks.boardSize * 4, 28), tweaks.axis);
+            const fresh = buildPairs(src, Math.max(tweaks.boardSize * 4, 28), tweaks.axis);
             pool = fresh;
             pIdx = 0;
             setShufflePool(fresh);
@@ -242,7 +262,7 @@ const MatchApp = ({ cards }) => {
           let safety = 0;
           while (safety < 40 && next.some(p => !matchedIds.includes(p.id) && p.value === candidate.value && p.side === candidate.side)) {
             if (pIdx >= pool.length) {
-              const fresh = buildPairs(cards, Math.max(tweaks.boardSize * 4, 28), tweaks.axis);
+              const fresh = buildPairs(src, Math.max(tweaks.boardSize * 4, 28), tweaks.axis);
               pool = fresh;
               pIdx = 0;
               setShufflePool(fresh);
