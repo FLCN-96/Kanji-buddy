@@ -363,7 +363,7 @@ const App = ({ cards }) => {
             <span className="kb-section-title">Challenge modes</span>
             <span className="kb-section-r">alt / bonus xp</span>
           </div>
-          <ChallengeGrid onPick={onPick} hotId={hotChallengeId} />
+          <ChallengeGrid onPick={onPick} hotId={hotChallengeId} dailyDone={state === 'clear'} />
 
           <div style={{height: 8}} />
         </main>

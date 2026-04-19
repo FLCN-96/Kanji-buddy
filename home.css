@@ -340,15 +340,16 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
 .kb-run-primary.is-disabled .kb-rp-top { color: var(--fg-2); }
 .kb-run-primary.is-disabled .kb-rp-arrow { color: var(--fg-2); }
 
-/* Overclock — post-quota bonus sortie. Dim base, magenta arcs, subtle tremble
-   to suggest hardware running past spec. */
+/* Overclock — post-quota bonus sortie. Deliberately under-powered: the HOT
+   challenge tile should read as the bigger reward after the daily is done,
+   so this stays dim and buzzy rather than headlining. */
 .kb-run-primary.is-overachiever {
-  opacity: .78;
+  opacity: .52;
   border-color: var(--accent-magenta-dim);
-  background: linear-gradient(180deg, var(--accent-magenta-bg), transparent 68%);
+  background: linear-gradient(180deg, rgba(255,61,255,.05), transparent 70%);
   box-shadow:
-    0 0 14px rgba(255,61,255,.22),
-    inset 0 0 0 1px rgba(255,61,255,.35);
+    0 0 8px rgba(255,61,255,.12),
+    inset 0 0 0 1px rgba(255,61,255,.22);
   animation: kb-oc-tremble 2.6s ease-in-out infinite;
   overflow: visible;
   cursor: pointer;
@@ -359,13 +360,13 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
   inset: -2px;
   pointer-events: none;
   background:
-    radial-gradient(circle at 14% 78%, rgba(255,61,255,.55), transparent 22%),
-    radial-gradient(circle at 86% 22%, rgba(255,61,255,.5),  transparent 18%),
-    radial-gradient(circle at 62% 88%, rgba(255,61,255,.35), transparent 14%),
-    radial-gradient(circle at 30% 18%, rgba(255,61,255,.3),  transparent 16%);
+    radial-gradient(circle at 14% 78%, rgba(255,61,255,.38), transparent 22%),
+    radial-gradient(circle at 86% 22%, rgba(255,61,255,.32), transparent 18%),
+    radial-gradient(circle at 62% 88%, rgba(255,61,255,.22), transparent 14%),
+    radial-gradient(circle at 30% 18%, rgba(255,61,255,.2),  transparent 16%);
   mix-blend-mode: screen;
   animation: kb-oc-arc 1.1s steps(7, end) infinite;
-  opacity: .85;
+  opacity: .55;
 }
 .kb-run-primary.is-overachiever::after {
   content: '';
@@ -375,30 +376,35 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
   background: repeating-linear-gradient(
     180deg,
     transparent 0 3px,
-    rgba(255,61,255,.04) 3px 4px
+    rgba(255,61,255,.03) 3px 4px
   );
   animation: kb-oc-scan 3.2s linear infinite;
-  opacity: .6;
+  opacity: .35;
 }
-.kb-run-primary.is-overachiever .kb-rp-top   { color: var(--accent-magenta); letter-spacing: .22em; }
+.kb-run-primary.is-overachiever .kb-rp-top   { color: var(--accent-magenta-dim); letter-spacing: .22em; }
 .kb-run-primary.is-overachiever .kb-rp-label {
-  color: var(--accent-magenta);
-  text-shadow: 0 0 6px rgba(255,61,255,.55), 0 0 16px rgba(255,61,255,.28);
+  color: var(--accent-magenta-dim);
+  text-shadow: 0 0 4px rgba(255,61,255,.4), 0 0 10px rgba(255,61,255,.18);
   animation: kb-oc-flicker 2.1s ease-in-out infinite;
 }
-.kb-run-primary.is-overachiever .kb-rp-sub   { color: var(--fg-2); }
+.kb-run-primary.is-overachiever .kb-rp-sub   { color: var(--fg-3); }
 .kb-run-primary.is-overachiever .kb-rp-arrow {
-  color: var(--accent-magenta);
-  text-shadow: 0 0 8px rgba(255,61,255,.55);
+  color: var(--accent-magenta-dim);
+  text-shadow: 0 0 5px rgba(255,61,255,.35);
 }
 .kb-run-primary.is-overachiever:hover {
-  opacity: .95;
+  opacity: .9;
   border-color: var(--accent-magenta);
   box-shadow:
-    0 0 26px rgba(255,61,255,.55),
+    0 0 22px rgba(255,61,255,.45),
     inset 0 0 0 1px var(--accent-magenta);
   transform: none;
   animation-play-state: paused;
+}
+.kb-run-primary.is-overachiever:hover .kb-rp-top,
+.kb-run-primary.is-overachiever:hover .kb-rp-label,
+.kb-run-primary.is-overachiever:hover .kb-rp-arrow {
+  color: var(--accent-magenta);
 }
 .kb-run-primary.is-overachiever:hover .kb-rp-label { animation-play-state: paused; opacity: 1; }
 .kb-run-primary.is-overachiever:hover .kb-rp-arrow { transform: translateX(4px); }
@@ -529,6 +535,72 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
   box-shadow: 0 0 0 1px var(--accent-amber), 0 0 14px rgba(245,165,36,.25);
 }
 .kb-chal.is-hot .kb-chal-glyph { color: var(--accent-amber); text-shadow: 0 0 10px rgba(245,165,36,.4); }
+
+/* Post-quota the hot tile is the only thing still worth chasing — it gets
+   a sliding diagonal glimmer with a corner twinkle at the tail end. Gate
+   on .is-done so it stays quiet while the daily deck is still in the
+   queue. */
+.kb-chal-grid.is-done .kb-chal.is-hot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 42%,
+    rgba(255,210,120,.28) 48%,
+    rgba(255,245,210,.78) 50%,
+    rgba(255,210,120,.28) 52%,
+    transparent 58%
+  );
+  background-size: 250% 100%;
+  background-position: -100% 0;
+  animation: kb-hot-glimmer 5.2s cubic-bezier(.55,.1,.45,.95) infinite;
+  mix-blend-mode: screen;
+  z-index: 1;
+}
+.kb-chal-grid.is-done .kb-chal.is-hot::after {
+  content: '✦';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 13px;
+  color: #fff3d1;
+  text-shadow:
+    0 0 6px rgba(255,210,120,.95),
+    0 0 14px rgba(245,165,36,.7);
+  opacity: 0;
+  animation: kb-hot-twinkle 5.2s ease-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+.kb-chal-grid.is-done .kb-chal.is-hot .kb-chal-meta,
+.kb-chal-grid.is-done .kb-chal.is-hot .kb-chal-glyph,
+.kb-chal-grid.is-done .kb-chal.is-hot .kb-chal-ascii {
+  position: relative;
+  z-index: 3;
+}
+.kb-chal-grid.is-done .kb-chal.is-hot .kb-chal-xp { z-index: 3; }
+
+@keyframes kb-hot-glimmer {
+  0%   { background-position: -100% 0; }
+  28%  { background-position: 200% 0;  }
+  100% { background-position: 200% 0;  }
+}
+
+@keyframes kb-hot-twinkle {
+  0%, 22%  { opacity: 0;  transform: scale(.55) rotate(-12deg); }
+  26%      { opacity: 1;  transform: scale(1.35) rotate(18deg); }
+  32%      { opacity: .95; transform: scale(1) rotate(0deg); }
+  40%      { opacity: 0;  transform: scale(.7) rotate(-8deg); }
+  100%     { opacity: 0;  transform: scale(.55); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-chal-grid.is-done .kb-chal.is-hot::before,
+  .kb-chal-grid.is-done .kb-chal.is-hot::after { animation: none; }
+  .kb-chal-grid.is-done .kb-chal.is-hot::before { display: none; }
+}
 .kb-chal-ascii {
   font-size: 8px; color: var(--fg-3); letter-spacing: 0;
   line-height: 1; white-space: pre; margin-top: auto;
