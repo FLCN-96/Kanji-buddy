@@ -60,7 +60,7 @@ Run is the only consumer; challenge modes do not touch card_states.
 
 ### Rank ladder (`data/rank.js`)
 
-12 ranks (`Ⅰ NOVICE` → `Ⅻ ASCENDANT`), thresholds 0 → 55,000 XP. Four colour tiers: cyan / magenta / amber / transcend. `Rank.flagPromotion(prev, total)` writes a one-shot localStorage marker; `Rank.consumePromotion()` reads-and-clears it.
+16 ranks (`Ⅰ NOVICE` → `ⅩⅥ IMMORTAL`), thresholds 0 → 80,000 XP. Four colour tiers: cyan / magenta / amber / transcend. `Rank.flagPromotion(prev, total)` writes a one-shot localStorage marker; `Rank.consumePromotion()` reads-and-clears it.
 
 Rank thresholds are deliberate — don't tweak them without thinking about how they interact with the per-mode XP balances (`RUN_XP`, `TA_XP_*`, etc., defined at the top of each mode's component).
 

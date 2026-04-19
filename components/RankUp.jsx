@@ -46,7 +46,7 @@ const RankUpModal = ({ from, to, totalXp, onClose }) => {
 
         <ul className="ku-stats">
           <li><span>› TOTAL XP</span><span>{totalXp.toLocaleString()}</span></li>
-          <li><span>› RANK TIER</span><span>{String(to.i).padStart(2,'0')} / 12</span></li>
+          <li><span>› RANK TIER</span><span>{String(to.i).padStart(2,'0')} / {window.Rank.RANKS.length}</span></li>
           <li><span>› NEXT THRESHOLD</span><span>{next ? toNext.toLocaleString() + ' XP' : '— MAX —'}</span></li>
         </ul>
 

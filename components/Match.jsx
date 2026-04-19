@@ -13,6 +13,14 @@ const TWEAK_DEFAULTS_MT = {
 
 const PB_KEY_MT = 'kb-mt-pb';
 
+const MT_XP_BASE  = 15;
+const MT_XP_HIT   = 5;
+const MT_XP_MISS  = -3;
+const MT_XP_CLEAN = 25;
+const MT_XP_PB    = 30;
+const mtComboTier = (c) =>
+  c >= 25 ? 40 : c >= 18 ? 25 : c >= 12 ? 15 : c >= 6 ? 5 : 0;
+
 const HIRA = ['あ','い','う','え','お','か','き','く','け','こ','さ','し','す','せ','そ','た','ち','つ','て','と','な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ','ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ','わ','を','ん','が','ぎ','ぐ','げ','ご','ざ','じ','ず','ぜ','ぞ','だ','ぢ','づ','で','ど','ば','び','ぶ','べ','ぼ','ぱ','ぴ','ぷ','ぺ','ぽ'];
 
 // Convert katakana reading to hiragana (cleaner for display)
@@ -228,13 +236,19 @@ const MatchApp = ({ cards }) => {
       try { localStorage.setItem(PB_KEY_MT, String(score)); } catch(e) {}
       setPb(score);
     }
-    // Score-scaled base + PB bonus — strong play should be obviously rewarded.
+    // Per-pair constants + combo/clean/PB bonuses — same shape as TimeAttack
+    // so Match can't dominate the XP economy via runaway score scaling.
     // Mix axis pays +50% (harder — both meaning AND reading must be primed).
     const isMix = tweaks.axis === 'mix';
-    const base = 20 + score * 2;
-    const pbBonus = newBeatPb ? 20 : 0;
-    const preMix = base + pbBonus;
-    const withMix = isMix ? Math.round(preMix * 1.5) : preMix;
+    const base = Math.max(0,
+      MT_XP_BASE
+      + matches * MT_XP_HIT
+      + misses  * MT_XP_MISS
+      + mtComboTier(bestCombo)
+      + (misses === 0 && matches > 0 ? MT_XP_CLEAN : 0)
+      + (newBeatPb ? MT_XP_PB : 0)
+    );
+    const withMix = isMix ? Math.round(base * 1.5) : base;
     const earned = Math.round(withMix * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
     setXpGained(earned);
     window.DB.saveScore({ mode: 'match', score, duration_s: tweaks.duration }).catch(() => {});
