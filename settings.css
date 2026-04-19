@@ -87,11 +87,13 @@
   border: 1px solid var(--line-dim);
   color: var(--fg-0);
   font-family: var(--font-mono);
-  font-size: 12px;
-  padding: 7px 10px;
+  /* Keep at 16px minimum — Safari/iOS auto-zooms on focus for any input
+     under 16px and often fails to zoom back out cleanly. */
+  font-size: 16px;
+  padding: 8px 10px;
   outline: none;
   letter-spacing: .04em;
-  width: 180px;
+  width: 200px;
   transition: border-color var(--dur-fast) var(--ease-snap);
 }
 .kb-set-input:focus { border-color: var(--accent-cyan); }

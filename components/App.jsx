@@ -54,10 +54,13 @@ const FirstRunModal = ({ onDone }) => {
             placeholder="operator name"
             autoFocus
             maxLength={24}
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
             style={{
               background:'var(--bg-0)', border:'1px solid var(--accent-cyan)',
               color:'var(--fg-0)', padding:'10px 12px',
-              fontFamily:'var(--font-mono)', fontSize:14,
+              fontFamily:'var(--font-mono)', fontSize:16,
               outline:'none', letterSpacing:'.05em',
             }}
           />
@@ -116,14 +119,21 @@ const App = ({ cards }) => {
   const [dueCount, setDueCount] = React.useState(null);
 
   React.useEffect(() => {
+    // Drop any ?reset=TS left over from a hard-reset redirect.
+    try {
+      if (window.location.search) {
+        history.replaceState(null, '', window.location.pathname);
+      }
+    } catch(e) {}
+
     if (!window.DB) { setUserLoaded(true); return; }
     window.DB.open()
       .then(() => window.DB.getUser())
       .then(u => {
-        setUser(u);
+        setUser(u || null);
         setUserLoaded(true);
       })
-      .catch(() => setUserLoaded(true));
+      .catch(() => { setUser(null); setUserLoaded(true); });
     window.DB.getDueCards()
       .then(cs => setDueCount(cs.length))
       .catch(() => {});
