@@ -1,7 +1,6 @@
 // Daily Run orchestrator: weighted 5-card deck, learn → quiz phase split.
 
 const TWEAK_DEFAULTS = {
-  accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
 };
@@ -136,7 +135,6 @@ const RunApp = ({ cards }) => {
   }, [cards]);
 
   React.useEffect(() => {
-    document.body.dataset.accent = tweaks.accent;
     document.body.dataset.scanlines = tweaks.scanlines;
     document.body.dataset.density = tweaks.density;
   }, [tweaks]);

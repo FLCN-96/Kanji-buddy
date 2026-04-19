@@ -1,7 +1,6 @@
 // LeechHunt — 3-stage cleanse per leech. 8 leeches, 3-miss fail limit.
 
 const TWEAK_DEFAULTS_LH = {
-  accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
   countdown: 'dissolve',
@@ -184,7 +183,6 @@ const LeechHuntApp = ({ cards }) => {
   }, []);
 
   React.useEffect(() => {
-    document.body.dataset.accent = tweaks.accent;
     document.body.dataset.scanlines = tweaks.scanlines;
     document.body.dataset.density = tweaks.density;
   }, [tweaks]);

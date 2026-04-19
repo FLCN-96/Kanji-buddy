@@ -1,7 +1,6 @@
 // Survival orchestrator — single life, depth ladder
 
 const TWEAK_DEFAULTS_SV = {
-  accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
   countdown: 'dissolve',
@@ -146,7 +145,6 @@ const SurvivalApp = ({ cards }) => {
   }, []);
 
   React.useEffect(() => {
-    document.body.dataset.accent = tweaks.accent;
     document.body.dataset.scanlines = tweaks.scanlines;
     document.body.dataset.density = tweaks.density;
   }, [tweaks]);

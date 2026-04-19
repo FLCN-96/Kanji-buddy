@@ -1,7 +1,6 @@
 // TimeAttack orchestrator — phase machine, scoring, timer, deck dealer
 
 const TWEAK_DEFAULTS_TA = {
-  accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
   duration: 60,
@@ -166,7 +165,6 @@ const TimeAttackApp = ({ cards }) => {
 
   // apply visual tweaks to body (read-only; settings controls them)
   React.useEffect(() => {
-    document.body.dataset.accent = tweaks.accent;
     document.body.dataset.scanlines = tweaks.scanlines;
     document.body.dataset.density = tweaks.density;
   }, [tweaks]);
