@@ -74,7 +74,7 @@ Large (≈6.7 MB) bundled deck. Each card has `idx` (1-based, used as the card_s
 
 ### Service worker (`sw.js`)
 
-`kb-v9` cache. Source files (`.jsx`/`.css`/`.html`) use stale-while-revalidate so deploys land on the next visit without bumping the cache version. Heavy assets (`.json`/`.svg`/`.png`/`.woff2`) are cache-first. Bump `CACHE` to `kb-v10` only when you need to force eviction (e.g. removed assets or changed precache list).
+`kb-v11` cache. Source files (`.jsx`/`.css`/`.html`) use stale-while-revalidate so deploys land on the next visit without bumping the cache version. Heavy assets (`.json`/`.svg`/`.png`/`.woff2`) are cache-first. Bump `CACHE` only when you need to force eviction (e.g. removed assets or changed precache list).
 
 ## Conventions
 
