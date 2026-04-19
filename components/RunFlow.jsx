@@ -26,7 +26,7 @@ const VERDICT_KEYS = [
 ];
 
 // composition: { new, due, leech, total } from the weighted deck selector.
-const PreRun = ({ composition, onStart }) => {
+const PreRun = ({ composition, onStart, isOverclock }) => {
   const c = composition || { new: 0, due: 0, leech: 0, total: 0 };
   const total = c.total || (c.new + c.due + c.leech);
   const bTotal = Math.max(1, c.new + c.due + c.leech);
@@ -37,20 +37,41 @@ const PreRun = ({ composition, onStart }) => {
   const hasDue    = c.due   > 0;
   const hasLeech  = c.leech > 0;
 
-  const title = total === 0
-    ? 'NOTHING QUEUED'
-    : hasNew && !hasDue && !hasLeech
-      ? 'LEARN · FIRST KANJI'
-      : hasLeech && !hasNew && !hasDue
-        ? 'LEECH RECLAIM'
-        : 'DAILY RUN · READY';
+  const title = isOverclock
+    ? 'OVERCLOCK · BONUS CYCLE'
+    : total === 0
+      ? 'NOTHING QUEUED'
+      : hasNew && !hasDue && !hasLeech
+        ? 'LEARN · FIRST KANJI'
+        : hasLeech && !hasNew && !hasDue
+          ? 'LEECH RECLAIM'
+          : 'DAILY RUN · READY';
+  const eyebrow = isOverclock ? '▸ OVERCLOCK · PAST THE LIMITER' : '▸ RUN · PRE-FLIGHT';
 
   return (
-    <div className="run-pre" data-screen-label="pre-run">
+    <div className={`run-pre${isOverclock ? ' is-overclock' : ''}`} data-screen-label={isOverclock ? 'pre-overclock' : 'pre-run'}>
       <div className="run-pre-head">
-        <div className="run-pre-lbl">▸ RUN · PRE-FLIGHT</div>
+        <div className="run-pre-lbl">{eyebrow}</div>
         <div className="run-pre-title">{title}</div>
+        {isOverclock && (
+          <div className="run-pre-overclock-sub">
+            daily quota cleared · cooling compromised · bonus cycle keeps cards fresh
+          </div>
+        )}
       </div>
+
+      {isOverclock && (
+        <div className="run-pre-overclock-callout">
+          <div className="run-pre-overclock-callout-row">
+            <span className="run-pre-overclock-tag">×1.5</span>
+            <span className="run-pre-overclock-msg">XP multiplier · the only bonus cycle modifier</span>
+          </div>
+          <div className="run-pre-overclock-callout-row is-meta">
+            <span className="run-pre-overclock-tag is-meta">▸</span>
+            <span className="run-pre-overclock-msg">streak already locked in for today · this is pure practice</span>
+          </div>
+        </div>
+      )}
 
       <div className="run-pre-stats">
         <div className="run-pre-stat">
@@ -106,7 +127,12 @@ const PreRun = ({ composition, onStart }) => {
       </div>
 
       <button className="run-pre-start" onClick={onStart} disabled={total === 0}>
-        <span>{total === 0 ? '▸ CHECK BACK AFTER MIDNIGHT' : hasNew ? '▸ START LEARN' : '▸ RUN START'}</span>
+        <span>
+          {total === 0 ? '▸ CHECK BACK AFTER MIDNIGHT'
+            : isOverclock ? '▸ ENGAGE OVERCLOCK'
+            : hasNew ? '▸ START LEARN'
+            : '▸ RUN START'}
+        </span>
         <span className="arrow">▸</span>
       </button>
       <div className="run-pre-hint">
@@ -117,7 +143,7 @@ const PreRun = ({ composition, onStart }) => {
 };
 
 // EndRun — fed real user data (streak, total_xp, xpGained) so nothing is faked.
-const EndRun = ({ results, cards, duration, onAgain, onHome, user, xpGained }) => {
+const EndRun = ({ results, cards, duration, onAgain, onHome, user, xpGained, isOverclock }) => {
   const counts = { miss:0, hard:0, ok:0, easy:0 };
   results.forEach(r => { if (counts[r] != null) counts[r]++; });
   const total = results.length;
@@ -148,9 +174,9 @@ const EndRun = ({ results, cards, duration, onAgain, onHome, user, xpGained }) =
   const streakDelta = streakDays > (user?._streakBefore ?? streakDays) ? '▲ +1' : null;
 
   return (
-    <div className="run-end" data-screen-label="run-end">
+    <div className={`run-end${isOverclock ? ' is-overclock' : ''}`} data-screen-label={isOverclock ? 'overclock-end' : 'run-end'}>
       <div className="run-end-head">
-        <div className="run-end-top">▸ RUN END · {durStr}</div>
+        <div className="run-end-top">▸ {isOverclock ? 'OVERCLOCK END' : 'RUN END'} · {durStr}</div>
         <div className="run-end-title">{acc >= 80 ? 'CLEAN RUN' : acc >= 60 ? 'RUN COMPLETE' : 'ROUGH RUN'}</div>
         <div className="run-end-acc">{acc}<span className="pct">%</span></div>
       </div>

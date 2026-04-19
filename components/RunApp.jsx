@@ -17,27 +17,32 @@ const shuffle = (arr) => arr
   .sort((a, b) => a.k - b.k)
   .map(x => x.v);
 
-const RunTopbar = ({ phase, timer, onQuit, idx, total }) => (
-  <header className="run-top">
-    <div className="run-top-l">
-      <button className="run-quit" onClick={onQuit}>‹ quit</button>
-      <span className="run-lbl">▸ RUN</span>
-    </div>
-    <div className="run-timer">
-      {phase === 'quiz'  ? `${String(idx+1).padStart(2,'0')} / ${String(total).padStart(2,'0')} · ${timer}`
-        : phase === 'intro' ? `LEARN · ${idx + 1} / ${total}`
-        : phase === 'pre'   ? 'PRE-FLIGHT'
-        : 'COMPLETE'}
-    </div>
-    <div className="run-top-r">
-      <span style={{display:'inline-flex',alignItems:'center',gap:4,color:'var(--accent-cyan)'}}>
-        <span style={{width:6,height:6,background:'var(--accent-cyan)',boxShadow:'0 0 6px var(--accent-cyan)'}} /> LIVE
-      </span>
-    </div>
-  </header>
-);
+const RunTopbar = ({ phase, timer, onQuit, idx, total, isOverclock }) => {
+  const dotClr = isOverclock ? 'var(--accent-magenta)' : 'var(--accent-cyan)';
+  const dotShadow = isOverclock ? '0 0 6px var(--accent-magenta)' : '0 0 6px var(--accent-cyan)';
+  return (
+    <header className="run-top">
+      <div className="run-top-l">
+        <button className="run-quit" onClick={onQuit}>‹ quit</button>
+        <span className="run-lbl">▸ {isOverclock ? 'OVERCLOCK' : 'RUN'}</span>
+      </div>
+      <div className="run-timer">
+        {phase === 'quiz'  ? `${String(idx+1).padStart(2,'0')} / ${String(total).padStart(2,'0')} · ${timer}`
+          : phase === 'intro' ? `LEARN · ${idx + 1} / ${total}`
+          : phase === 'pre'   ? 'PRE-FLIGHT'
+          : 'COMPLETE'}
+      </div>
+      <div className="run-top-r">
+        <span style={{display:'inline-flex',alignItems:'center',gap:4,color:dotClr}}>
+          <span style={{width:6,height:6,background:dotClr,boxShadow:dotShadow}} />
+          {isOverclock ? 'BONUS' : 'LIVE'}
+        </span>
+      </div>
+    </header>
+  );
+};
 
-const RunStatusbar = ({ results, combo }) => {
+const RunStatusbar = ({ results, combo, isOverclock }) => {
   const c = { miss:0, hard:0, ok:0, easy:0 };
   results.forEach(r => { if (c[r] != null) c[r]++; });
   const hits = c.ok + c.easy + c.hard;
@@ -48,7 +53,7 @@ const RunStatusbar = ({ results, combo }) => {
         <span className="run-pill miss">MISS · <b>{c.miss}</b></span>
         <span className="run-pill skip">HARD · <b>{c.hard}</b></span>
       </div>
-      <span>{combo >= 2 ? `combo ×${combo}` : 'daily run'}</span>
+      <span>{combo >= 2 ? `combo ×${combo}` : (isOverclock ? 'overclock · ×1.5 xp' : 'daily run')}</span>
     </footer>
   );
 };
@@ -82,6 +87,7 @@ const RunApp = ({ cards }) => {
   const [duration, setDuration] = React.useState(0);
   const [xpGained, setXpGained] = React.useState(0);
   const [confirmQuit, setConfirmQuit] = React.useState(false);
+  const [isOverclock, setIsOverclock] = React.useState(false);
 
   // Build the weighted deck once, after DB + cards are ready.
   React.useEffect(() => {
@@ -97,6 +103,14 @@ const RunApp = ({ cards }) => {
         if (cancelled) return;
         setUser(u);
         setStreakBefore(u?.current_streak ?? 0);
+        // Overclock = "I already cleared today's quota and I'm coming back for more."
+        // Detect by mirroring App.jsx's daily-done gate so Home and Run agree on
+        // when the cycle is bonus territory.
+        const todayStr = new Date().toDateString();
+        const reviewedToday = (states || []).filter(s =>
+          s.last_reviewed && new Date(s.last_reviewed).toDateString() === todayStr
+        ).length;
+        setIsOverclock(reviewedToday >= (window.Daily.DECK_SIZE || 5));
         const selected = window.Daily.selectDailyDeck(cards, states);
         const composed = {
           new:   selected.filter(c => c._bucket === 'new').length,
@@ -145,7 +159,8 @@ const RunApp = ({ cards }) => {
     const base = c.miss * RUN_XP.miss + c.hard * RUN_XP.hard + c.ok * RUN_XP.ok + c.easy * RUN_XP.easy;
     const cleanBonus = (total > 0 && c.miss === 0) ? RUN_BONUS_CLEAN : 0;
     const accBonus   = (total > 0 && acc >= 90) ? RUN_BONUS_ACC90 : 0;
-    const earned = Math.max(0, base + cleanBonus + accBonus);
+    const preMult = Math.max(0, base + cleanBonus + accBonus);
+    const earned = isOverclock ? Math.round(preMult * 1.5) : preMult;
     setXpGained(earned);
     window.DB.saveSession({
       mode: 'run',
@@ -273,12 +288,12 @@ const RunApp = ({ cards }) => {
   }, [now, startedAt]);
 
   const cardLatency = cardStartedAt ? Math.floor((now - cardStartedAt)/1000) : 0;
-  const shellCls = 'run-shell variant-game';
+  const shellCls = `run-shell variant-game${isOverclock ? ' is-overclock' : ''}`;
 
   if (phase === 'loading') {
     return (
-      <div className={shellCls}>
-        <RunTopbar phase="pre" idx={0} total={0} onQuit={quit} timer="00:00" />
+      <div className={shellCls} data-overclock={isOverclock ? 'true' : undefined}>
+        <RunTopbar phase="pre" idx={0} total={0} onQuit={quit} timer="00:00" isOverclock={isOverclock} />
         <main className="run-main" data-screen-label="run-loading">
           <div style={{padding:'var(--sp-5)', color:'var(--fg-2)', textAlign:'center', fontFamily:'var(--font-mono)', letterSpacing:'.14em'}}>
             ▸ MOUNTING QUEUE...
@@ -292,20 +307,21 @@ const RunApp = ({ cards }) => {
   const activeQuiz  = phase === 'quiz'  ? quizOrder[quizIdx] : null;
 
   return (
-    <div className={shellCls}>
+    <div className={shellCls} data-overclock={isOverclock ? 'true' : undefined}>
       <RunTopbar
         phase={phase}
         timer={timer}
         idx={phase === 'intro' ? introIdx : quizIdx}
         total={phase === 'intro' ? newCards.length : quizOrder.length}
         onQuit={quit}
+        isOverclock={isOverclock}
       />
       {phase === 'quiz' && (
         <SegProgress results={results} current={quizIdx} total={quizOrder.length} />
       )}
       <main className="run-main" data-screen-label={`run-${phase}`}>
         {phase === 'pre' && (
-          <PreRun composition={composition} onStart={beginSession} />
+          <PreRun composition={composition} onStart={beginSession} isOverclock={isOverclock} />
         )}
         {phase === 'intro' && activeIntro && (
           <IntroCard
@@ -336,10 +352,11 @@ const RunApp = ({ cards }) => {
             onHome={() => window.location.href = 'Home.html'}
             user={user ? { ...user, _streakBefore: streakBefore } : null}
             xpGained={xpGained}
+            isOverclock={isOverclock}
           />
         )}
       </main>
-      <RunStatusbar results={results} combo={combo} />
+      <RunStatusbar results={results} combo={combo} isOverclock={isOverclock} />
       {phase === 'quiz' && <ComboChip combo={combo} pulse={comboPulse} />}
 
       <ConfirmModal
