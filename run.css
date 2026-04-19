@@ -635,3 +635,70 @@ body[data-density="compact"] .run-card-body { padding: var(--sp-3); }
   .run-kanji-ghost { font-size: 132px; }
 }
 
+/* =========================================================
+   OVERCLOCK — bonus cycle theming. Magenta swap of cyan
+   accents on the run shell, plus the pre-flight callout.
+   ========================================================= */
+.run-shell.is-overclock .run-lbl {
+  color: var(--accent-magenta);
+  text-shadow: 0 0 8px rgba(255,61,255,.45);
+}
+.run-shell.is-overclock .run-pre-title {
+  color: var(--accent-magenta);
+  text-shadow: 0 0 12px rgba(255,61,255,.5);
+}
+.run-shell.is-overclock .run-pre-lbl {
+  color: var(--accent-magenta);
+}
+.run-shell.is-overclock .run-pre-start {
+  border-color: var(--accent-magenta);
+  color: var(--accent-magenta);
+  background: linear-gradient(180deg, var(--accent-magenta-bg), transparent 70%);
+  box-shadow: 0 0 20px rgba(255,61,255,.35), inset 0 0 0 1px var(--accent-magenta);
+  text-shadow: 0 0 12px rgba(255,61,255,.55);
+}
+.run-shell.is-overclock .run-pre-start:hover {
+  box-shadow: 0 0 32px rgba(255,61,255,.55), inset 0 0 0 1px var(--accent-magenta);
+}
+.run-shell.is-overclock .run-pre-stat-val.cyan { color: var(--accent-magenta); }
+
+.run-pre-overclock-sub {
+  margin-top: 6px;
+  font-size: 11px; color: var(--fg-2);
+  letter-spacing: .04em;
+}
+.run-pre-overclock-callout {
+  border: 1px solid var(--accent-magenta);
+  background: linear-gradient(180deg, var(--accent-magenta-bg), transparent 80%);
+  box-shadow: inset 0 0 24px rgba(255,61,255,.06);
+  display: flex; flex-direction: column;
+}
+.run-pre-overclock-callout-row {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3);
+  border-bottom: 1px solid var(--line-dim);
+}
+.run-pre-overclock-callout-row:last-child { border-bottom: 0; }
+.run-pre-overclock-tag {
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: 14px;
+  min-width: 56px; text-align: center;
+  padding: 4px 8px;
+  border: 1px solid var(--accent-magenta);
+  background: var(--bg-1);
+  color: var(--accent-magenta);
+  text-shadow: 0 0 6px rgba(255,61,255,.45);
+}
+.run-pre-overclock-tag.is-meta {
+  border-color: var(--line-bright);
+  color: var(--fg-2);
+  text-shadow: none;
+}
+.run-pre-overclock-msg {
+  font-size: 12px; color: var(--fg-1);
+  letter-spacing: .04em;
+}
+.run-pre-overclock-callout-row.is-meta .run-pre-overclock-msg {
+  color: var(--fg-2);
+}
+
