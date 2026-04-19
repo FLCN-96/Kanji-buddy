@@ -2,8 +2,9 @@
 // land on next visit without forcing cache-version bumps. Cache-first
 // for heavy/stable assets (cards.json, icons, manifest, fonts).
 
-const CACHE = 'kb-v6';
+const CACHE = 'kb-v7';
 const CDN_CACHE = 'kb-cdn-v1';
+const NAV_FALLBACK = './Home.html';
 
 const LOCAL_ASSETS = [
   './',
@@ -30,6 +31,9 @@ const LOCAL_ASSETS = [
   './manifest.json',
   './icons/icon.svg',
   './icons/icon-maskable.svg',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/icon-512-maskable.png',
   './data/cards.json',
   './data/db.js',
   './data/load-cards.js',
@@ -112,6 +116,14 @@ const cacheFirst = (cacheName) => (request) =>
     }))
   );
 
+// Navigation handler: try SWR, then fall back to the cached Home shell
+// so deep links and unknown routes stay usable offline.
+const navigationHandler = (request) =>
+  staleWhileRevalidate(CACHE)(request).then(res => {
+    if (res) return res;
+    return caches.match(NAV_FALLBACK);
+  }).catch(() => caches.match(NAV_FALLBACK));
+
 self.addEventListener('fetch', (e) => {
   const { request } = e;
   if (request.method !== 'GET') return;
@@ -133,8 +145,15 @@ self.addEventListener('fetch', (e) => {
 
   const path = url.pathname;
 
-  // Navigations (HTML documents) — SWR so fresh deploys land next visit.
-  if (request.mode === 'navigate' || REVALIDATE_RX.test(path)) {
+  // Navigations — SWR with fallback to the cached Home shell if both
+  // the cache and the network miss.
+  if (request.mode === 'navigate') {
+    e.respondWith(navigationHandler(request));
+    return;
+  }
+
+  // Source files — SWR so fresh deploys land next visit.
+  if (REVALIDATE_RX.test(path)) {
     e.respondWith(staleWhileRevalidate(CACHE)(request));
     return;
   }
