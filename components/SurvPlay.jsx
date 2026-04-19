@@ -65,7 +65,7 @@ const SVPlay = ({ q, depth, jlpt, onPick, feedback, heartBreak, pressure, sector
 
       <SVPrompt prompt={q.prompt} jlpt={jlpt} />
 
-      <div className={`sv-tiles${bigTile ? ' is-big' : ''}`}>
+      <div key={q.card.idx} className={`sv-tiles${bigTile ? ' is-big' : ''}`}>
         {q.tiles.map((t, i) => {
           let state = '';
           if (feedback) {
