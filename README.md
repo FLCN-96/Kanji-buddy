@@ -31,7 +31,7 @@ next Home load.
 - Service worker for offline / stale-while-revalidate delivery
 - SM-2 scheduler in `data/srs.js`
 - Design tokens in `design_system/colors_and_type.css`
-- Cards seeded from an Archive `.zip`, imported once and persisted in OPFS/IDB
+- Card deck lives in `data/cards.json` and is loaded once on first boot
 
 ## Run it locally
 
