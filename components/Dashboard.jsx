@@ -95,6 +95,8 @@ const composeSub = (deck) => {
   return parts.join(' · ');
 };
 
+// DuePanel owns one question: "what's queued today and what's in it?"
+// The midnight timer lives in <Countdown> right below — don't duplicate it here.
 const DuePanel = ({ state, deck }) => {
   if (state === 'loading' || !deck) {
     return (
@@ -103,7 +105,7 @@ const DuePanel = ({ state, deck }) => {
           <span className="kb-due-lbl">▸ DAILY QUEUE</span>
           <span className="kb-due-lbl">—</span>
         </div>
-        <div className="kb-due-count dim">—<span className="unit">cards</span></div>
+        <div className="kb-due-count dim">—<span className="unit">queued today</span></div>
         <div className="kb-due-sub">loading…</div>
         <div className="kb-due-seg">
           {Array.from({length: 12}).map((_, i) => <div key={i} className="kb-due-seg-s" />)}
@@ -116,18 +118,16 @@ const DuePanel = ({ state, deck }) => {
   const isClear = total === 0;
   const cls = isClear ? 'dim' : 'cyan';
   const filledSegs = Math.round((total / DECK_MAX) * 12);
-  const sub = isClear
-    ? `queue clear · next drop ${formatCountdown(secondsUntilMidnight())}`
-    : composeSub(deck);
+  const sub = isClear ? '✓ all caught up' : composeSub(deck);
 
   return (
     <div className="kb-due" data-screen-label="due-panel">
       <div className="kb-due-head">
         <span className="kb-due-lbl">▸ DAILY QUEUE</span>
-        <span className="kb-due-lbl">{isClear ? 'clear' : 'green'}</span>
+        <span className="kb-due-lbl">{isClear ? 'cleared' : 'ready'}</span>
       </div>
       <div className={`kb-due-count ${cls}`}>
-        {total}<span className="unit">cards</span>
+        {total}<span className="unit">queued today</span>
       </div>
       <div className="kb-due-sub">{sub}</div>
       <div className="kb-due-seg">
@@ -175,7 +175,7 @@ const XpBar = ({ xp = 0 }) => {
             {cur.label}
           </span>
         </span>
-        <span style={{color:'var(--accent-cyan)'}}>{xp.toLocaleString()} XP</span>
+        <span style={{color:'var(--accent-cyan)'}}>LIFETIME · {xp.toLocaleString()} XP</span>
       </div>
       <div className="variant-xp-bar"><div className="variant-xp-fill" style={{width:`${pct}%`}} /></div>
       <div className="variant-xp-meta">
