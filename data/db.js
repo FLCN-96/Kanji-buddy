@@ -1,7 +1,7 @@
 // IndexedDB persistence layer — exposed as window.DB
 
 const DB_NAME = 'kanji-buddy-db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let _db = null;
 
@@ -32,9 +32,8 @@ function openDB() {
         sc.createIndex('mode_score', ['mode', 'score'], { unique: false });
       }
 
-      if (!db.objectStoreNames.contains('imported_cards')) {
-        const ic = db.createObjectStore('imported_cards', { keyPath: 'idx' });
-        ic.createIndex('jlpt', 'jlpt', { unique: false });
+      if (db.objectStoreNames.contains('imported_cards')) {
+        db.deleteObjectStore('imported_cards');
       }
     };
 
@@ -156,35 +155,6 @@ const DB = {
       );
       req.onerror = (e) => reject(e.target.error);
     }));
-  },
-
-  // ── imported cards ────────────────────────────────────────────────
-
-  hasImportedDeck() {
-    return openDB().then(db => new Promise((resolve, reject) => {
-      const req = db.transaction('imported_cards', 'readonly').objectStore('imported_cards').count();
-      req.onsuccess = (e) => resolve(e.target.result > 0);
-      req.onerror   = (e) => reject(e.target.error);
-    }));
-  },
-
-  getImportedCards() {
-    return rw('imported_cards', 'readonly', s => s.getAll());
-  },
-
-  saveImportedCards(cards) {
-    return openDB().then(db => new Promise((resolve, reject) => {
-      const t = db.transaction('imported_cards', 'readwrite');
-      const s = t.objectStore('imported_cards');
-      s.clear();
-      cards.forEach(c => s.put(c));
-      t.oncomplete = () => resolve(cards.length);
-      t.onerror    = (e) => reject(e.target.error);
-    }));
-  },
-
-  clearImportedCards() {
-    return rw('imported_cards', 'readwrite', s => s.clear());
   },
 
   // ── streak helpers ────────────────────────────────────────────────

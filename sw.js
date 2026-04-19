@@ -1,4 +1,4 @@
-const CACHE = 'kb-v1';
+const CACHE = 'kb-v3';
 const CDN_CACHE = 'kb-cdn-v1';
 
 const LOCAL_ASSETS = [
@@ -17,7 +17,6 @@ const LOCAL_ASSETS = [
   './data/cards.json',
   './data/db.js',
   './data/load-cards.js',
-  './data/zip-parser.js',
   './components/App.jsx',
   './components/Dashboard.jsx',
   './components/Modes.jsx',
@@ -27,7 +26,6 @@ const LOCAL_ASSETS = [
   './components/TimeAttack.jsx',
   './components/TAScreens.jsx',
   './components/TAPlay.jsx',
-  './components/DeckImport.jsx',
 ];
 
 const CDN_ASSETS = [
