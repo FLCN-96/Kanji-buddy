@@ -48,7 +48,7 @@ If you need to add a store or index, bump `DB_VERSION` and extend the `onupgrade
 
 `Daily.selectDailyDeck(cards, cardStates)` builds the **5-card** Run deck with budgets `2 new + 2 due + 1 leech`, with cascade-fill if any bucket is short. A card is a "leech" at `lapses ≥ 3`. Cards are returned augmented with `_bucket` (`'new' | 'due' | 'leech'`) and `_state` (the existing card_state, or null for new). New cards always sort first so the intro/learn phase precedes the quiz.
 
-Home gates the panel as **clear** once `reviewed-today >= Daily.DECK_SIZE`, even if the SRS backlog is non-zero — otherwise the ~2000-card "new" pool would refill the panel forever. The raw SRS backlog is shown separately in `StatusBar`. See `components/App.jsx` lines ~146–175.
+Home gates the panel as **clear** once `reviewed-today >= Daily.DECK_SIZE`, even if the SRS backlog is non-zero — otherwise the ~2000-card "new" pool would refill the panel forever.
 
 `Daily.daySeed()` and `Daily.hotChallengeId()` are deterministic per local day. The "hot" challenge gets a `Daily.HOT_MULTIPLIER` (3×) XP bonus — challenge modes apply this themselves at end-of-session.
 

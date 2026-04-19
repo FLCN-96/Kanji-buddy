@@ -40,22 +40,6 @@ const RunTopbar = ({ phase, timer, onQuit, idx, total, isOverclock }) => {
   );
 };
 
-const RunStatusbar = ({ results, combo, isOverclock }) => {
-  const c = { miss:0, hard:0, ok:0, easy:0 };
-  results.forEach(r => { if (c[r] != null) c[r]++; });
-  const hits = c.ok + c.easy + c.hard;
-  return (
-    <footer className="run-statusbar">
-      <div className="run-statusbar-l">
-        <span className="run-pill hit">HIT · <b>{hits}</b></span>
-        <span className="run-pill miss">MISS · <b>{c.miss}</b></span>
-        <span className="run-pill skip">HARD · <b>{c.hard}</b></span>
-      </div>
-      <span>{combo >= 2 ? `combo ×${combo}` : (isOverclock ? 'overclock · ×1.5 xp' : 'daily run')}</span>
-    </footer>
-  );
-};
-
 const RunApp = ({ cards }) => {
   const [tweaks] = React.useState(() => {
     try {
@@ -352,7 +336,6 @@ const RunApp = ({ cards }) => {
           />
         )}
       </main>
-      <RunStatusbar results={results} combo={combo} isOverclock={isOverclock} />
       {phase === 'quiz' && <ComboChip combo={combo} pulse={comboPulse} />}
 
       <ConfirmModal

@@ -17,7 +17,7 @@ body[data-scanlines="on"]::after {
 }
 
 /* shell — 100dvh fits the visible viewport on mobile browsers so the
-   statusbar / action button don't hide behind URL bar / bottom toolbar */
+   action button doesn't hide behind URL bar / bottom toolbar */
 .run-shell {
   min-height: 100vh;
   min-height: 100dvh;
@@ -55,22 +55,6 @@ body[data-scanlines="on"]::after {
 }
 .run-top-r { display: flex; align-items: center; gap: var(--sp-3); font-size: 10px; color: var(--fg-2); letter-spacing: .12em; }
 
-/* status bar */
-.run-statusbar {
-  height: 28px;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 var(--sp-4);
-  border-top: 1px solid var(--line-dim);
-  background: var(--bg-1);
-  font-size: 10px; color: var(--fg-2); letter-spacing: .08em;
-  position: sticky; bottom: 0; z-index: 10;
-}
-.run-statusbar b { color: var(--fg-0); font-weight: 500; }
-.run-statusbar-l { display: flex; gap: var(--sp-3); }
-.run-pill { display: inline-flex; align-items: center; gap: 4px; }
-.run-pill.hit { color: var(--accent-cyan); }
-.run-pill.miss { color: var(--danger); }
-.run-pill.skip { color: var(--accent-amber); }
 
 /* Segment progress */
 .run-seg {
