@@ -60,10 +60,13 @@ const orderForHot = (list, hotId) => {
   return [hot, ...list.filter(c => c.id !== hotId)];
 };
 
-const ChallengeGrid = ({ onPick, hotId }) => {
+const ChallengeGrid = ({ onPick, hotId, dailyDone }) => {
   const ordered = orderForHot(CHALLENGES, hotId);
   return (
-    <div className="kb-chal-grid" data-screen-label="challenge-grid">
+    <div
+      className={`kb-chal-grid${dailyDone ? ' is-done' : ''}`}
+      data-screen-label="challenge-grid"
+    >
       {ordered.map(c => {
         const isHot = c.id === hotId;
         const xp = isHot ? c.xp * HOT_MULTIPLIER : c.xp;
