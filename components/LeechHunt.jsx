@@ -17,7 +17,7 @@ const PB_KEY_LH = 'kb-lh-pb';
 // the target count, we pad with synthetic practice targets (harder-JLPT cards
 // they haven't lapsed on yet) so the mode still has enough meat to chew on.
 function buildLeeches(cards, n, cardStates) {
-  const LEECH_LAPSES = (window.Daily && 3) || 3; // mirrors daily.js
+  const LEECH_LAPSES = (window.Daily && window.Daily.LEECH_LAPSES) || 3;
   const byIdx = new Map(cards.map(c => [c.idx, c]));
 
   const realStates = (cardStates || [])

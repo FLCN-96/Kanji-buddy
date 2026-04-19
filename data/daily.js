@@ -183,6 +183,7 @@
     HOT_MULTIPLIER: 3,
     selectDailyDeck,
     DECK_SIZE,
+    LEECH_LAPSES,
     nearUserPool,
     MIN_POOL_DEFAULT,
     FRONTIER_DEFAULT,
