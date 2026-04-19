@@ -44,10 +44,13 @@ body[data-scanlines="on"]::after {
 }
 
 /* ---------- Topbar ---------- */
+/* On iOS standalone (PWA from home screen) the viewport extends under the
+   Dynamic Island / notch — pad the bar by env(safe-area-inset-top) so the
+   brand mark and right-side cluster stay below it. */
 .kb-top {
-  height: 48px;
+  height: calc(48px + env(safe-area-inset-top));
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 var(--sp-4);
+  padding: env(safe-area-inset-top) var(--sp-4) 0;
   border-bottom: 1px solid var(--line-dim);
   background: var(--bg-1);
   position: sticky; top: 0; z-index: 10;

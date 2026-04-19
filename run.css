@@ -31,10 +31,13 @@ body[data-scanlines="on"]::after {
 @media (min-width: 900px) { .run-shell { max-width: 900px; } }
 
 /* Topbar */
+/* On iOS standalone (PWA from home screen) the viewport extends under the
+   Dynamic Island / notch — pad the bar by env(safe-area-inset-top) so the
+   quit button and timer stay below it. */
 .run-top {
-  height: 48px;
+  height: calc(48px + env(safe-area-inset-top));
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 var(--sp-4);
+  padding: env(safe-area-inset-top) var(--sp-4) 0;
   border-bottom: 1px solid var(--line-dim);
   background: var(--bg-1);
   position: sticky; top: 0; z-index: 10;
@@ -300,7 +303,7 @@ body[data-scanlines="on"]::after {
 /* combo chip */
 .run-combo {
   position: fixed;
-  right: 12px; top: 56px;
+  right: 12px; top: calc(56px + env(safe-area-inset-top));
   border: 1px solid var(--accent-magenta);
   background: var(--bg-1);
   padding: 6px 10px;
