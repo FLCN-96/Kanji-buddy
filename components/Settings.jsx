@@ -28,7 +28,6 @@ const SettingsTopbar = ({ displayName }) => {
     <header className="kb-top">
       <div className="kb-wm">kanji-buddy</div>
       <div className="kb-top-right">
-        <span className="kb-hb">LIVE</span>
         <span style={{color:'var(--fg-2)'}}>{displayName || '—'}</span>
         <span>{hhmm}</span>
       </div>

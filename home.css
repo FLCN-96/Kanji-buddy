@@ -91,12 +91,93 @@ body[data-scanlines="on"]::after {
   transition: color var(--dur-fast) var(--ease-snap), border-color var(--dur-fast) var(--ease-snap), transform .4s;
 }
 .kb-top-cog:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); transform: rotate(60deg); }
-.kb-hb { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-cyan); }
-.kb-hb::before {
-  content: ''; width: 6px; height: 6px; background: var(--accent-cyan);
-  box-shadow: 0 0 6px var(--accent-cyan); animation: hb 1.2s infinite;
+/* Streak chip — header-right indicator, replacing the old LIVE pulse.
+   Three live states (hot/cold/broken) plus a quiet 'fresh' for new
+   operators. Hot animates a few sparks rising out of the pill. */
+.kb-streak-chip {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid currentColor;
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase;
+  overflow: visible;     /* sparks need to escape the pill */
+  white-space: nowrap;
+  cursor: default;
+  transition: color var(--dur-fast) var(--ease-snap),
+              border-color var(--dur-fast) var(--ease-snap),
+              text-shadow var(--dur-fast) var(--ease-snap);
 }
-@keyframes hb { 0%,70% { opacity:1; } 85% { opacity:.2; } 100% { opacity:1; } }
+.kb-streak-chip-icon {
+  font-size: 10px;
+  line-height: 1;
+}
+.kb-streak-chip-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.kb-streak-chip.is-hot {
+  color: var(--accent-amber);
+  border-color: var(--accent-amber);
+  text-shadow: 0 0 6px rgba(245,165,36,.55);
+  background: rgba(245,165,36,.06);
+}
+.kb-streak-chip.is-cold {
+  color: var(--fg-2);
+  border-color: var(--line-bright);
+  background: transparent;
+}
+.kb-streak-chip.is-cold .kb-streak-chip-icon { color: var(--fg-3); }
+.kb-streak-chip.is-broken {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: rgba(255,92,106,.06);
+  text-shadow: 0 0 6px rgba(255,92,106,.55);
+  animation: kb-streak-error 2.4s ease-in-out infinite;
+}
+.kb-streak-chip.is-broken .kb-streak-chip-num {
+  text-decoration: line-through;
+  text-decoration-color: rgba(255,92,106,.7);
+}
+.kb-streak-chip.is-fresh {
+  color: var(--fg-3);
+  border-color: var(--line-bright);
+  border-style: dashed;
+}
+
+@keyframes kb-streak-error {
+  0%, 100% { box-shadow: 0 0 4px rgba(255,92,106,.3); }
+  50%      { box-shadow: 0 0 12px rgba(255,92,106,.7); }
+}
+
+/* Sparks — only mounted on the hot variant in JSX. Each span gets a
+   custom --sx start position and --sd delay so they trigger out of
+   sync. Translate-only animation so the compositor can handle it. */
+.kb-streak-spark {
+  position: absolute;
+  bottom: 2px; left: var(--sx, 30%);
+  width: 2px; height: 2px;
+  background: var(--accent-amber);
+  box-shadow: 0 0 6px var(--accent-amber);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: kb-streak-spark 2.6s ease-out infinite;
+  animation-delay: var(--sd, 0s);
+}
+@keyframes kb-streak-spark {
+  0%   { transform: translate3d(0, 0, 0) scale(.4); opacity: 0; }
+  10%  { opacity: 1; }
+  60%  { opacity: .9; }
+  100% { transform: translate3d(0, -22px, 0) scale(.2); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-streak-spark { animation: none; opacity: 0; }
+  .kb-streak-chip.is-broken { animation: none; }
+}
 
 /* ---------- Statusbar ---------- */
 .kb-statusbar {
