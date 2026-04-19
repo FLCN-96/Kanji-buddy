@@ -334,6 +334,7 @@ const TimeAttackApp = ({ cards }) => {
               onPick={onTilePick}
               feedback={tileFeedback}
               clockMs={clockMs}
+              totalMs={tweaks.duration * 1000}
               danger={clockMs <= 10_000}
               combo={combo}
               comboBurst={comboBurst}
