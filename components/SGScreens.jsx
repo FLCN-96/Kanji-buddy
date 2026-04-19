@@ -73,17 +73,22 @@ const SGPre = ({ pb, cellCount, difficulty, onStart }) => {
   );
 };
 
-const SGEnd = ({ deck, saved, leaked, total, beatPb, pb, onAgain, onHome }) => {
+const SGEnd = ({ deck, saved, leaked, total, beatPb, pb, xpGained, onAgain, onHome }) => {
   const savedCards = deck.filter(c => c.status === 'saved');
   const leakedCards = deck.filter(c => c.status === 'leaked');
   const rate = total > 0 ? Math.round((saved/total)*100) : 0;
   const ribbon = rate === 100 ? 'PERFECT RESCUE' : rate >= 80 ? 'STRONG SAVE' : rate >= 50 ? 'MIXED RESULT' : 'CRITICAL LOSSES';
   const ribbonClr = rate === 100 ? 'var(--accent-lime)' : rate >= 80 ? 'var(--accent-cyan)' : rate >= 50 ? 'var(--accent-amber)' : 'var(--danger)';
 
-  const xpSaved = saved * 10;
-  const xpPerfect = rate === 100 ? 50 : 0;
-  const xpPb = beatPb ? 30 : 0;
-  const xpTotal = xpSaved + xpPerfect + xpPb;
+  // Breakdown mirrors StreakGuard.jsx grant formula exactly.
+  const xpBase = total > 0 ? 40 : 0;
+  const xpSaved = saved * 8;
+  const xpPerfect = rate === 100 && total > 0 ? 20 : 0;
+  const xpPb = beatPb ? 20 : 0;
+  const isHot = window.Daily && window.Daily.hotChallengeId() === 'streak';
+  const xpRaw = xpBase + xpSaved + xpPerfect + xpPb;
+  const xpHot = isHot ? Math.round(xpRaw * (window.Daily.HOT_MULTIPLIER - 1)) : 0;
+  const xpTotal = xpGained ?? (xpRaw + xpHot);
 
   return (
     <div className="sg-end" data-screen-label="sg-end">
@@ -151,9 +156,11 @@ const SGEnd = ({ deck, saved, leaked, total, beatPb, pb, onAgain, onHome }) => {
           <span className="sg-end-xp-total">+{xpTotal}</span>
         </div>
         <div className="sg-end-xp-rows">
-          <div className="sg-end-xp-row"><span>saved · {saved}×10</span><b>+{xpSaved}</b></div>
+          <div className="sg-end-xp-row"><span>base</span><b>+{xpBase}</b></div>
+          <div className="sg-end-xp-row"><span>saved · {saved}×8</span><b>+{xpSaved}</b></div>
           {xpPerfect > 0 && <div className="sg-end-xp-row is-pb"><span>perfect rescue</span><b>+{xpPerfect}</b></div>}
           {xpPb > 0 && <div className="sg-end-xp-row is-pb"><span>new record</span><b>+{xpPb}</b></div>}
+          {isHot && <div className="sg-end-xp-row is-pb"><span>hot daily · ×{window.Daily.HOT_MULTIPLIER}</span><b>+{xpHot}</b></div>}
           <div className="sg-end-xp-row sg-streak"><span>daily streak</span><b>▲ +1</b></div>
         </div>
       </div>

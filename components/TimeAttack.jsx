@@ -115,6 +115,7 @@ const TimeAttackApp = ({ cards }) => {
     try { return JSON.parse(localStorage.getItem(PB_KEY) || '{}'); } catch(e) { return {}; }
   });
   const [beatPb, setBeatPb] = React.useState(false);
+  const [xpGained, setXpGained] = React.useState(0);
   const questionStart = React.useRef(null);
   const lockedRef = React.useRef(false);
   // Ref (not state) so the ready-phase countdown effect doesn't restart when
@@ -141,6 +142,7 @@ const TimeAttackApp = ({ cards }) => {
       hits * TA_XP_HIT + misses * TA_XP_MISS + taComboTier(maxCombo) + cleanBonus + pbBonus
     );
     const earned = Math.round(base * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+    setXpGained(earned);
     window.DB.saveScore({
       mode: 'time_attack',
       score,
@@ -287,6 +289,7 @@ const TimeAttackApp = ({ cards }) => {
   const restart = () => {
     setScore(0); setHits(0); setMisses(0); setCombo(0); setMaxCombo(0);
     setHistory([]); setUsedIdx(new Set()); setBeatPb(false); setQuestion(null);
+    setXpGained(0);
     setPhase('ready');
   };
   const quit = () => {
@@ -353,6 +356,7 @@ const TimeAttackApp = ({ cards }) => {
               tier={tier}
               prevPb={prevPb}
               beatPb={beatPb}
+              xpGained={xpGained}
               history={history}
               timedOut={clockMs <= 0}
               onAgain={restart}

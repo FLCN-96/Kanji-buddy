@@ -167,7 +167,7 @@ const LHDossier = ({ roster, onEngage, purged, misses, missCap }) => (
   </div>
 );
 
-const LHEnd = ({ roster, purged, weakened, survived, result, beatPb, pb, misses, onAgain, onHome }) => {
+const LHEnd = ({ roster, purged, weakened, survived, result, beatPb, pb, misses, xpGained, onAgain, onHome }) => {
   const total = roster.length;
   const rate = total > 0 ? Math.round((purged/total)*100) : 0;
   const ribbon = result === 'fail' ? 'MISSION COMPROMISED'
@@ -181,11 +181,15 @@ const LHEnd = ({ roster, purged, weakened, survived, result, beatPb, pb, misses,
     : rate >= 50 ? 'var(--accent-amber)'
     : 'var(--accent-magenta)';
 
-  const xpPurge = purged * 25;
-  const xpWeak = weakened * 8;
-  const xpClean = result !== 'fail' && misses === 0 ? 40 : 0;
-  const xpPb = beatPb ? 30 : 0;
-  const xpTotal = xpPurge + xpWeak + xpClean + xpPb;
+  // Breakdown mirrors LeechHunt.jsx grant formula exactly.
+  const xpBase = total > 0 ? 30 : 0;
+  const xpPurge = purged * 10;
+  const xpComplete = result === 'complete' ? 20 : 0;
+  const xpPb = beatPb ? 20 : 0;
+  const isHot = window.Daily && window.Daily.hotChallengeId() === 'leech';
+  const xpRaw = xpBase + xpPurge + xpComplete + xpPb;
+  const xpHot = isHot ? Math.round(xpRaw * (window.Daily.HOT_MULTIPLIER - 1)) : 0;
+  const xpTotal = xpGained ?? (xpRaw + xpHot);
 
   return (
     <div className="lh-end" data-screen-label="lh-end">
@@ -271,10 +275,11 @@ const LHEnd = ({ roster, purged, weakened, survived, result, beatPb, pb, misses,
           <span className="lh-end-xp-total">+{xpTotal}</span>
         </div>
         <div className="lh-end-xp-rows">
-          <div className="lh-end-xp-row"><span>purged · {purged}×25</span><b>+{xpPurge}</b></div>
-          <div className="lh-end-xp-row"><span>weakened · {weakened}×8</span><b>+{xpWeak}</b></div>
-          {xpClean > 0 && <div className="lh-end-xp-row is-pb"><span>clean run · 0 misses</span><b>+{xpClean}</b></div>}
+          <div className="lh-end-xp-row"><span>base</span><b>+{xpBase}</b></div>
+          <div className="lh-end-xp-row"><span>purged · {purged}×10</span><b>+{xpPurge}</b></div>
+          {xpComplete > 0 && <div className="lh-end-xp-row is-pb"><span>full hunt complete</span><b>+{xpComplete}</b></div>}
           {xpPb > 0 && <div className="lh-end-xp-row is-pb"><span>new record</span><b>+{xpPb}</b></div>}
+          {isHot && <div className="lh-end-xp-row is-pb"><span>hot daily · ×{window.Daily.HOT_MULTIPLIER}</span><b>+{xpHot}</b></div>}
           <div className="lh-end-xp-row lh-streak"><span>daily streak</span><b>▲ +1</b></div>
         </div>
       </div>

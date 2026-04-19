@@ -58,11 +58,15 @@ const SVPre = ({ pb, onStart, promptMode }) => {
   );
 };
 
-const SVEnd = ({ depth, tier, beatPb, prevPb, killer, history, onAgain, onHome }) => {
-  const xpBase = depth * 8;
-  const xpBonus = beatPb ? 50 : 0;
-  const xpSector = Math.floor(depth / 10) * 20;
-  const xpTotal = xpBase + xpBonus + xpSector;
+const SVEnd = ({ depth, tier, beatPb, prevPb, killer, history, xpGained, onAgain, onHome }) => {
+  // Breakdown mirrors Survival.jsx grant formula exactly.
+  const xpBase = depth > 0 ? 40 : 0;
+  const xpDepth = depth * 3;
+  const xpPb = beatPb ? 30 : 0;
+  const isHot = window.Daily && window.Daily.hotChallengeId() === 'survival';
+  const xpRaw = xpBase + xpDepth + xpPb;
+  const xpHot = isHot ? Math.round(xpRaw * (window.Daily.HOT_MULTIPLIER - 1)) : 0;
+  const xpTotal = xpGained ?? (xpRaw + xpHot);
 
   return (
     <div className="sv-end" data-screen-label="sv-end">
@@ -132,9 +136,10 @@ const SVEnd = ({ depth, tier, beatPb, prevPb, killer, history, onAgain, onHome }
           <span className="sv-end-xp-total">+{xpTotal}</span>
         </div>
         <div className="sv-end-xp-rows">
-          <div className="sv-end-xp-row"><span>depth bonus</span><b>+{xpBase}</b></div>
-          <div className="sv-end-xp-row"><span>sectors cleared · {Math.floor(depth/10)}</span><b>+{xpSector}</b></div>
-          {beatPb && <div className="sv-end-xp-row is-pb"><span>new personal best</span><b>+50</b></div>}
+          <div className="sv-end-xp-row"><span>base</span><b>+{xpBase}</b></div>
+          <div className="sv-end-xp-row"><span>depth · {depth}×3</span><b>+{xpDepth}</b></div>
+          {xpPb > 0 && <div className="sv-end-xp-row is-pb"><span>new personal best</span><b>+{xpPb}</b></div>}
+          {isHot && <div className="sv-end-xp-row is-pb"><span>hot daily · ×{window.Daily.HOT_MULTIPLIER}</span><b>+{xpHot}</b></div>}
           <div className="sv-end-xp-row sv-streak"><span>daily streak</span><b>▲ +1</b></div>
         </div>
       </div>
