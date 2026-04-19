@@ -194,9 +194,13 @@ const App = ({ cards }) => {
   const onRun = () => {
     const btn = document.querySelector('.kb-run-primary');
     if (btn) {
+      const over = btn.classList.contains('is-overachiever');
       btn.style.transition = 'none';
       btn.style.transform = 'scale(.96)';
-      btn.style.boxShadow = '0 0 40px rgba(34,211,238,.9), inset 0 0 0 2px var(--accent-cyan)';
+      btn.style.animation = 'none';
+      btn.style.boxShadow = over
+        ? '0 0 48px rgba(255,61,255,.9), inset 0 0 0 2px var(--accent-magenta)'
+        : '0 0 40px rgba(34,211,238,.9), inset 0 0 0 2px var(--accent-cyan)';
       setTimeout(() => {
         window.location.href = 'Run.html';
       }, 160);
