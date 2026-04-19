@@ -566,32 +566,38 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
    a sliding diagonal glimmer with a corner twinkle at the tail end. Gate
    on .is-done so it stays quiet while the daily deck is still in the
    queue. */
+/* The previous version animated `background-position` and used
+   `mix-blend-mode: screen`, which together prevented true compositor-layer
+   promotion (mix-blend-mode forces backdrop reads, and background-position
+   is a paint-only property — neither will-change nor translateZ buys you
+   actual GPU offload). The animation was running on the main thread the
+   whole time, which made first-frame jank inevitable.
+
+   This rewrite uses a tilted strip translated via transform — the only
+   property the compositor can animate without repainting. .kb-chal already
+   has overflow: hidden, so the wide strip is clipped to the tile. We drop
+   mix-blend-mode entirely and bump the gradient alpha to compensate for
+   the lost screen-blend brightness. */
 .kb-chal-grid.is-done .kb-chal.is-hot::before {
   content: '';
   position: absolute;
-  inset: 0;
+  top: -30%;
+  bottom: -30%;
+  left: 0;
+  width: 28%;
   pointer-events: none;
   background: linear-gradient(
-    115deg,
-    transparent 42%,
-    rgba(255,210,120,.13) 48%,
-    rgba(255,240,200,.4)  50%,
-    rgba(255,210,120,.13) 52%,
-    transparent 58%
+    90deg,
+    transparent 0%,
+    rgba(255,210,120,.18) 30%,
+    rgba(255,240,200,.55) 50%,
+    rgba(255,210,120,.18) 70%,
+    transparent 100%
   );
-  background-size: 250% 100%;
-  background-position: -100% 0;
-  /* Pre-promote to a compositor layer so the first frames don't pay the
-     mix-blend-mode setup cost. The previous easing was cubic-bezier(.55,.1,
-     .45,.95) — strong ease-in-out meant the band barely moved for the first
-     ~200ms of the 22%-of-9s sweep, which read as a stutter. The new curve
-     is front-loaded (immediate motion, gentle landing) so the sweep starts
-     visibly on frame one. */
-  will-change: background-position;
-  transform: translateZ(0);
-  backface-visibility: hidden;
+  transform: translate3d(-180%, 0, 0) rotate(25deg);
+  transform-origin: center;
+  will-change: transform;
   animation: kb-hot-glimmer 9s cubic-bezier(.3,.7,.4,1) infinite;
-  mix-blend-mode: screen;
   z-index: 1;
 }
 .kb-chal-grid.is-done .kb-chal.is-hot::after {
@@ -618,9 +624,9 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
 .kb-chal-grid.is-done .kb-chal.is-hot .kb-chal-xp { z-index: 3; }
 
 @keyframes kb-hot-glimmer {
-  0%   { background-position: -100% 0; }
-  22%  { background-position: 200% 0;  }
-  100% { background-position: 200% 0;  }
+  0%   { transform: translate3d(-180%, 0, 0) rotate(25deg); }
+  22%  { transform: translate3d(540%, 0, 0)  rotate(25deg); }
+  100% { transform: translate3d(540%, 0, 0)  rotate(25deg); }
 }
 
 @keyframes kb-hot-twinkle {
