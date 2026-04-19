@@ -431,6 +431,55 @@ body[data-scanlines="on"]::after {
 .run-pre-legend .dot.rev { background: var(--accent-magenta); opacity: .7; }
 .run-pre-legend .dot.lch { background: var(--accent-amber); }
 
+/* Verdict key — explainer strip shown on PreRun so first-time operators
+   understand what MISS/HARD/OK/EASY will do once the card is revealed. */
+.run-pre-verdicts {
+  border: 1px solid var(--line-dim); background: var(--bg-1); padding: var(--sp-3);
+}
+.run-pre-verdicts-head {
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-2);
+  margin-bottom: var(--sp-2); display: flex; justify-content: space-between;
+}
+.run-pre-verdicts-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+}
+.run-pre-vk {
+  border: 1px solid var(--line-dim); background: var(--bg-0);
+  padding: 8px 10px; display: flex; flex-direction: column; gap: 4px;
+  font-family: var(--font-mono);
+}
+.run-pre-vk-head { display: flex; align-items: baseline; gap: 6px; }
+.run-pre-vk-head .k {
+  font-size: 9px; color: var(--fg-2); letter-spacing: .08em;
+  border: 1px solid var(--line-bright); padding: 0 4px;
+  border-bottom-width: 2px;
+}
+.run-pre-vk-head .l { font-size: 12px; font-weight: 700; letter-spacing: .1em; }
+.run-pre-vk-desc { font-size: 10px; color: var(--fg-2); line-height: 1.35; }
+.run-pre-vk-int {
+  font-size: 9px; color: var(--fg-3); letter-spacing: .08em;
+  text-transform: uppercase; margin-top: auto;
+}
+.run-pre-vk.miss { border-color: rgba(255,61,255,.45); }
+.run-pre-vk.miss .l    { color: var(--accent-magenta); }
+.run-pre-vk.miss .k    { color: var(--accent-magenta); border-color: var(--accent-magenta-dim); }
+.run-pre-vk.hard { border-color: rgba(245,165,36,.5); }
+.run-pre-vk.hard .l    { color: var(--accent-amber); }
+.run-pre-vk.hard .k    { color: var(--accent-amber); border-color: var(--accent-amber); }
+.run-pre-vk.ok   { border-color: rgba(34,211,238,.4); }
+.run-pre-vk.ok   .l    { color: var(--accent-cyan); }
+.run-pre-vk.ok   .k    { color: var(--accent-cyan); border-color: var(--accent-cyan); }
+.run-pre-vk.easy {
+  border-color: var(--accent-cyan);
+  box-shadow: inset 0 0 0 1px var(--accent-cyan), 0 0 10px rgba(34,211,238,.18);
+}
+.run-pre-vk.easy .l    { color: var(--accent-cyan); text-shadow: 0 0 6px rgba(34,211,238,.4); }
+.run-pre-vk.easy .k    { color: var(--accent-cyan); border-color: var(--accent-cyan); }
+
+@media (max-width: 560px) {
+  .run-pre-verdicts-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
 .run-pre-start {
   margin-top: var(--sp-2);
   padding: var(--sp-4);
