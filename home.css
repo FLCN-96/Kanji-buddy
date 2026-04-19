@@ -394,14 +394,11 @@ body[data-density="compact"] .kb-chal-grid > .kb-chal:first-child .kb-chal-glyph
   text-transform: uppercase; color: var(--fg-0);
 }
 .kb-chal-sub { font-size: 10px; color: var(--fg-2); letter-spacing: .04em; line-height: 1.4; }
-.kb-chal-tag {
-  position: absolute; top: 6px; right: 6px;
-  font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
-  padding: 2px 5px; border: 1px solid var(--line-dim); color: var(--fg-2);
+.kb-chal.is-hot {
+  border-color: var(--accent-amber);
+  box-shadow: 0 0 0 1px var(--accent-amber), 0 0 14px rgba(245,165,36,.25);
 }
-.kb-chal-tag.new { border-color: var(--accent-magenta); color: var(--accent-magenta); }
-.kb-chal-tag.hot { border-color: var(--accent-amber); color: var(--accent-amber); }
-.kb-chal-tag.dbl { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.kb-chal.is-hot .kb-chal-glyph { color: var(--accent-amber); text-shadow: 0 0 10px rgba(245,165,36,.4); }
 .kb-chal-ascii {
   font-size: 8px; color: var(--fg-3); letter-spacing: 0;
   line-height: 1; white-space: pre; margin-top: auto;
