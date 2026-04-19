@@ -1,0 +1,335 @@
+// Survival orchestrator — single life, depth ladder
+
+const TWEAK_DEFAULTS_SV = /*EDITMODE-BEGIN*/{
+  "variant": "game",
+  "accent": "cyan",
+  "scanlines": "off",
+  "density": "comfortable",
+  "countdown": "dissolve",
+  "promptMode": "rotate"
+}/*EDITMODE-END*/;
+
+const PB_KEY_SV = 'kb-sv-pb';
+
+const DEPTH_TIERS = [
+  { id: 'LEGEND',  min: 40, color: '#b8f1ff' },
+  { id: 'ABYSS',   min: 25, color: '#ff3dff' },
+  { id: 'DEEP',    min: 15, color: '#f5a524' },
+  { id: 'SHALLOW', min: 0,  color: '#c9d6e2' },
+];
+const pickDepthTier = (d) => DEPTH_TIERS.find(t => d >= t.min) || DEPTH_TIERS[3];
+
+const jlptForDepth = (d) => {
+  if (d < 10) return 5;
+  if (d < 20) return 4;
+  if (d < 30) return 3;
+  if (d < 40) return 2;
+  return 1;
+};
+
+const PROMPT_MODES = ['mean2k', 'read2k', 'k2mean'];
+
+function dealSurvQuestion(cards, used, depth, mode) {
+  const targetJlpt = jlptForDepth(depth);
+  const pool = cards.filter(c => !used.has(c.idx) && c.jlpt === targetJlpt);
+  const fallback = cards.filter(c => !used.has(c.idx));
+  const src = pool.length >= 4 ? pool : (fallback.length >= 4 ? fallback : cards);
+  const card = src[Math.floor(Math.random() * src.length)];
+
+  const candidates = cards.filter(c => c.idx !== card.idx && c.jlpt === card.jlpt);
+  const dsrc = candidates.length >= 3 ? candidates : cards.filter(c => c.idx !== card.idx);
+
+  let prompt, correct, tilesRaw;
+  if (mode === 'mean2k') {
+    // show meaning + reading, pick the kanji
+    prompt = { kind: 'mean', mean: card.mean.split(',')[0].trim(), reading: (card.kun[0] || card.on[0])?.r || '' };
+    correct = card.k;
+    const seen = new Set([card.k]);
+    const dis = [];
+    while (dis.length < 3 && dsrc.length) {
+      const p = dsrc[Math.floor(Math.random() * dsrc.length)];
+      if (seen.has(p.k)) continue;
+      seen.add(p.k); dis.push(p.k);
+    }
+    tilesRaw = [correct, ...dis];
+  } else if (mode === 'read2k') {
+    // show reading only, pick the kanji
+    const r = (card.kun[0]?.r || card.on[0]?.r || '').replace(/\./g, '');
+    prompt = { kind: 'read', reading: r, meaning: null };
+    correct = card.k;
+    const seen = new Set([card.k]);
+    const dis = [];
+    while (dis.length < 3 && dsrc.length) {
+      const p = dsrc[Math.floor(Math.random() * dsrc.length)];
+      if (seen.has(p.k)) continue;
+      seen.add(p.k); dis.push(p.k);
+    }
+    tilesRaw = [correct, ...dis];
+  } else {
+    // k2mean — show kanji, pick meaning
+    prompt = { kind: 'kanji', kanji: card.k };
+    correct = card.mean.split(',')[0].trim();
+    const seen = new Set([correct.toLowerCase()]);
+    const dis = [];
+    while (dis.length < 3 && dsrc.length) {
+      const p = dsrc[Math.floor(Math.random() * dsrc.length)];
+      const m = p.mean.split(',')[0].trim();
+      if (seen.has(m.toLowerCase())) continue;
+      seen.add(m.toLowerCase()); dis.push(m);
+    }
+    tilesRaw = [correct, ...dis];
+  }
+  const tiles = tilesRaw.map(t => ({ t, k: Math.random() })).sort((a,b) => a.k - b.k).map(x => x.t);
+  return { card, prompt, tiles, correct, correctIdx: tiles.indexOf(correct) };
+}
+
+const TweaksPanelSV = ({ open, onClose, tweaks, onSet }) => {
+  const opt = (key, options) => (
+    <div className="tweaks-row">
+      <div className="tweaks-lbl">▸ {key.toUpperCase()}</div>
+      <div className="tweaks-opts">
+        {options.map(o => (
+          <button key={o.id} className={`tweaks-btn${tweaks[key] === o.id ? ' is-active' : ''}`} onClick={() => onSet(key, o.id)}>{o.label}</button>
+        ))}
+      </div>
+    </div>
+  );
+  return (
+    <div className={`tweaks${open ? ' is-open' : ''}`}>
+      <div className="tweaks-head"><span>TWEAKS</span><button className="tweaks-close" onClick={onClose}>╳</button></div>
+      <div className="tweaks-body">
+        {opt('promptMode', [{id:'rotate',label:'rotate'},{id:'mean2k',label:'mean→kanji'},{id:'read2k',label:'reading→k'},{id:'k2mean',label:'kanji→mean'}])}
+        {opt('variant', [{id:'calm',label:'calm'},{id:'hud',label:'hud'},{id:'game',label:'game'}])}
+        {opt('accent', [{id:'cyan',label:'cyan+mag'},{id:'dim',label:'teal+rose'}])}
+        {opt('scanlines', [{id:'off',label:'off'},{id:'on',label:'on'}])}
+        {opt('density', [{id:'comfortable',label:'comfort'},{id:'compact',label:'compact'}])}
+      </div>
+    </div>
+  );
+};
+
+const SVTopbar = ({ phase, depth, best, onQuit }) => (
+  <header className="run-top sv-top">
+    <div className="run-top-l">
+      <button className="run-quit" onClick={onQuit}>‹ quit</button>
+      <span className="run-lbl sv-lbl">▸ SURVIVAL</span>
+    </div>
+    <div className="sv-top-depth">
+      <span className="sv-top-depth-lbl">DEPTH</span>
+      <span className="sv-top-depth-val" key={depth}>{String(depth).padStart(3,'0')}</span>
+    </div>
+    <div className="run-top-r">
+      <span className="sv-top-best">BEST · <b>{best}</b></span>
+    </div>
+  </header>
+);
+
+const SurvivalApp = ({ cards }) => {
+  const [tweaks, setTweaks] = React.useState(() => {
+    try {
+      const shared = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
+      const svLocal = JSON.parse(localStorage.getItem('kb-sv-tweaks') || '{}');
+      return { ...TWEAK_DEFAULTS_SV, ...shared, ...svLocal };
+    } catch(e) { return TWEAK_DEFAULTS_SV; }
+  });
+  const [tweaksOpen, setTweaksOpen] = React.useState(false);
+  const [editMode, setEditMode] = React.useState(false);
+
+  const [phase, setPhase] = React.useState('pre'); // pre | ready | play | end
+  const [countdown, setCountdown] = React.useState(3);
+  const [depth, setDepth] = React.useState(0);
+  const [question, setQuestion] = React.useState(null);
+  const [used, setUsed] = React.useState(() => new Set());
+  const [history, setHistory] = React.useState([]);
+  const [feedback, setFeedback] = React.useState(null);
+  const [heartBreak, setHeartBreak] = React.useState(false);
+  const [sectorFlash, setSectorFlash] = React.useState(null);
+  const [pb, setPb] = React.useState(() => {
+    try { return parseInt(localStorage.getItem(PB_KEY_SV) || '0', 10) || 0; } catch(e) { return 0; }
+  });
+  const [beatPb, setBeatPb] = React.useState(false);
+  const [modeIdx, setModeIdx] = React.useState(0); // for rotate
+  const lockedRef = React.useRef(false);
+  const qStart = React.useRef(null);
+
+  React.useEffect(() => {
+    document.body.dataset.accent = tweaks.accent;
+    document.body.dataset.scanlines = tweaks.scanlines;
+    document.body.dataset.density = tweaks.density;
+    try {
+      localStorage.setItem('kb-sv-tweaks', JSON.stringify(tweaks));
+      const shared = { variant: tweaks.variant, accent: tweaks.accent, scanlines: tweaks.scanlines, density: tweaks.density };
+      const existing = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
+      localStorage.setItem('kb-tweaks', JSON.stringify({ ...existing, ...shared }));
+    } catch(e) {}
+  }, [tweaks]);
+
+  React.useEffect(() => {
+    const h = (e) => {
+      if (e.data?.type === '__activate_edit_mode') { setEditMode(true); setTweaksOpen(true); }
+      else if (e.data?.type === '__deactivate_edit_mode') { setEditMode(false); setTweaksOpen(false); }
+    };
+    window.addEventListener('message', h);
+    window.parent.postMessage({type: '__edit_mode_available'}, '*');
+    return () => window.removeEventListener('message', h);
+  }, []);
+
+  const setTweak = (k, v) => {
+    const next = { ...tweaks, [k]: v };
+    setTweaks(next);
+    try { window.parent.postMessage({type:'__edit_mode_set_keys', edits:{[k]: v}}, '*'); } catch(e) {}
+  };
+
+  const pickMode = React.useCallback((d) => {
+    if (tweaks.promptMode === 'rotate') {
+      return PROMPT_MODES[d % PROMPT_MODES.length];
+    }
+    return tweaks.promptMode;
+  }, [tweaks.promptMode]);
+
+  const dealNext = React.useCallback((usedSet, d) => {
+    const mode = pickMode(d);
+    const q = dealSurvQuestion(cards, usedSet, d, mode);
+    setQuestion(q);
+    setFeedback(null);
+    lockedRef.current = false;
+    qStart.current = performance.now();
+    return q;
+  }, [cards, pickMode]);
+
+  // 3-2-1 countdown
+  React.useEffect(() => {
+    if (phase !== 'ready') return;
+    setCountdown(3);
+    let n = 3;
+    const tick = () => {
+      n -= 1;
+      if (n <= 0) {
+        setCountdown(0);
+        setDepth(0);
+        setHistory([]);
+        const u = new Set();
+        setUsed(u);
+        dealNext(u, 0);
+        setPhase('play');
+      } else { setCountdown(n); setTimeout(tick, 700); }
+    };
+    const t = setTimeout(tick, 700);
+    return () => clearTimeout(t);
+  }, [phase, dealNext]);
+
+  const finish = (depthAtDeath, killer) => {
+    setPhase('end');
+    try {
+      const prev = pb;
+      if (depthAtDeath > prev) {
+        setBeatPb(true);
+        localStorage.setItem(PB_KEY_SV, String(depthAtDeath));
+        setPb(depthAtDeath);
+      }
+    } catch(e) {}
+  };
+
+  const onTilePick = (tileIdx) => {
+    if (phase !== 'play' || !question || lockedRef.current) return;
+    lockedRef.current = true;
+    const ok = tileIdx === question.correctIdx;
+    const ms = Math.round(performance.now() - qStart.current);
+    const entry = { card: question.card, prompt: question.prompt, correct: question.correct, picked: question.tiles[tileIdx], ok, ms };
+    setFeedback({ picked: tileIdx, correct: question.correctIdx, ok });
+    setHistory(h => [...h, entry]);
+
+    if (ok) {
+      const nextDepth = depth + 1;
+      setDepth(nextDepth);
+      // sector cleared?
+      if (nextDepth > 0 && nextDepth % 10 === 0) {
+        setSectorFlash({ depth: nextDepth, t: Date.now() });
+        setTimeout(() => setSectorFlash(null), 1100);
+      }
+      setTimeout(() => {
+        const nu = new Set(used); nu.add(question.card.idx);
+        setUsed(nu);
+        dealNext(nu, nextDepth);
+      }, nextDepth % 10 === 0 ? 900 : 280);
+    } else {
+      setHeartBreak(true);
+      setTimeout(() => finish(depth, question.card), 1400);
+    }
+  };
+
+  const start = () => { setPhase('ready'); };
+  const restart = () => {
+    setDepth(0); setUsed(new Set()); setHistory([]);
+    setFeedback(null); setHeartBreak(false); setBeatPb(false); setQuestion(null);
+    setPhase('ready');
+  };
+  const quit = () => {
+    if (phase === 'play' && !confirm('Quit? Run ends.')) return;
+    window.location.href = 'Home.html';
+  };
+
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if (phase === 'pre') {
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); start(); }
+      } else if (phase === 'play') {
+        if (['1','2','3','4'].includes(e.key)) { onTilePick(Number(e.key) - 1); }
+        else if (e.key === 'Escape') { quit(); }
+      } else if (phase === 'end') {
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); restart(); }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
+  const shellCls = `run-shell sv-shell variant-${tweaks.variant}${heartBreak ? ' is-breaking' : ''}`;
+  const pressure = Math.min(1, depth / 40); // 0..1 dread
+  const tier = pickDepthTier(depth);
+  const lastEight = history.slice(-8);
+
+  return (
+    <>
+      <div className={shellCls} data-phase={phase} style={{'--dread': pressure}}>
+        <SVTopbar phase={phase} depth={depth} best={pb} onQuit={quit} />
+
+        <main className="run-main sv-main" data-screen-label={`sv-${phase}`}>
+          {phase === 'pre' && <SVPre pb={pb} onStart={start} promptMode={tweaks.promptMode} />}
+          {phase === 'ready' && <TAReady n={countdown} variant={tweaks.countdown} />}
+          {phase === 'play' && question && (
+            <SVPlay
+              q={question}
+              depth={depth}
+              jlpt={jlptForDepth(depth)}
+              onPick={onTilePick}
+              feedback={feedback}
+              heartBreak={heartBreak}
+              pressure={pressure}
+              sectorFlash={sectorFlash}
+            />
+          )}
+          {phase === 'end' && (
+            <SVEnd
+              depth={depth}
+              tier={tier}
+              beatPb={beatPb}
+              prevPb={pb - (beatPb ? depth - pb : 0)}
+              killer={history[history.length - 1]?.card}
+              history={lastEight}
+              onAgain={restart}
+              onHome={() => window.location.href = 'Home.html'}
+            />
+          )}
+        </main>
+
+        {/* Dread vignette — intensifies with depth */}
+        {phase === 'play' && <div className="sv-vignette" aria-hidden />}
+      </div>
+      {!editMode && <button className="tweaks-float" onClick={() => setTweaksOpen(o => !o)}>▸ tweaks</button>}
+      <TweaksPanelSV open={tweaksOpen} onClose={() => setTweaksOpen(false)} tweaks={tweaks} onSet={setTweak} />
+    </>
+  );
+};
+
+Object.assign(window, { SurvivalApp, pickDepthTier, DEPTH_TIERS, jlptForDepth });

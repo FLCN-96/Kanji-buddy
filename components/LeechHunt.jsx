@@ -1,0 +1,388 @@
+// LeechHunt — 3-stage cleanse per leech. 8 leeches, 3-miss fail limit.
+
+const TWEAK_DEFAULTS_LH = /*EDITMODE-BEGIN*/{
+  "variant": "game",
+  "accent": "cyan",
+  "scanlines": "off",
+  "density": "comfortable",
+  "countdown": "dissolve",
+  "leechCount": 8,
+  "missCap": 3
+}/*EDITMODE-END*/;
+
+const PB_KEY_LH = 'kb-lh-pb';
+
+// Build a leech roster: synthetic contamination + miss history for flavour.
+// In a real SRS we'd pull from review stats; here we sample higher-JLPT cards
+// (typically harder) and stamp them with realistic miss patterns.
+function buildLeeches(cards, n) {
+  const pool = cards.filter(c => c.ex && c.ex.length >= 1);
+  // sort by random but weight toward higher JLPT (harder)
+  const scored = pool.map(c => ({ c, s: Math.random() + (5 - c.jlpt) * 0.2 }));
+  scored.sort((a,b) => b.s - a.s);
+  const picked = scored.slice(0, n).map(x => x.c);
+  return picked.map((card, i) => {
+    const contamination = 0.58 + Math.random() * 0.32; // 58–90% miss rate
+    // 8 recent attempts: biased toward misses given contamination
+    const history = Array.from({length: 8}, () => Math.random() < contamination ? 'x' : 'o');
+    // ensure at least 4 misses visible
+    while (history.filter(h => h === 'x').length < 4) {
+      const j = Math.floor(Math.random() * 8);
+      history[j] = 'x';
+    }
+    return {
+      id: `leech-${i}`,
+      card,
+      contamination,
+      history,
+      status: 'pending', // pending | active | purged | weakened | survived
+      cleansed: 0, // stages cleared first try this encounter
+      firstTry: true,
+    };
+  });
+}
+
+function dealStage(leech, stageIdx, allCards) {
+  const card = leech.card;
+  const sameJlpt = allCards.filter(c => c.idx !== card.idx && c.jlpt === card.jlpt);
+  const fallback = allCards.filter(c => c.idx !== card.idx);
+  const dsrc = sameJlpt.length >= 3 ? sameJlpt : fallback;
+
+  if (stageIdx === 0) {
+    // recognition — pick meaning
+    const correct = card.mean.split(',')[0].trim();
+    const seen = new Set([correct.toLowerCase()]);
+    const dis = [];
+    while (dis.length < 3 && dsrc.length) {
+      const p = dsrc[Math.floor(Math.random()*dsrc.length)];
+      const m = p.mean.split(',')[0].trim();
+      if (seen.has(m.toLowerCase())) continue;
+      seen.add(m.toLowerCase()); dis.push(m);
+    }
+    const tilesRaw = [correct, ...dis];
+    const tiles = tilesRaw.map(t=>({t,k:Math.random()})).sort((a,b)=>a.k-b.k).map(x=>x.t);
+    return { kind: 'recognition', tiles, correctIdx: tiles.indexOf(correct) };
+  }
+  if (stageIdx === 1) {
+    // reading — pick reading
+    const allReads = [...card.kun.map(r=>r.r), ...card.on.map(r=>r.r)].filter(Boolean);
+    const correct = (allReads[0] || '').replace(/\./g,'');
+    const seen = new Set([correct]);
+    const dis = [];
+    while (dis.length < 3 && dsrc.length) {
+      const p = dsrc[Math.floor(Math.random()*dsrc.length)];
+      const prs = [...p.kun.map(r=>r.r), ...p.on.map(r=>r.r)].filter(Boolean);
+      const r = (prs[0] || '').replace(/\./g,'');
+      if (!r || seen.has(r)) continue;
+      seen.add(r); dis.push(r);
+    }
+    while (dis.length < 3) { dis.push('—'); } // safety
+    const tilesRaw = [correct, ...dis];
+    const tiles = tilesRaw.map(t=>({t,k:Math.random()})).sort((a,b)=>a.k-b.k).map(x=>x.t);
+    return { kind: 'reading', tiles, correctIdx: tiles.indexOf(correct) };
+  }
+  // stage 2: application — pick right example sentence
+  const ex = card.ex[0];
+  const blanked = ex.w.replaceAll(card.k, '＿');
+  const correct = { w: ex.w, r: ex.r, m: ex.m, blanked, show: ex.m };
+
+  // distractors: another example meaning from a different card
+  const dis = [];
+  const used = new Set([correct.show.toLowerCase()]);
+  while (dis.length < 1 && dsrc.length) {
+    const p = dsrc[Math.floor(Math.random()*dsrc.length)];
+    if (!p.ex || !p.ex.length) continue;
+    const m = p.ex[0].m;
+    if (used.has(m.toLowerCase())) continue;
+    used.add(m.toLowerCase());
+    dis.push({ show: m });
+  }
+  const tilesRaw = [correct, ...dis];
+  const tiles = tilesRaw.map(t=>({t,k:Math.random()})).sort((a,b)=>a.k-b.k).map(x=>x.t);
+  return { kind: 'application', tiles, correctIdx: tiles.findIndex(t => t === correct), blanked };
+}
+
+const TweaksPanelLH = ({ open, onClose, tweaks, onSet }) => {
+  const opt = (key, options) => (
+    <div className="tweaks-row">
+      <div className="tweaks-lbl">▸ {key.toUpperCase()}</div>
+      <div className="tweaks-opts">
+        {options.map(o => (
+          <button key={o.id} className={`tweaks-btn${tweaks[key] === o.id ? ' is-active' : ''}`} onClick={() => onSet(key, o.id)}>{o.label}</button>
+        ))}
+      </div>
+    </div>
+  );
+  return (
+    <div className={`tweaks${open ? ' is-open' : ''}`}>
+      <div className="tweaks-head"><span>TWEAKS</span><button className="tweaks-close" onClick={onClose}>╳</button></div>
+      <div className="tweaks-body">
+        {opt('leechCount', [{id:4,label:'4'},{id:8,label:'8'},{id:12,label:'12'}])}
+        {opt('missCap', [{id:1,label:'1'},{id:3,label:'3'},{id:5,label:'5'},{id:99,label:'∞'}])}
+        {opt('variant', [{id:'calm',label:'calm'},{id:'hud',label:'hud'},{id:'game',label:'game'}])}
+        {opt('accent', [{id:'cyan',label:'cyan+mag'},{id:'dim',label:'teal+rose'}])}
+        {opt('scanlines', [{id:'off',label:'off'},{id:'on',label:'on'}])}
+      </div>
+    </div>
+  );
+};
+
+const LHTopbar = ({ purged, total, misses, missCap, onQuit }) => (
+  <header className="run-top lh-top">
+    <div className="run-top-l">
+      <button className="run-quit" onClick={onQuit}>‹ abort</button>
+      <span className="run-lbl lh-lbl">▸ LEECH HUNT</span>
+    </div>
+    <div className="lh-top-r">
+      <span className="lh-pill lh-pill-purged">⊘ {purged}/{total}</span>
+      <span className={`lh-pill lh-pill-miss${misses >= missCap ? ' is-danger' : misses >= missCap-1 ? ' is-warn' : ''}`}>
+        × {misses}/{missCap === 99 ? '∞' : missCap}
+      </span>
+    </div>
+  </header>
+);
+
+const LeechHuntApp = ({ cards }) => {
+  const [tweaks, setTweaks] = React.useState(() => {
+    try {
+      const shared = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
+      const lhLocal = JSON.parse(localStorage.getItem('kb-lh-tweaks') || '{}');
+      return { ...TWEAK_DEFAULTS_LH, ...shared, ...lhLocal };
+    } catch(e) { return TWEAK_DEFAULTS_LH; }
+  });
+  const [tweaksOpen, setTweaksOpen] = React.useState(false);
+  const [editMode, setEditMode] = React.useState(false);
+
+  const [phase, setPhase] = React.useState('pre'); // pre | ready | dossier | hunt | end
+  const [countdown, setCountdown] = React.useState(3);
+  const [roster, setRoster] = React.useState([]);
+  const [activeIdx, setActiveIdx] = React.useState(-1);
+  const [stageIdx, setStageIdx] = React.useState(0);
+  const [stage, setStage] = React.useState(null);
+  const [feedback, setFeedback] = React.useState(null);
+  const [misses, setMisses] = React.useState(0);
+  const [purgeFx, setPurgeFx] = React.useState(null);
+  const [result, setResult] = React.useState(null); // 'complete' | 'fail'
+  const [pb, setPb] = React.useState(() => {
+    try { return parseInt(localStorage.getItem(PB_KEY_LH) || '0', 10) || 0; } catch(e) { return 0; }
+  });
+  const [beatPb, setBeatPb] = React.useState(false);
+  const lockRef = React.useRef(false);
+
+  React.useEffect(() => {
+    document.body.dataset.accent = tweaks.accent;
+    document.body.dataset.scanlines = tweaks.scanlines;
+    document.body.dataset.density = tweaks.density;
+    try {
+      localStorage.setItem('kb-lh-tweaks', JSON.stringify(tweaks));
+      const shared = { variant: tweaks.variant, accent: tweaks.accent, scanlines: tweaks.scanlines, density: tweaks.density };
+      const existing = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
+      localStorage.setItem('kb-tweaks', JSON.stringify({ ...existing, ...shared }));
+    } catch(e) {}
+  }, [tweaks]);
+
+  React.useEffect(() => {
+    const h = (e) => {
+      if (e.data?.type === '__activate_edit_mode') { setEditMode(true); setTweaksOpen(true); }
+      else if (e.data?.type === '__deactivate_edit_mode') { setEditMode(false); setTweaksOpen(false); }
+    };
+    window.addEventListener('message', h);
+    window.parent.postMessage({type: '__edit_mode_available'}, '*');
+    return () => window.removeEventListener('message', h);
+  }, []);
+
+  const setTweak = (k, v) => {
+    const next = { ...tweaks, [k]: v };
+    setTweaks(next);
+    try { window.parent.postMessage({type:'__edit_mode_set_keys', edits:{[k]: v}}, '*'); } catch(e) {}
+  };
+
+  React.useEffect(() => {
+    if (phase !== 'ready') return;
+    setCountdown(3);
+    let n = 3;
+    const tick = () => {
+      n -= 1;
+      if (n <= 0) {
+        setCountdown(0);
+        const r = buildLeeches(cards, tweaks.leechCount);
+        setRoster(r);
+        setMisses(0);
+        setResult(null);
+        setBeatPb(false);
+        setPhase('dossier');
+      } else { setCountdown(n); setTimeout(tick, 700); }
+    };
+    const t = setTimeout(tick, 700);
+    return () => clearTimeout(t);
+  }, [phase, cards, tweaks.leechCount]);
+
+  const engage = (idx) => {
+    if (phase !== 'dossier') return;
+    const leech = roster[idx];
+    if (!leech || leech.status !== 'pending') return;
+    setRoster(r => r.map((l,i) => i === idx ? { ...l, status: 'active', cleansed: 0, firstTry: true } : l));
+    setActiveIdx(idx);
+    setStageIdx(0);
+    setStage(dealStage(leech, 0, cards));
+    setFeedback(null);
+    lockRef.current = false;
+    setPhase('hunt');
+  };
+
+  const finish = (purged, res) => {
+    if (purged > pb) {
+      setBeatPb(true);
+      try { localStorage.setItem(PB_KEY_LH, String(purged)); } catch(e) {}
+      setPb(purged);
+    }
+    setResult(res);
+    setPhase('end');
+  };
+
+  const onStageAnswer = (tileIdx) => {
+    if (!stage || lockRef.current) return;
+    lockRef.current = true;
+    const ok = tileIdx === stage.correctIdx;
+    setFeedback({ picked: tileIdx, correct: stage.correctIdx, ok });
+
+    setTimeout(() => {
+      const leech = roster[activeIdx];
+      const newMisses = ok ? misses : misses + 1;
+      if (!ok) setMisses(newMisses);
+
+      const nextFirstTry = leech.firstTry && ok;
+      const nextCleansed = leech.cleansed + (ok ? 1 : 0);
+
+      if (stageIdx < 2) {
+        // proceed to next stage
+        const nextStageIdx = stageIdx + 1;
+        setRoster(r => r.map((l,i) => i === activeIdx ? { ...l, firstTry: nextFirstTry, cleansed: nextCleansed } : l));
+        setStageIdx(nextStageIdx);
+        setStage(dealStage(leech, nextStageIdx, cards));
+        setFeedback(null);
+        lockRef.current = false;
+
+        // check miss cap after updating misses
+        if (!ok && newMisses >= tweaks.missCap && tweaks.missCap !== 99) {
+          // give the player a beat, then finish
+          setTimeout(() => {
+            const purgedCount = roster.filter(l => l.status === 'purged').length;
+            finish(purgedCount, 'fail');
+          }, 400);
+        }
+      } else {
+        // resolve leech
+        const finalFirstTry = leech.firstTry && ok;
+        const finalStatus = finalFirstTry ? 'purged' : 'weakened';
+        setPurgeFx({ id: leech.id, card: leech.card, status: finalStatus, t: Date.now() });
+        setRoster(r => r.map((l,i) => i === activeIdx ? { ...l, status: finalStatus, firstTry: finalFirstTry, cleansed: nextCleansed } : l));
+        setTimeout(() => {
+          setPurgeFx(null);
+          setActiveIdx(-1);
+          setStageIdx(0);
+          setStage(null);
+          setFeedback(null);
+          lockRef.current = false;
+          // check end conditions
+          const nextRoster = roster.map((l,i) => i === activeIdx ? { ...l, status: finalStatus } : l);
+          const remaining = nextRoster.filter(l => l.status === 'pending').length;
+          if (!ok && newMisses >= tweaks.missCap && tweaks.missCap !== 99) {
+            const purgedCount = nextRoster.filter(l => l.status === 'purged').length;
+            finish(purgedCount, 'fail');
+          } else if (remaining === 0) {
+            const purgedCount = nextRoster.filter(l => l.status === 'purged').length;
+            finish(purgedCount, 'complete');
+          } else {
+            setPhase('dossier');
+          }
+        }, 1200);
+      }
+    }, ok ? 480 : 780);
+  };
+
+  const start = () => setPhase('ready');
+  const restart = () => {
+    setRoster([]); setActiveIdx(-1); setStageIdx(0); setStage(null);
+    setFeedback(null); setMisses(0); setResult(null); setBeatPb(false); setPurgeFx(null);
+    setPhase('ready');
+  };
+  const quit = () => {
+    if ((phase === 'dossier' || phase === 'hunt') && !confirm('Abort mission? Leeches remain at large.')) return;
+    window.location.href = 'Home.html';
+  };
+
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if (phase === 'pre') {
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); start(); }
+      } else if (phase === 'hunt' && stage) {
+        if (['1','2','3','4'].includes(e.key)) {
+          const i = Number(e.key)-1;
+          if (i < stage.tiles.length) onStageAnswer(i);
+        } else if (e.key === 'Escape') { quit(); }
+      } else if (phase === 'end') {
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); restart(); }
+      } else if (phase === 'dossier') {
+        if (e.key === 'Escape') quit();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
+  const purged = roster.filter(l => l.status === 'purged').length;
+  const weakened = roster.filter(l => l.status === 'weakened').length;
+  const survived = roster.filter(l => l.status === 'pending' || l.status === 'survived').length;
+
+  return (
+    <>
+      <div className={`run-shell lh-shell variant-${tweaks.variant}`} data-phase={phase}>
+        <LHTopbar purged={purged} total={roster.length || tweaks.leechCount} misses={misses} missCap={tweaks.missCap} onQuit={quit} />
+
+        <main className="run-main lh-main" data-screen-label={`lh-${phase}`}>
+          {phase === 'pre' && <LHPre pb={pb} tweaks={tweaks} onStart={start} />}
+          {phase === 'ready' && <TAReady n={countdown} variant={tweaks.countdown} />}
+          {phase === 'dossier' && (
+            <LHDossier roster={roster} onEngage={engage} purged={purged} misses={misses} missCap={tweaks.missCap} />
+          )}
+          {phase === 'hunt' && stage && activeIdx >= 0 && (
+            <LHHunt
+              leech={roster[activeIdx]}
+              stage={stage}
+              stageIdx={stageIdx}
+              onPick={onStageAnswer}
+              feedback={feedback}
+            />
+          )}
+          {phase === 'end' && (
+            <LHEnd
+              roster={roster}
+              purged={purged}
+              weakened={weakened}
+              survived={survived}
+              result={result}
+              beatPb={beatPb}
+              pb={pb}
+              misses={misses}
+              onAgain={restart}
+              onHome={() => window.location.href = 'Home.html'}
+            />
+          )}
+
+          {purgeFx && (
+            <div key={purgeFx.t} className={`lh-purge-fx is-${purgeFx.status}`}>
+              <div className="lh-purge-fx-k">{purgeFx.card.k}</div>
+              <div className="lh-purge-fx-lbl">{purgeFx.status === 'purged' ? 'PURGED' : 'WEAKENED'}</div>
+              <div className="lh-purge-fx-sub">{purgeFx.card.mean.split(',')[0]}</div>
+            </div>
+          )}
+        </main>
+      </div>
+      {!editMode && <button className="tweaks-float" onClick={() => setTweaksOpen(o => !o)}>▸ tweaks</button>}
+      <TweaksPanelLH open={tweaksOpen} onClose={() => setTweaksOpen(false)} tweaks={tweaks} onSet={setTweak} />
+    </>
+  );
+};
+
+Object.assign(window, { LeechHuntApp });

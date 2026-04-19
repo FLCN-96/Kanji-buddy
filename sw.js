@@ -1,4 +1,4 @@
-const CACHE = 'kb-v3';
+const CACHE = 'kb-v4';
 const CDN_CACHE = 'kb-cdn-v1';
 
 const LOCAL_ASSETS = [
@@ -7,10 +7,20 @@ const LOCAL_ASSETS = [
   './Home.html',
   './Run.html',
   './TimeAttack.html',
+  './Survival.html',
+  './StreakGuard.html',
+  './LeechHunt.html',
+  './Match.html',
   './home.css',
   './run.css',
   './timeattack.css',
+  './survival.css',
+  './streakguard.css',
+  './leechhunt.css',
+  './match.css',
   './design_system/colors_and_type.css',
+  './design_system/logo-mark.svg',
+  './design_system/scanlines.svg',
   './manifest.json',
   './icons/icon.svg',
   './icons/icon-maskable.svg',
@@ -26,6 +36,18 @@ const LOCAL_ASSETS = [
   './components/TimeAttack.jsx',
   './components/TAScreens.jsx',
   './components/TAPlay.jsx',
+  './components/Survival.jsx',
+  './components/SurvPlay.jsx',
+  './components/SurvScreens.jsx',
+  './components/StreakGuard.jsx',
+  './components/SGPlay.jsx',
+  './components/SGScreens.jsx',
+  './components/LeechHunt.jsx',
+  './components/LHHunt.jsx',
+  './components/LHScreens.jsx',
+  './components/Match.jsx',
+  './components/MTLanes.jsx',
+  './components/MTScreens.jsx',
 ];
 
 const CDN_ASSETS = [
