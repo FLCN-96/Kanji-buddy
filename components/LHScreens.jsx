@@ -104,9 +104,24 @@ const LHRowMean = ({ leech, idx }) => {
   );
 };
 
+// JLPT 5→1 maps to threat tiers D→S (N5 easiest, N1 apex).
+const BOUNTY_TIERS = { 5: 'd', 4: 'c', 3: 'b', 2: 'a', 1: 's' };
+const LHBountyStamp = ({ jlpt }) => {
+  const tier = BOUNTY_TIERS[jlpt] || 'd';
+  return (
+    <div className={`lh-bounty is-${tier}`} aria-label={`JLPT N${jlpt} · threat class ${tier.toUpperCase()}`}>
+      <span className="lh-bounty-lbl">▸ BOUNTY</span>
+      <span className="lh-bounty-tier">{tier.toUpperCase()}</span>
+      <span className="lh-bounty-sub">JLPT N{jlpt}</span>
+    </div>
+  );
+};
+
 const LHLeechRow = ({ leech, onEngage, idx }) => {
-  const pct = Math.round(leech.contamination * 100);
-  const missCount = leech.history.filter(h => h === 'x').length;
+  const lapses = leech.lapses || 0;
+  const filled = Math.min(lapses, 8);
+  const pct = Math.min(lapses / 8, 1) * 100;
+  const lapseLbl = lapses > 8 ? '8+ lapses' : `${lapses}/8 lapses`;
   return (
     <div className={`lh-row lh-row-${leech.status}`} data-screen-label={`lh-leech-${idx}`}>
       <div className="lh-row-idx">#{String(idx+1).padStart(2,'0')}</div>
@@ -114,17 +129,17 @@ const LHLeechRow = ({ leech, onEngage, idx }) => {
       <div className="lh-row-info">
         <div className="lh-row-info-top">
           <LHRowMean leech={leech} idx={idx} />
-          <span className="lh-row-jlpt">N{leech.card.jlpt}</span>
+          <LHBountyStamp jlpt={leech.card.jlpt} />
         </div>
         <div className="lh-row-history">
-          {leech.history.map((h, i) => (
-            <span key={i} className={`lh-dot${h === 'x' ? ' is-miss' : ''}`}></span>
+          {Array.from({length: 8}, (_, i) => (
+            <span key={i} className={`lh-dot${i < filled ? ' is-miss' : ''}`}></span>
           ))}
-          <span className="lh-row-miss-count">{missCount}/8 missed</span>
+          <span className="lh-row-miss-count">{lapseLbl}</span>
         </div>
         <div className="lh-row-bar">
           <span className="lh-row-bar-fill" style={{width: `${pct}%`}} />
-          <span className="lh-row-bar-lbl">{pct}% contamination</span>
+          <span className="lh-row-bar-lbl">{lapses} lapses</span>
         </div>
       </div>
       <div className="lh-row-action">
@@ -292,4 +307,4 @@ const LHEnd = ({ roster, purged, weakened, survived, result, beatPb, pb, misses,
   );
 };
 
-Object.assign(window, { LHPre, LHDossier, LHEnd, LHLeechRow });
+Object.assign(window, { LHPre, LHDossier, LHEnd, LHLeechRow, LHBountyStamp });

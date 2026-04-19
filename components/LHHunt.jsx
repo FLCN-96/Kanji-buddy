@@ -25,7 +25,7 @@ const LHHunt = ({ leech, stage, stageIdx, onPick, feedback }) => {
         <div className="lh-hunt-target-meta">
           <span className="lh-hunt-target-eyebrow">▸ TARGET ACQUIRED</span>
           <span className="lh-hunt-target-jlpt">N{card.jlpt}</span>
-          <span className="lh-hunt-target-cont">{Math.round(leech.contamination*100)}% contam</span>
+          <span className="lh-hunt-target-cont">{leech.lapses || 0} lapses</span>
         </div>
         <div className="lh-hunt-target-body">
           <div className="lh-hunt-target-reticle" aria-hidden>
