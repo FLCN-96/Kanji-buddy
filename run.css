@@ -634,7 +634,7 @@ body[data-scanlines="on"]::after {
 }
 
 /* =========================================================
-   OVERCLOCK — bonus cycle theming. Magenta swap of cyan
+   OVERCLOCK — extra cycle theming. Magenta swap of cyan
    accents on the run shell, plus the pre-flight callout.
    ========================================================= */
 .run-shell.is-overclock .run-lbl {

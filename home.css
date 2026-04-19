@@ -562,7 +562,7 @@ body[data-hero="off"] .kb-hero { display: none; }
 .kb-run-primary.is-disabled .kb-rp-arrow { color: var(--fg-2); text-shadow: none; }
 .kb-run-primary.is-disabled::after { display: none; }
 
-/* Overclock — post-quota bonus sortie. Deliberately under-powered: the HOT
+/* Overclock — post-quota extra sortie. Deliberately under-powered: the HOT
    challenge tile should read as the bigger reward after the daily is done,
    so this stays dim and buzzy rather than headlining. */
 .kb-run-primary.is-overachiever {
