@@ -32,10 +32,19 @@
   position: absolute; inset: 0 auto 0 0;
   background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
   box-shadow: 0 0 8px rgba(34,211,238,.5);
-  transition: width 120ms linear;
+  /* No width transition — RAF updates 60×/s already render smoothly, and a
+     transition would smear -2s penalty jumps into a gentle slide. */
 }
 .mt-top.is-danger .mt-top-clock { color: var(--danger); text-shadow: 0 0 12px rgba(255,92,106,.7); animation: mt-clock-pulse .6s ease-in-out infinite; }
 .mt-top.is-danger .mt-top-bar-fill { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+.mt-top.is-penalty .mt-top-bar-fill {
+  animation: mt-bar-penalty-flash .42s var(--ease-snap);
+}
+@keyframes mt-bar-penalty-flash {
+  0%   { filter: brightness(1); box-shadow: 0 0 8px rgba(34,211,238,.5); }
+  40%  { filter: brightness(1.6) hue-rotate(-30deg); box-shadow: 0 0 18px var(--danger); }
+  100% { filter: brightness(1); box-shadow: 0 0 8px rgba(34,211,238,.5); }
+}
 @keyframes mt-clock-pulse {
   0%,100% { transform: scale(1); }
   50% { transform: scale(1.04); }

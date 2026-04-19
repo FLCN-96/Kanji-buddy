@@ -108,6 +108,7 @@ const TimeAttackApp = ({ cards }) => {
   const [history, setHistory] = React.useState([]); // [{card, ok, ms}]
   const [tileFeedback, setTileFeedback] = React.useState(null); // {picked, correct}
   const [glitch, setGlitch] = React.useState(false);
+  const [penaltyTick, setPenaltyTick] = React.useState(false);
   const [comboBurst, setComboBurst] = React.useState(null);
   const [pb, setPb] = React.useState(() => {
     try { return JSON.parse(localStorage.getItem(PB_KEY) || '{}'); } catch(e) { return {}; }
@@ -273,6 +274,8 @@ const TimeAttackApp = ({ cards }) => {
       setCombo(0);
       setGlitch(true);
       setTimeout(() => setGlitch(false), 360);
+      setPenaltyTick(true);
+      setTimeout(() => setPenaltyTick(false), 600);
       setEndAt(e => e == null ? e : e - TA_MISS_PENALTY_MS);
     }
 
@@ -344,6 +347,7 @@ const TimeAttackApp = ({ cards }) => {
               clockMs={clockMs}
               totalMs={tweaks.duration * 1000}
               danger={clockMs <= 10_000}
+              penaltyTick={penaltyTick}
               combo={combo}
               comboBurst={comboBurst}
               isUnseen={!seenSetRef.current.has(question.card.idx)}
