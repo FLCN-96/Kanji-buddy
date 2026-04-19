@@ -244,10 +244,53 @@
   from { opacity: 0; transform: translateX(-4px); }
   to { opacity: 1; transform: translateX(0); }
 }
-.lh-row-jlpt {
-  font-family: var(--font-mono); font-size: 10px;
-  color: var(--accent-magenta); letter-spacing: .1em;
+/* Bounty stamp — JLPT-as-threat-class (D→S). Exaggerated wanted-poster
+ * treatment: slight tilt, heavy border, glowing tier letter. */
+.lh-bounty {
+  display: inline-grid;
+  grid-template-columns: auto;
+  grid-template-rows: auto auto auto;
+  justify-items: center;
+  gap: 1px;
+  padding: 3px 10px 4px;
+  border: 2px solid currentColor;
+  background: color-mix(in oklch, currentColor 8%, transparent);
+  color: var(--fg-2);
+  transform: rotate(-2deg);
+  transform-origin: center;
+  font-family: var(--font-mono);
+  line-height: 1;
+  flex-shrink: 0;
+  transition: filter var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
 }
+.lh-bounty-lbl {
+  font-size: 8px; letter-spacing: .22em; font-weight: 700;
+  opacity: .85;
+}
+.lh-bounty-tier {
+  font-size: 22px; font-weight: 900;
+  letter-spacing: .02em;
+  color: currentColor;
+  text-shadow: 0 0 10px currentColor;
+  margin: 1px 0;
+}
+.lh-bounty-sub {
+  font-size: 8px; letter-spacing: .18em; font-weight: 600;
+  opacity: .7;
+}
+.lh-bounty.is-d { color: var(--fg-2); }
+.lh-bounty.is-c { color: var(--accent-cyan); background: var(--accent-cyan-bg); }
+.lh-bounty.is-b { color: var(--accent-amber); background: rgba(245,165,36,.07); }
+.lh-bounty.is-a { color: var(--accent-magenta); background: var(--accent-magenta-bg); }
+.lh-bounty.is-s {
+  color: var(--danger); background: var(--danger-bg);
+  animation: lh-pulse-warn 1.2s ease-in-out infinite;
+}
+/* Dim the stamp once the row is resolved, mirroring the row fade. */
+.lh-row-purged .lh-bounty,
+.lh-row-weakened .lh-bounty { filter: saturate(.4); opacity: .55; animation: none; }
+/* Scanlines variant: kill the tilt so the stamp doesn't wobble with the overlay. */
+[data-scanlines="on"] .lh-bounty { transform: none; }
 .lh-row-history {
   display: flex; align-items: center; gap: 3px;
   margin-bottom: 4px;
