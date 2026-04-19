@@ -3,54 +3,11 @@
 // caller and triples that mode's XP; the HOT card floats to the top.
 
 const CHALLENGES = [
-  {
-    id: 'time',
-    glyph: '秒',
-    name: 'TIME ATTACK',
-    sub: '60s · max cards',
-    tag: null,
-    tagClass: null,
-    ascii: '■■■■□□□□ 60s',
-    xp: 60,
-  },
-  {
-    id: 'survival',
-    glyph: '命',
-    name: 'SURVIVAL',
-    sub: '1 miss · run ends',
-    tag: null,
-    ascii: '♥ ♥ ♥ → ╳',
-    xp: 80,
-  },
-  {
-    id: 'streak',
-    glyph: '忘',
-    name: 'STREAK GUARD',
-    sub: '12 cards about to leak',
-    tag: 'DUE',
-    tagClass: 'dbl',
-    ascii: '▮▮▮▮▯▯ 12',
-    xp: 50,
-  },
-  {
-    id: 'leech',
-    glyph: '蛭',
-    name: 'LEECH HUNT',
-    sub: '8 worst · target & purge',
-    tag: null,
-    ascii: '☠ × 8',
-    xp: 70,
-  },
-  {
-    id: 'match',
-    glyph: '合',
-    name: 'MATCH',
-    sub: '60s · pair kanji ↔ meaning',
-    tag: 'NEW',
-    tagClass: 'new',
-    ascii: '[字]→[char]',
-    xp: 55,
-  },
+  { id: 'time',     glyph: '秒', name: 'TIME ATTACK',   sub: '60s · max cards',           ascii: '■■■■□□□□ 60s', xp: 60 },
+  { id: 'survival', glyph: '命', name: 'SURVIVAL',      sub: '1 miss · run ends',         ascii: '♥ ♥ ♥ → ╳',   xp: 80 },
+  { id: 'streak',   glyph: '忘', name: 'STREAK GUARD',  sub: '12 cards about to leak',    ascii: '▮▮▮▮▯▯ 12',    xp: 50 },
+  { id: 'leech',    glyph: '蛭', name: 'LEECH HUNT',    sub: '8 worst · target & purge',  ascii: '☠ × 8',        xp: 70 },
+  { id: 'match',    glyph: '合', name: 'MATCH',         sub: '60s · pair kanji ↔ meaning', ascii: '[字]→[char]',  xp: 55 },
 ];
 
 const HOT_MULTIPLIER = 3;
@@ -93,11 +50,8 @@ const ChallengeGrid = ({ onPick, hotId }) => {
       {ordered.map(c => {
         const isHot = c.id === hotId;
         const xp = isHot ? c.xp * HOT_MULTIPLIER : c.xp;
-        const tag = isHot ? 'HOT' : c.tag;
-        const tagClass = isHot ? 'hot' : (c.tagClass || '');
         return (
-          <button key={c.id} className="kb-chal" onClick={() => onPick && onPick(c.id)}>
-            {tag && <span className={`kb-chal-tag ${tagClass}`}>{tag}</span>}
+          <button key={c.id} className={`kb-chal${isHot ? ' is-hot' : ''}`} onClick={() => onPick && onPick(c.id)}>
             <div className="kb-chal-glyph">{c.glyph}</div>
             <div className="kb-chal-meta">
               <div className="kb-chal-name">{c.name}</div>
