@@ -51,10 +51,14 @@
     const leechStates = [];
     const dueStates = [];
     const reviewedIdx = new Set();
+    const todayStr = now.toDateString();
     for (const s of states) {
       reviewedIdx.add(s.idx);
       if ((s.lapses || 0) >= LEECH_LAPSES) leechStates.push(s);
-      else if (s.due_date && s.due_date <= nowIso) dueStates.push(s);
+      else if (
+        s.due_date && s.due_date <= nowIso &&
+        (!s.last_reviewed || new Date(s.last_reviewed).toDateString() !== todayStr)
+      ) dueStates.push(s);
     }
     leechStates.sort((a, b) => (b.lapses || 0) - (a.lapses || 0));
     dueStates.sort((a, b) => (a.due_date || '').localeCompare(b.due_date || ''));
