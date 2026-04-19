@@ -171,13 +171,24 @@ const TAReady = ({ n, variant = 'dissolve' }) => {
   );
 };
 
-const TAEnd = ({ score, hits, misses, maxCombo, duration, tier, prevPb, beatPb, history, timedOut, onAgain, onHome }) => {
+const TAEnd = ({ score, hits, misses, maxCombo, duration, tier, prevPb, beatPb, xpGained, history, timedOut, onAgain, onHome }) => {
   const total = hits + misses;
   const acc = total === 0 ? 0 : Math.round(100 * hits / total);
   const avgMs = history.filter(h => h.ok).reduce((a,h) => a + h.ms, 0) / (hits || 1);
-  const xpBase = hits * 5 + maxCombo * 2;
-  const xpPb = beatPb ? 25 : 0;
-  const xpTotal = xpBase + xpPb;
+  // Breakdown mirrors TimeAttack.jsx grant formula exactly.
+  const xpHit = hits * 4;
+  const xpMissPenalty = misses * -2;
+  const xpCombo =
+    maxCombo >= 20 ? 40 :
+    maxCombo >= 15 ? 25 :
+    maxCombo >= 10 ? 15 :
+    maxCombo >= 5  ? 5  : 0;
+  const xpClean = misses === 0 && total > 0 ? 25 : 0;
+  const xpPb = beatPb ? 30 : 0;
+  const isHot = window.Daily && window.Daily.hotChallengeId() === 'time';
+  const xpRaw = Math.max(0, xpHit + xpMissPenalty + xpCombo + xpClean + xpPb);
+  const xpHot = isHot ? Math.round(xpRaw * (window.Daily.HOT_MULTIPLIER - 1)) : 0;
+  const xpTotal = xpGained ?? (xpRaw + xpHot);
   const missed = history.filter(h => !h.ok);
   const fastest = history.filter(h => h.ok).slice().sort((a,b) => a.ms - b.ms)[0];
 
@@ -252,9 +263,12 @@ const TAEnd = ({ score, hits, misses, maxCombo, duration, tier, prevPb, beatPb, 
           <span className="ta-end-xp-total">+{xpTotal}</span>
         </div>
         <div className="ta-end-xp-rows">
-          <div className="ta-end-xp-row"><span>hit bonus</span><b>+{hits * 5}</b></div>
-          <div className="ta-end-xp-row"><span>max combo bonus</span><b>+{maxCombo * 2}</b></div>
-          {beatPb && <div className="ta-end-xp-row is-pb"><span>new personal best</span><b>+25</b></div>}
+          <div className="ta-end-xp-row"><span>hits · {hits}×4</span><b>+{xpHit}</b></div>
+          {misses > 0 && <div className="ta-end-xp-row"><span>miss penalty · {misses}×2</span><b>{xpMissPenalty}</b></div>}
+          {xpCombo > 0 && <div className="ta-end-xp-row"><span>max combo · ×{maxCombo}</span><b>+{xpCombo}</b></div>}
+          {xpClean > 0 && <div className="ta-end-xp-row is-pb"><span>clean sweep</span><b>+{xpClean}</b></div>}
+          {xpPb > 0 && <div className="ta-end-xp-row is-pb"><span>new personal best</span><b>+{xpPb}</b></div>}
+          {isHot && <div className="ta-end-xp-row is-pb"><span>hot daily · ×{window.Daily.HOT_MULTIPLIER}</span><b>+{xpHot}</b></div>}
           <div className="ta-end-xp-row ta-end-xp-streak"><span>daily streak</span><b>▲ +1</b></div>
         </div>
       </div>

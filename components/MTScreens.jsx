@@ -75,7 +75,7 @@ const MTPre = ({ pb, tweaks, onStart }) => {
   );
 };
 
-const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duration, onAgain, onHome }) => {
+const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duration, xpGained, onAgain, onHome }) => {
   const acc = matches + misses > 0 ? Math.round((matches / (matches + misses)) * 100) : 100;
   const apm = Math.round(matches / (duration / 60));
   const ribbon = score >= 3000 ? 'PERFECT FLOW'
@@ -91,10 +91,14 @@ const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duratio
   const fastest = [...history].sort((a,b) => a.speedSec - b.speedSec).slice(0, 3);
   const slowest = [...history].sort((a,b) => b.speedSec - a.speedSec).slice(0, 3);
 
-  const xpMatches = matches * 10;
-  const xpCombo = bestCombo * 5;
-  const xpPb = beatPb ? 50 : 0;
-  const xpTotal = xpMatches + xpCombo + xpPb;
+  // Breakdown mirrors Match.jsx grant formula exactly.
+  const xpBase = matches + misses > 0 ? 20 : 0;
+  const xpScore = score * 2;
+  const xpPb = beatPb ? 20 : 0;
+  const isHot = window.Daily && window.Daily.hotChallengeId() === 'match';
+  const xpRaw = xpBase + xpScore + xpPb;
+  const xpHot = isHot ? Math.round(xpRaw * (window.Daily.HOT_MULTIPLIER - 1)) : 0;
+  const xpTotal = xpGained ?? (xpRaw + xpHot);
 
   return (
     <div className="mt-end" data-screen-label="mt-end">
@@ -173,9 +177,10 @@ const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duratio
           <span className="mt-end-xp-total">+{xpTotal}</span>
         </div>
         <div className="mt-end-xp-rows">
-          <div className="mt-end-xp-row"><span>matches · {matches}×10</span><b>+{xpMatches}</b></div>
-          <div className="mt-end-xp-row"><span>best combo · ×{bestCombo}</span><b>+{xpCombo}</b></div>
+          <div className="mt-end-xp-row"><span>base</span><b>+{xpBase}</b></div>
+          <div className="mt-end-xp-row"><span>score · {score}×2</span><b>+{xpScore}</b></div>
           {xpPb > 0 && <div className="mt-end-xp-row is-pb"><span>new record</span><b>+{xpPb}</b></div>}
+          {isHot && <div className="mt-end-xp-row is-pb"><span>hot daily · ×{window.Daily.HOT_MULTIPLIER}</span><b>+{xpHot}</b></div>}
           <div className="mt-end-xp-row mt-streak"><span>daily streak</span><b>▲ +1</b></div>
         </div>
       </div>

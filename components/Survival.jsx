@@ -128,6 +128,7 @@ const SurvivalApp = ({ cards }) => {
     try { return parseInt(localStorage.getItem(PB_KEY_SV) || '0', 10) || 0; } catch(e) { return 0; }
   });
   const [beatPb, setBeatPb] = React.useState(false);
+  const [xpGained, setXpGained] = React.useState(0);
   const [modeIdx, setModeIdx] = React.useState(0); // for rotate
   const lockedRef = React.useRef(false);
   const qStart = React.useRef(null);
@@ -203,6 +204,7 @@ const SurvivalApp = ({ cards }) => {
       const base = 40 + depthAtDeath * 3;
       const pbBonus = (depthAtDeath > pb) ? 30 : 0;
       const earned = Math.round((base + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+      setXpGained(earned);
       window.DB.saveScore({ mode: 'survival', score: depthAtDeath, tier: pickDepthTier(depthAtDeath).id })
         .catch(() => {});
       window.DB.saveSession({
@@ -252,6 +254,7 @@ const SurvivalApp = ({ cards }) => {
   const restart = () => {
     setDepth(0); setUsed(new Set()); setHistory([]);
     setFeedback(null); setHeartBreak(false); setBeatPb(false); setQuestion(null);
+    setXpGained(0);
     setPhase('ready');
   };
   const quit = () => {
@@ -307,6 +310,7 @@ const SurvivalApp = ({ cards }) => {
               prevPb={pb - (beatPb ? depth - pb : 0)}
               killer={history[history.length - 1]?.card}
               history={lastEight}
+              xpGained={xpGained}
               onAgain={restart}
               onHome={() => window.location.href = 'Home.html'}
             />

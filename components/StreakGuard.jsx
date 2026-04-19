@@ -88,9 +88,13 @@ const StreakGuardApp = ({ cards }) => {
     try { return parseInt(localStorage.getItem(PB_KEY_SG) || '0', 10) || 0; } catch(e) { return 0; }
   });
   const [beatPb, setBeatPb] = React.useState(false);
+  const [xpGained, setXpGained] = React.useState(0);
   const tickRef = React.useRef(null);
   const lastTickRef = React.useRef(null);
   const lockRef = React.useRef(false);
+  // Guards the end-condition effect from re-firing when `pb` updates mid-run
+  // (otherwise setPb below would flip the dep and re-run the whole grant path).
+  const finishedRef = React.useRef(false);
   // Ref (not state) so the ready-phase countdown effect doesn't restart when
   // card_states finish loading — buildDeck/dealQuiz only read it at deal time.
   const cardStatesRef = React.useRef([]);
@@ -168,8 +172,10 @@ const StreakGuardApp = ({ cards }) => {
   // End condition: all cells resolved
   React.useEffect(() => {
     if (phase !== 'play' || deck.length === 0) return;
+    if (finishedRef.current) return;
     const unresolved = deck.filter(c => c.status === 'live').length;
     if (unresolved === 0 && !activeId) {
+      finishedRef.current = true;
       const savedCount = deck.filter(c => c.status === 'saved').length;
       const leakedCount = deck.filter(c => c.status === 'leaked').length;
       if (savedCount > pb) {
@@ -184,6 +190,7 @@ const StreakGuardApp = ({ cards }) => {
         const cleanBonus = (savedCount === deck.length) ? 20 : 0;
         const pbBonus = (savedCount > pb) ? 20 : 0;
         const earned = Math.round((base + cleanBonus + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+        setXpGained(earned);
         window.DB.saveScore({ mode: 'streak_guard', score: savedCount }).catch(() => {});
         window.DB.saveSession({
           mode: 'streak_guard',
@@ -242,7 +249,9 @@ const StreakGuardApp = ({ cards }) => {
 
   const start = () => { setPhase('ready'); };
   const restart = () => {
+    finishedRef.current = false;
     setDeck([]); setActiveId(null); setFeedback(null); setBeatPb(false);
+    setXpGained(0);
     setPhase('ready');
   };
   const quit = () => {
@@ -307,6 +316,7 @@ const StreakGuardApp = ({ cards }) => {
               total={deck.length}
               beatPb={beatPb}
               pb={pb}
+              xpGained={xpGained}
               onAgain={restart}
               onHome={() => window.location.href = 'Home.html'}
             />

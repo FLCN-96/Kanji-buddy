@@ -125,6 +125,7 @@ const MatchApp = ({ cards }) => {
     try { return parseInt(localStorage.getItem(PB_KEY_MT) || '0', 10) || 0; } catch(e) { return 0; }
   });
   const [beatPb, setBeatPb] = React.useState(false);
+  const [xpGained, setXpGained] = React.useState(0);
 
   const lastMatchAtRef = React.useRef(0);
   const startedAtRef = React.useRef(0);
@@ -176,6 +177,7 @@ const MatchApp = ({ cards }) => {
         setMatchHistory([]); setPenaltyTick(false);
         setTimeLeft(tweaks.duration * 1000);
         setBeatPb(false);
+        setXpGained(0);
         startedAtRef.current = performance.now();
         lastMatchAtRef.current = performance.now();
         setPhase('play');
@@ -222,6 +224,7 @@ const MatchApp = ({ cards }) => {
       const base = 20 + score * 2;
       const pbBonus = (score > pb) ? 20 : 0;
       const earned = Math.round((base + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+      setXpGained(earned);
       window.DB.saveScore({ mode: 'match', score, duration_s: tweaks.duration }).catch(() => {});
       window.DB.saveSession({
         mode: 'match',
@@ -420,6 +423,7 @@ const MatchApp = ({ cards }) => {
               beatPb={beatPb}
               pb={pb}
               duration={tweaks.duration}
+              xpGained={xpGained}
               onAgain={restart}
               onHome={() => window.location.href = 'Home.html'}
             />

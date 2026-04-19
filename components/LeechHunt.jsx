@@ -182,6 +182,7 @@ const LeechHuntApp = ({ cards }) => {
     try { return parseInt(localStorage.getItem(PB_KEY_LH) || '0', 10) || 0; } catch(e) { return 0; }
   });
   const [beatPb, setBeatPb] = React.useState(false);
+  const [xpGained, setXpGained] = React.useState(0);
   const lockRef = React.useRef(false);
   const finishedRef = React.useRef(false);
   // Ref (not state) so the ready-phase countdown effect doesn't restart when
@@ -258,6 +259,7 @@ const LeechHuntApp = ({ cards }) => {
       const completeBonus = res === 'complete' ? 20 : 0;
       const pbBonus = (purged > pb) ? 20 : 0;
       const earned = Math.round((base + completeBonus + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+      setXpGained(earned);
       window.DB.saveScore({ mode: 'leech_hunt', score: purged, result: res }).catch(() => {});
       window.DB.saveSession({
         mode: 'leech_hunt',
@@ -353,6 +355,7 @@ const LeechHuntApp = ({ cards }) => {
   const restart = () => {
     setRoster([]); setActiveIdx(-1); setStageIdx(0); setStage(null);
     setFeedback(null); setMisses(0); setResult(null); setBeatPb(false); setPurgeFx(null);
+    setXpGained(0);
     finishedRef.current = false;
     lockRef.current = false;
     setPhase('ready');
@@ -415,6 +418,7 @@ const LeechHuntApp = ({ cards }) => {
               beatPb={beatPb}
               pb={pb}
               misses={misses}
+              xpGained={xpGained}
               onAgain={restart}
               onHome={() => window.location.href = 'Home.html'}
             />
