@@ -1,5 +1,15 @@
 // MTPre + MTEnd
 
+// XP constants — must stay in lockstep with components/Match.jsx so the
+// end-screen breakdown sums to the actual granted amount.
+const MT_XP_BASE  = 15;
+const MT_XP_HIT   = 5;
+const MT_XP_MISS  = -3;
+const MT_XP_CLEAN = 25;
+const MT_XP_PB    = 30;
+const mtComboTier = (c) =>
+  c >= 25 ? 40 : c >= 18 ? 25 : c >= 12 ? 15 : c >= 6 ? 5 : 0;
+
 const MT_AXIS_OPTS = [
   { id: 'mean', label: 'ENGLISH', sub: 'kanji ↔ meaning' },
   { id: 'read', label: 'かな', sub: 'kanji ↔ reading' },
@@ -110,12 +120,16 @@ const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duratio
   const slowest = [...history].sort((a,b) => b.speedSec - a.speedSec).slice(0, 3);
 
   // Breakdown mirrors Match.jsx grant formula exactly.
-  const xpBase = matches + misses > 0 ? 20 : 0;
-  const xpScore = score * 2;
-  const xpPb = beatPb ? 20 : 0;
+  const played = matches + misses > 0;
+  const xpBase  = played ? MT_XP_BASE : 0;
+  const xpHit   = matches * MT_XP_HIT;
+  const xpMiss  = misses  * MT_XP_MISS;
+  const xpCombo = mtComboTier(bestCombo);
+  const xpClean = misses === 0 && matches > 0 ? MT_XP_CLEAN : 0;
+  const xpPb    = beatPb ? MT_XP_PB : 0;
   const isMix = axis === 'mix';
   const isHot = window.Daily && window.Daily.hotChallengeId() === 'match';
-  const xpPreMix = xpBase + xpScore + xpPb;
+  const xpPreMix = Math.max(0, xpBase + xpHit + xpMiss + xpCombo + xpClean + xpPb);
   const xpMix = isMix ? Math.round(xpPreMix * 0.5) : 0;
   const xpRaw = xpPreMix + xpMix;
   const xpHot = isHot ? Math.round(xpRaw * (window.Daily.HOT_MULTIPLIER - 1)) : 0;
@@ -199,7 +213,10 @@ const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duratio
         </div>
         <div className="mt-end-xp-rows">
           <div className="mt-end-xp-row"><span>base</span><b>+{xpBase}</b></div>
-          <div className="mt-end-xp-row"><span>score · {score}×2</span><b>+{xpScore}</b></div>
+          <div className="mt-end-xp-row"><span>pairs · {matches}×{MT_XP_HIT}</span><b>+{xpHit}</b></div>
+          {misses > 0 && <div className="mt-end-xp-row"><span>misses · {misses}×{MT_XP_MISS}</span><b>{xpMiss}</b></div>}
+          {xpCombo > 0 && <div className="mt-end-xp-row"><span>best combo · ×{bestCombo}</span><b>+{xpCombo}</b></div>}
+          {xpClean > 0 && <div className="mt-end-xp-row is-pb"><span>clean sweep</span><b>+{xpClean}</b></div>}
           {xpPb > 0 && <div className="mt-end-xp-row is-pb"><span>new record</span><b>+{xpPb}</b></div>}
           {xpMix > 0 && <div className="mt-end-xp-row is-pb"><span>mix axis · ×1.5</span><b>+{xpMix}</b></div>}
           {isHot && <div className="mt-end-xp-row is-pb"><span>hot daily · ×{window.Daily.HOT_MULTIPLIER}</span><b>+{xpHot}</b></div>}
