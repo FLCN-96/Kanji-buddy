@@ -1,6 +1,12 @@
 // MTPre + MTEnd
 
-const MTPre = ({ pb, tweaks, onStart }) => {
+const MT_AXIS_OPTS = [
+  { id: 'mean', label: 'ENGLISH', sub: 'kanji ↔ meaning' },
+  { id: 'read', label: 'かな', sub: 'kanji ↔ reading' },
+  { id: 'mix', label: 'MIX', sub: 'random per tile · ×1.5 xp' },
+];
+
+const MTPre = ({ pb, tweaks, onStart, onAxis }) => {
   return (
     <div className="mt-pre" data-screen-label="mt-pre">
       <div className="mt-pre-head">
@@ -46,14 +52,26 @@ const MTPre = ({ pb, tweaks, onStart }) => {
         </div>
       </div>
 
-      <div className={`mt-pre-meta ${pb > 0 ? 'mt-pre-meta-3' : 'mt-pre-meta-2'}`}>
+      <div className="mt-pre-axis">
+        <div className="mt-pre-axis-lbl">▸ MATCH AXIS</div>
+        <div className="mt-pre-axis-row">
+          {MT_AXIS_OPTS.map(o => (
+            <button
+              key={o.id}
+              className={`mt-pre-axis-btn${tweaks.axis === o.id ? ' is-active' : ''}${o.id === 'mix' ? ' is-mix' : ''}`}
+              onClick={() => onAxis(o.id)}
+            >
+              <span className="mt-pre-axis-btn-label">{o.label}</span>
+              <span className="mt-pre-axis-btn-sub">{o.sub}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={`mt-pre-meta ${pb > 0 ? 'mt-pre-meta-2' : 'mt-pre-meta-1'}`}>
         <div className="mt-pre-meta-cell">
           <div className="mt-pre-meta-lbl">board</div>
           <div className="mt-pre-meta-val">{tweaks.boardSize}</div>
-        </div>
-        <div className="mt-pre-meta-cell">
-          <div className="mt-pre-meta-lbl">axis</div>
-          <div className="mt-pre-meta-val">{tweaks.axis === 'mix' ? 'MIX' : tweaks.axis === 'mean' ? 'MEAN' : 'READ'}</div>
         </div>
         {pb > 0 && (
           <div className="mt-pre-meta-cell is-pb">
@@ -75,7 +93,7 @@ const MTPre = ({ pb, tweaks, onStart }) => {
   );
 };
 
-const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duration, xpGained, onAgain, onHome }) => {
+const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duration, axis, xpGained, onAgain, onHome }) => {
   const acc = matches + misses > 0 ? Math.round((matches / (matches + misses)) * 100) : 100;
   const apm = Math.round(matches / (duration / 60));
   const ribbon = score >= 3000 ? 'PERFECT FLOW'
@@ -95,8 +113,11 @@ const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duratio
   const xpBase = matches + misses > 0 ? 20 : 0;
   const xpScore = score * 2;
   const xpPb = beatPb ? 20 : 0;
+  const isMix = axis === 'mix';
   const isHot = window.Daily && window.Daily.hotChallengeId() === 'match';
-  const xpRaw = xpBase + xpScore + xpPb;
+  const xpPreMix = xpBase + xpScore + xpPb;
+  const xpMix = isMix ? Math.round(xpPreMix * 0.5) : 0;
+  const xpRaw = xpPreMix + xpMix;
   const xpHot = isHot ? Math.round(xpRaw * (window.Daily.HOT_MULTIPLIER - 1)) : 0;
   const xpTotal = xpGained ?? (xpRaw + xpHot);
 
@@ -180,6 +201,7 @@ const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duratio
           <div className="mt-end-xp-row"><span>base</span><b>+{xpBase}</b></div>
           <div className="mt-end-xp-row"><span>score · {score}×2</span><b>+{xpScore}</b></div>
           {xpPb > 0 && <div className="mt-end-xp-row is-pb"><span>new record</span><b>+{xpPb}</b></div>}
+          {xpMix > 0 && <div className="mt-end-xp-row is-pb"><span>mix axis · ×1.5</span><b>+{xpMix}</b></div>}
           {isHot && <div className="mt-end-xp-row is-pb"><span>hot daily · ×{window.Daily.HOT_MULTIPLIER}</span><b>+{xpHot}</b></div>}
           <div className="mt-end-xp-row mt-streak"><span>daily streak</span><b>▲ +1</b></div>
         </div>
