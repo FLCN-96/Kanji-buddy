@@ -473,13 +473,13 @@
   flex: 1;
   display: flex; align-items: center; justify-content: center;
   padding: var(--sp-3);
-  min-height: 220px;
+  min-height: 170px;
   position: relative;
 }
 .ta-card-glyph {
   font-family: var(--font-jp-serif);
   font-weight: 700;
-  font-size: 180px;
+  font-size: 132px;
   line-height: 1;
   color: var(--fg-0);
   position: relative;
@@ -495,7 +495,7 @@
   transform: translate(calc(-50% + 3px), calc(-50% + 3px));
   font-family: var(--font-jp-serif);
   font-weight: 700;
-  font-size: 180px;
+  font-size: 132px;
   line-height: 1;
   color: var(--accent-magenta);
   opacity: .25;
@@ -565,7 +565,8 @@
   background: var(--bg-1);
   color: var(--fg-0);
   font-family: var(--font-mono); font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
+  min-height: 52px;
   cursor: pointer;
   text-align: left;
   min-height: 64px;
@@ -887,15 +888,9 @@
 .variant-calm .ta-tier-ring { box-shadow: inset 0 0 0 1px var(--tier-color); }
 .variant-calm .ta-end-score-val { text-shadow: none; }
 
-/* density */
-body[data-density="compact"] .ta-card-glyph,
-body[data-density="compact"] .ta-card-glyph-ghost { font-size: 132px; }
-body[data-density="compact"] .ta-card-glyph-wrap { min-height: 170px; }
-body[data-density="compact"] .ta-tile { min-height: 52px; font-size: 13px; }
-
-/* small screens */
+/* small screens — base glyph is 132px (was the compact value before density
+   lock); leave it alone here and only retune end-screen + combo decorations */
 @media (max-width: 420px) {
-  .ta-card-glyph, .ta-card-glyph-ghost { font-size: 144px; }
   .ta-end-score-val { font-size: 58px; }
   .ta-tier-ring { width: 100px; height: 100px; }
   .ta-combo-burst { font-size: 64px; }

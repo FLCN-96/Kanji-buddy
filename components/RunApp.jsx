@@ -2,7 +2,6 @@
 
 const TWEAK_DEFAULTS = {
   scanlines: 'off',
-  density: 'comfortable',
 };
 
 // XP weights for Run mode — miss penalizes, easy rewards confidence,
@@ -136,7 +135,6 @@ const RunApp = ({ cards }) => {
 
   React.useEffect(() => {
     document.body.dataset.scanlines = tweaks.scanlines;
-    document.body.dataset.density = tweaks.density;
   }, [tweaks]);
 
   // live timer during quiz

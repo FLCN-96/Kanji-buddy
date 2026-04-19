@@ -3,7 +3,6 @@
 
 const TWEAK_DEFAULTS_MT = {
   scanlines: 'off',
-  density: 'comfortable',
   countdown: 'dissolve',
   boardSize: 7,
   axis: 'mix',
@@ -164,7 +163,6 @@ const MatchApp = ({ cards }) => {
 
   React.useEffect(() => {
     document.body.dataset.scanlines = tweaks.scanlines;
-    document.body.dataset.density = tweaks.density;
   }, [tweaks]);
 
   // Countdown ready phase

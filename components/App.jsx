@@ -1,11 +1,11 @@
 // Top-level home app — shell, topbar, dashboard
-// Appearance preferences (scanlines/density/hero) live in Settings. Accent
-// is locked to the cyan+magenta brand pair — no longer user-tweakable.
-// The `game` visual variant is shipped — no alternates are user-selectable.
+// Appearance preferences (scanlines/hero) live in Settings. Accent is locked
+// to the cyan+magenta brand pair and density is locked to compact — neither
+// is user-tweakable. The `game` visual variant is shipped — no alternates
+// are user-selectable.
 
 const TWEAK_DEFAULTS = {
   scanlines: 'off',
-  density: 'comfortable',
   hero: 'on',
 };
 
@@ -280,7 +280,6 @@ const App = ({ cards }) => {
 
   React.useEffect(() => {
     document.body.dataset.scanlines = tweaks.scanlines;
-    document.body.dataset.density = tweaks.density;
     document.body.dataset.hero = tweaks.hero;
   }, [tweaks]);
 

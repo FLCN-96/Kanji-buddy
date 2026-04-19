@@ -2,7 +2,6 @@
 
 const TWEAK_DEFAULTS_TA = {
   scanlines: 'off',
-  density: 'comfortable',
   duration: 60,
   countdown: 'dissolve',
 };
@@ -170,7 +169,6 @@ const TimeAttackApp = ({ cards }) => {
   // apply visual tweaks to body (read-only; settings controls them)
   React.useEffect(() => {
     document.body.dataset.scanlines = tweaks.scanlines;
-    document.body.dataset.density = tweaks.density;
   }, [tweaks]);
 
   const setTweak = (k, v) => setTweaks(t => ({ ...t, [k]: v }));
