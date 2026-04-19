@@ -181,12 +181,64 @@
 .mt-rk-bad { color: var(--danger); border-color: var(--danger); background: var(--danger-bg); }
 .mt-rk-neutral { color: var(--accent-magenta); border-color: var(--accent-magenta); background: var(--accent-magenta-bg); }
 
+.mt-pre-axis {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.mt-pre-axis-lbl {
+  font-size: 10px; color: var(--fg-2); letter-spacing: .18em; text-transform: uppercase;
+}
+.mt-pre-axis-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2);
+}
+.mt-pre-axis-btn {
+  display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+  padding: var(--sp-3);
+  border: 1px solid var(--line-bright);
+  background: transparent;
+  color: var(--fg-1);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-snap);
+  text-align: left;
+}
+.mt-pre-axis-btn-label {
+  font-weight: 700;
+  font-size: 15px; letter-spacing: .08em;
+}
+.mt-pre-axis-btn-sub {
+  font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--fg-2);
+}
+.mt-pre-axis-btn:hover {
+  color: var(--fg-0);
+  border-color: var(--accent-cyan);
+}
+.mt-pre-axis-btn.is-active {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  background: var(--accent-cyan-bg);
+  box-shadow: inset 0 0 0 1px var(--accent-cyan), 0 0 10px rgba(34,211,238,.3);
+}
+.mt-pre-axis-btn.is-active .mt-pre-axis-btn-sub {
+  color: var(--accent-cyan);
+}
+.mt-pre-axis-btn.is-mix.is-active {
+  border-color: var(--accent-magenta);
+  color: var(--accent-magenta);
+  background: var(--accent-magenta-bg);
+  box-shadow: inset 0 0 0 1px var(--accent-magenta), 0 0 10px rgba(255,61,255,.3);
+}
+.mt-pre-axis-btn.is-mix.is-active .mt-pre-axis-btn-sub {
+  color: var(--accent-magenta);
+}
+
 .mt-pre-meta {
   display: grid;
   grid-template-columns: 1fr 1fr;
   border: 1px solid var(--line-dim);
   background: var(--bg-1);
 }
+.mt-pre-meta-1 { grid-template-columns: 1fr; }
 .mt-pre-meta-3 { grid-template-columns: 1fr 1fr 1fr; }
 .mt-pre-meta-cell {
   padding: var(--sp-3); text-align: center;

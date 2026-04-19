@@ -95,12 +95,13 @@ const MTTopbar = ({ timeLeft, total, score, multiplier, penaltyTick, onQuit }) =
 };
 
 const MatchApp = ({ cards }) => {
-  const [tweaks] = React.useState(() => {
+  const [tweaks, setTweaks] = React.useState(() => {
     try {
       const shared = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
       return { ...TWEAK_DEFAULTS_MT, ...shared };
     } catch(e) { return { ...TWEAK_DEFAULTS_MT }; }
   });
+  const setTweak = (k, v) => setTweaks(t => ({ ...t, [k]: v }));
 
   const [phase, setPhase] = React.useState('pre'); // pre | ready | play | end
   const [countdown, setCountdown] = React.useState(3);
@@ -227,9 +228,13 @@ const MatchApp = ({ cards }) => {
       setPb(score);
     }
     // Score-scaled base + PB bonus — strong play should be obviously rewarded.
+    // Mix axis pays +50% (harder — both meaning AND reading must be primed).
+    const isMix = tweaks.axis === 'mix';
     const base = 20 + score * 2;
     const pbBonus = newBeatPb ? 20 : 0;
-    const earned = Math.round((base + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+    const preMix = base + pbBonus;
+    const withMix = isMix ? Math.round(preMix * 1.5) : preMix;
+    const earned = Math.round(withMix * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
     setXpGained(earned);
     window.DB.saveScore({ mode: 'match', score, duration_s: tweaks.duration }).catch(() => {});
     window.DB.saveSession({
@@ -407,7 +412,7 @@ const MatchApp = ({ cards }) => {
         />
 
         <main className="run-main mt-main" data-screen-label={`mt-${phase}`}>
-          {phase === 'pre' && <MTPre pb={pb} tweaks={tweaks} onStart={start} />}
+          {phase === 'pre' && <MTPre pb={pb} tweaks={tweaks} onStart={start} onAxis={(v) => setTweak('axis', v)} />}
           {phase === 'ready' && <TAReady n={countdown} variant={tweaks.countdown} />}
           {phase === 'play' && (
             <MTLanes
@@ -429,6 +434,7 @@ const MatchApp = ({ cards }) => {
               beatPb={beatPb}
               pb={pb}
               duration={tweaks.duration}
+              axis={tweaks.axis}
               xpGained={xpGained}
               onAgain={restart}
               onHome={() => window.location.href = 'Home.html'}
