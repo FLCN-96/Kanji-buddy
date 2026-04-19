@@ -20,7 +20,7 @@ const Hero = ({ kanji }) => {
   const kun = kanji.mainKun || '—';
   const mean = kanji.mean ? `"${kanji.mean}"` : '';
   const jlptLbl = kanji.jlpt ? `JLPT N${kanji.jlpt}` : 'JLPT —';
-  const strokeLbl = kanji.strokes ? `${kanji.strokes} strokes` : '';
+  const strokeLbl = kanji.strokes ? `${kanji.strokes} ${kanji.strokes === 1 ? 'stroke' : 'strokes'}` : '';
   const tag = [jlptLbl, strokeLbl].filter(Boolean).join(' · ');
   return (
     <section className="kb-hero" data-screen-label="hero-kanji">
