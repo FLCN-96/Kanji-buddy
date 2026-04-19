@@ -18,10 +18,10 @@ All modes feed one shared XP pool and rank ladder.
 
 ## Progression
 
-12-rank operator ladder (NOVICE → ASCENDANT) with Japanese ceremonial
+16-rank operator ladder (NOVICE → IMMORTAL) with Japanese ceremonial
 titles and a four-tier colour arc (cyan → magenta → amber → transcend).
 Thresholds follow a gentle-to-steep curve from 150 XP (rank Ⅱ) to
-55,000 XP (rank Ⅻ). Rank-up fires a one-time promotion ceremony on the
+80,000 XP (rank ⅩⅥ). Rank-up fires a one-time promotion ceremony on the
 next Home load.
 
 ## Tech
