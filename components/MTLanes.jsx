@@ -6,8 +6,8 @@
 const MTTile = ({ pair, col, isSelected, isShake, isResolved, onPick, slotIdx, isUnseen }) => {
   const isKanji = col === 'k';
   // Unseen halo only on the kanji-side tile — the value (meaning/reading) is
-  // a string, not a card to flag. The value tile borrows the same green
-  // border via is-unseen-frame so the matched pair reads as a unit.
+  // a string, not a card to flag, and the green glow on the right lane makes
+  // matching feel like a hint rather than a genuine unknown-term flag.
   const cls = [
     'mt-tile',
     isKanji ? 'mt-tile-k' : 'mt-tile-v',
@@ -15,7 +15,7 @@ const MTTile = ({ pair, col, isSelected, isShake, isResolved, onPick, slotIdx, i
     isSelected ? 'is-selected' : '',
     isShake ? 'is-shake' : '',
     isResolved ? 'is-resolved' : '',
-    isUnseen ? 'is-unseen-frame' : '',
+    isUnseen && isKanji ? 'is-unseen-frame' : '',
   ].filter(Boolean).join(' ');
 
   return (
