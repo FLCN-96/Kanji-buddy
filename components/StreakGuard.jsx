@@ -2,15 +2,15 @@
 // Each card has decayMs (random 15–45s). When picked, player answers 4-tile meaning quiz.
 // Correct = SAVED (locked). Wrong = LEAKED immediately. Decay timeout = LEAKED.
 
-const TWEAK_DEFAULTS_SG = /*EDITMODE-BEGIN*/{
-  "variant": "game",
-  "accent": "cyan",
-  "scanlines": "off",
-  "density": "comfortable",
-  "countdown": "dissolve",
-  "cellCount": 12,
-  "difficulty": "mix"
-}/*EDITMODE-END*/;
+const TWEAK_DEFAULTS_SG = {
+  variant: 'hud',
+  accent: 'cyan',
+  scanlines: 'off',
+  density: 'comfortable',
+  countdown: 'dissolve',
+  cellCount: 12,
+  difficulty: 'mix',
+};
 
 const PB_KEY_SG = 'kb-sg-pb';
 
@@ -53,31 +53,6 @@ function dealQuiz(card, allCards) {
   return { tiles, correctIdx: tiles.indexOf(correct) };
 }
 
-const TweaksPanelSG = ({ open, onClose, tweaks, onSet }) => {
-  const opt = (key, options) => (
-    <div className="tweaks-row">
-      <div className="tweaks-lbl">▸ {key.toUpperCase()}</div>
-      <div className="tweaks-opts">
-        {options.map(o => (
-          <button key={o.id} className={`tweaks-btn${tweaks[key] === o.id ? ' is-active' : ''}`} onClick={() => onSet(key, o.id)}>{o.label}</button>
-        ))}
-      </div>
-    </div>
-  );
-  return (
-    <div className={`tweaks${open ? ' is-open' : ''}`}>
-      <div className="tweaks-head"><span>TWEAKS</span><button className="tweaks-close" onClick={onClose}>╳</button></div>
-      <div className="tweaks-body">
-        {opt('cellCount', [{id:8,label:'8'},{id:12,label:'12'},{id:16,label:'16'}])}
-        {opt('difficulty', [{id:'easy',label:'n5/n4'},{id:'mix',label:'mix'},{id:'hard',label:'n3+'}])}
-        {opt('variant', [{id:'calm',label:'calm'},{id:'hud',label:'hud'},{id:'game',label:'game'}])}
-        {opt('accent', [{id:'cyan',label:'cyan+mag'},{id:'dim',label:'teal+rose'}])}
-        {opt('scanlines', [{id:'off',label:'off'},{id:'on',label:'on'}])}
-      </div>
-    </div>
-  );
-};
-
 const SGTopbar = ({ saved, leaked, atRisk, onQuit }) => (
   <header className="run-top sg-top">
     <div className="run-top-l">
@@ -93,15 +68,12 @@ const SGTopbar = ({ saved, leaked, atRisk, onQuit }) => (
 );
 
 const StreakGuardApp = ({ cards }) => {
-  const [tweaks, setTweaks] = React.useState(() => {
+  const [tweaks] = React.useState(() => {
     try {
       const shared = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
-      const sgLocal = JSON.parse(localStorage.getItem('kb-sg-tweaks') || '{}');
-      return { ...TWEAK_DEFAULTS_SG, ...shared, ...sgLocal };
-    } catch(e) { return TWEAK_DEFAULTS_SG; }
+      return { ...TWEAK_DEFAULTS_SG, ...shared };
+    } catch(e) { return { ...TWEAK_DEFAULTS_SG }; }
   });
-  const [tweaksOpen, setTweaksOpen] = React.useState(false);
-  const [editMode, setEditMode] = React.useState(false);
 
   const [phase, setPhase] = React.useState('pre'); // pre | ready | play | end
   const [countdown, setCountdown] = React.useState(3);
@@ -121,29 +93,7 @@ const StreakGuardApp = ({ cards }) => {
     document.body.dataset.accent = tweaks.accent;
     document.body.dataset.scanlines = tweaks.scanlines;
     document.body.dataset.density = tweaks.density;
-    try {
-      localStorage.setItem('kb-sg-tweaks', JSON.stringify(tweaks));
-      const shared = { variant: tweaks.variant, accent: tweaks.accent, scanlines: tweaks.scanlines, density: tweaks.density };
-      const existing = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
-      localStorage.setItem('kb-tweaks', JSON.stringify({ ...existing, ...shared }));
-    } catch(e) {}
   }, [tweaks]);
-
-  React.useEffect(() => {
-    const h = (e) => {
-      if (e.data?.type === '__activate_edit_mode') { setEditMode(true); setTweaksOpen(true); }
-      else if (e.data?.type === '__deactivate_edit_mode') { setEditMode(false); setTweaksOpen(false); }
-    };
-    window.addEventListener('message', h);
-    window.parent.postMessage({type: '__edit_mode_available'}, '*');
-    return () => window.removeEventListener('message', h);
-  }, []);
-
-  const setTweak = (k, v) => {
-    const next = { ...tweaks, [k]: v };
-    setTweaks(next);
-    try { window.parent.postMessage({type:'__edit_mode_set_keys', edits:{[k]: v}}, '*'); } catch(e) {}
-  };
 
   // 3-2-1 countdown → start play
   React.useEffect(() => {
@@ -202,11 +152,32 @@ const StreakGuardApp = ({ cards }) => {
     if (phase !== 'play' || deck.length === 0) return;
     const unresolved = deck.filter(c => c.status === 'live').length;
     if (unresolved === 0 && !activeId) {
-      const saved = deck.filter(c => c.status === 'saved').length;
-      if (saved > pb) {
+      const savedCount = deck.filter(c => c.status === 'saved').length;
+      const leakedCount = deck.filter(c => c.status === 'leaked').length;
+      if (savedCount > pb) {
         setBeatPb(true);
-        try { localStorage.setItem(PB_KEY_SG, String(saved)); } catch(e) {}
-        setPb(saved);
+        try { localStorage.setItem(PB_KEY_SG, String(savedCount)); } catch(e) {}
+        setPb(savedCount);
+      }
+      if (window.DB && deck.length > 0) {
+        const isHot = window.Daily && window.Daily.hotChallengeId() === 'streak';
+        const base = 50;
+        // Pay per saved card (proportional to performance)
+        const perfMult = savedCount / deck.length;
+        const earned = Math.round(base * (0.3 + perfMult * 0.7) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+        window.DB.saveScore({ mode: 'streak_guard', score: savedCount }).catch(() => {});
+        window.DB.saveSession({
+          mode: 'streak_guard',
+          duration_s: 0,
+          cards_reviewed: deck.length,
+          hits: savedCount,
+          misses: leakedCount,
+          hard: 0,
+          xp_earned: earned,
+        })
+          .then(() => window.DB.grantXp(earned))
+          .then(() => window.DB.recordSessionStreak())
+          .catch(() => {});
       }
       setTimeout(() => setPhase('end'), 500);
     }
@@ -330,8 +301,6 @@ const StreakGuardApp = ({ cards }) => {
           )}
         </main>
       </div>
-      {!editMode && <button className="tweaks-float" onClick={() => setTweaksOpen(o => !o)}>▸ tweaks</button>}
-      <TweaksPanelSG open={tweaksOpen} onClose={() => setTweaksOpen(false)} tweaks={tweaks} onSet={setTweak} />
     </>
   );
 };

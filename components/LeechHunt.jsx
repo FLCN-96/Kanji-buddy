@@ -1,14 +1,14 @@
 // LeechHunt — 3-stage cleanse per leech. 8 leeches, 3-miss fail limit.
 
-const TWEAK_DEFAULTS_LH = /*EDITMODE-BEGIN*/{
-  "variant": "game",
-  "accent": "cyan",
-  "scanlines": "off",
-  "density": "comfortable",
-  "countdown": "dissolve",
-  "leechCount": 8,
-  "missCap": 3
-}/*EDITMODE-END*/;
+const TWEAK_DEFAULTS_LH = {
+  variant: 'hud',
+  accent: 'cyan',
+  scanlines: 'off',
+  density: 'comfortable',
+  countdown: 'dissolve',
+  leechCount: 8,
+  missCap: 3,
+};
 
 const PB_KEY_LH = 'kb-lh-pb';
 
@@ -102,31 +102,6 @@ function dealStage(leech, stageIdx, allCards) {
   return { kind: 'application', tiles, correctIdx: tiles.findIndex(t => t === correct), blanked };
 }
 
-const TweaksPanelLH = ({ open, onClose, tweaks, onSet }) => {
-  const opt = (key, options) => (
-    <div className="tweaks-row">
-      <div className="tweaks-lbl">▸ {key.toUpperCase()}</div>
-      <div className="tweaks-opts">
-        {options.map(o => (
-          <button key={o.id} className={`tweaks-btn${tweaks[key] === o.id ? ' is-active' : ''}`} onClick={() => onSet(key, o.id)}>{o.label}</button>
-        ))}
-      </div>
-    </div>
-  );
-  return (
-    <div className={`tweaks${open ? ' is-open' : ''}`}>
-      <div className="tweaks-head"><span>TWEAKS</span><button className="tweaks-close" onClick={onClose}>╳</button></div>
-      <div className="tweaks-body">
-        {opt('leechCount', [{id:4,label:'4'},{id:8,label:'8'},{id:12,label:'12'}])}
-        {opt('missCap', [{id:1,label:'1'},{id:3,label:'3'},{id:5,label:'5'},{id:99,label:'∞'}])}
-        {opt('variant', [{id:'calm',label:'calm'},{id:'hud',label:'hud'},{id:'game',label:'game'}])}
-        {opt('accent', [{id:'cyan',label:'cyan+mag'},{id:'dim',label:'teal+rose'}])}
-        {opt('scanlines', [{id:'off',label:'off'},{id:'on',label:'on'}])}
-      </div>
-    </div>
-  );
-};
-
 const LHTopbar = ({ purged, total, misses, missCap, onQuit }) => (
   <header className="run-top lh-top">
     <div className="run-top-l">
@@ -143,15 +118,12 @@ const LHTopbar = ({ purged, total, misses, missCap, onQuit }) => (
 );
 
 const LeechHuntApp = ({ cards }) => {
-  const [tweaks, setTweaks] = React.useState(() => {
+  const [tweaks] = React.useState(() => {
     try {
       const shared = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
-      const lhLocal = JSON.parse(localStorage.getItem('kb-lh-tweaks') || '{}');
-      return { ...TWEAK_DEFAULTS_LH, ...shared, ...lhLocal };
-    } catch(e) { return TWEAK_DEFAULTS_LH; }
+      return { ...TWEAK_DEFAULTS_LH, ...shared };
+    } catch(e) { return { ...TWEAK_DEFAULTS_LH }; }
   });
-  const [tweaksOpen, setTweaksOpen] = React.useState(false);
-  const [editMode, setEditMode] = React.useState(false);
 
   const [phase, setPhase] = React.useState('pre'); // pre | ready | dossier | hunt | end
   const [countdown, setCountdown] = React.useState(3);
@@ -173,29 +145,7 @@ const LeechHuntApp = ({ cards }) => {
     document.body.dataset.accent = tweaks.accent;
     document.body.dataset.scanlines = tweaks.scanlines;
     document.body.dataset.density = tweaks.density;
-    try {
-      localStorage.setItem('kb-lh-tweaks', JSON.stringify(tweaks));
-      const shared = { variant: tweaks.variant, accent: tweaks.accent, scanlines: tweaks.scanlines, density: tweaks.density };
-      const existing = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
-      localStorage.setItem('kb-tweaks', JSON.stringify({ ...existing, ...shared }));
-    } catch(e) {}
   }, [tweaks]);
-
-  React.useEffect(() => {
-    const h = (e) => {
-      if (e.data?.type === '__activate_edit_mode') { setEditMode(true); setTweaksOpen(true); }
-      else if (e.data?.type === '__deactivate_edit_mode') { setEditMode(false); setTweaksOpen(false); }
-    };
-    window.addEventListener('message', h);
-    window.parent.postMessage({type: '__edit_mode_available'}, '*');
-    return () => window.removeEventListener('message', h);
-  }, []);
-
-  const setTweak = (k, v) => {
-    const next = { ...tweaks, [k]: v };
-    setTweaks(next);
-    try { window.parent.postMessage({type:'__edit_mode_set_keys', edits:{[k]: v}}, '*'); } catch(e) {}
-  };
 
   React.useEffect(() => {
     if (phase !== 'ready') return;
@@ -238,6 +188,26 @@ const LeechHuntApp = ({ cards }) => {
     }
     setResult(res);
     setPhase('end');
+    if (window.DB && roster.length > 0) {
+      const isHot = window.Daily && window.Daily.hotChallengeId() === 'leech';
+      const base = 70;
+      const perfMult = purged / roster.length;
+      const bonus = res === 'complete' ? 1.2 : 1.0;
+      const earned = Math.round(base * (0.3 + perfMult * 0.7) * bonus * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+      window.DB.saveScore({ mode: 'leech_hunt', score: purged, result: res }).catch(() => {});
+      window.DB.saveSession({
+        mode: 'leech_hunt',
+        duration_s: 0,
+        cards_reviewed: roster.length,
+        hits: purged,
+        misses: roster.length - purged,
+        hard: 0,
+        xp_earned: earned,
+      })
+        .then(() => window.DB.grantXp(earned))
+        .then(() => window.DB.recordSessionStreak())
+        .catch(() => {});
+    }
   };
 
   const onStageAnswer = (tileIdx) => {
@@ -379,8 +349,6 @@ const LeechHuntApp = ({ cards }) => {
           )}
         </main>
       </div>
-      {!editMode && <button className="tweaks-float" onClick={() => setTweaksOpen(o => !o)}>▸ tweaks</button>}
-      <TweaksPanelLH open={tweaksOpen} onClose={() => setTweaksOpen(false)} tweaks={tweaks} onSet={setTweak} />
     </>
   );
 };
