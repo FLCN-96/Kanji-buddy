@@ -10,16 +10,16 @@ const SVHeart = ({ broken, pressure }) => {
   );
 };
 
-const SVPrompt = ({ prompt, jlpt }) => {
+const SVPrompt = ({ prompt, jlpt, isUnseen }) => {
   if (prompt.kind === 'kanji') {
     return (
-      <div className="sv-prompt sv-prompt-kanji">
+      <div className={`sv-prompt sv-prompt-kanji${isUnseen ? ' is-unseen-frame' : ''}`}>
         <div className="sv-prompt-card-meta">
           <span>JLPT N{jlpt}</span>
-          <span className="sv-prompt-ask">meaning?</span>
+          <span className="sv-prompt-ask">{isUnseen ? 'first sighting · meaning?' : 'meaning?'}</span>
         </div>
         <div className="sv-prompt-glyph">
-          <span>{prompt.kanji}</span>
+          <span className={isUnseen ? 'is-unseen-glyph' : undefined}>{prompt.kanji}</span>
           <span className="sv-prompt-glyph-ghost" aria-hidden>{prompt.kanji}</span>
         </div>
       </div>
@@ -50,7 +50,7 @@ const SVPrompt = ({ prompt, jlpt }) => {
   );
 };
 
-const SVPlay = ({ q, depth, jlpt, onPick, feedback, heartBreak, pressure, sectorFlash }) => {
+const SVPlay = ({ q, depth, jlpt, onPick, feedback, heartBreak, pressure, sectorFlash, isUnseen }) => {
   const bigTile = q.prompt.kind !== 'kanji'; // tiles show kanji — make them big
   return (
     <div className="sv-play" data-screen-label="sv-play">
@@ -63,7 +63,7 @@ const SVPlay = ({ q, depth, jlpt, onPick, feedback, heartBreak, pressure, sector
         </div>
       </div>
 
-      <SVPrompt prompt={q.prompt} jlpt={jlpt} />
+      <SVPrompt prompt={q.prompt} jlpt={jlpt} isUnseen={isUnseen} />
 
       <div key={q.card.idx} className={`sv-tiles${bigTile ? ' is-big' : ''}`}>
         {q.tiles.map((t, i) => {

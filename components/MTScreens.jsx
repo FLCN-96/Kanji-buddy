@@ -62,6 +62,13 @@ const MTPre = ({ pb, tweaks, onStart, onAxis }) => {
         </div>
       </div>
 
+      <div className="kb-unseen-legend">
+        <span className="kb-unseen-legend-mk">新</span>
+        <span className="kb-unseen-legend-msg">
+          <b>green halo</b> = first sighting · result won't update SRS
+        </span>
+      </div>
+
       <div className="mt-pre-axis">
         <div className="mt-pre-axis-lbl">▸ MATCH AXIS</div>
         <div className="mt-pre-axis-row">

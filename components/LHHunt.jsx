@@ -13,7 +13,7 @@ const LHStageBar = ({ stageIdx, firstTry }) => (
   </div>
 );
 
-const LHHunt = ({ leech, stage, stageIdx, onPick, feedback }) => {
+const LHHunt = ({ leech, stage, stageIdx, onPick, feedback, isUnseen }) => {
   const card = leech.card;
   const ask = stage.kind === 'recognition' ? 'pick the meaning'
     : stage.kind === 'reading' ? 'pick the reading'
@@ -21,9 +21,9 @@ const LHHunt = ({ leech, stage, stageIdx, onPick, feedback }) => {
 
   return (
     <div className="lh-hunt" data-screen-label={`lh-hunt-${stage.kind}`}>
-      <div className="lh-hunt-target">
+      <div className={`lh-hunt-target${isUnseen ? ' is-unseen-frame' : ''}`}>
         <div className="lh-hunt-target-meta">
-          <span className="lh-hunt-target-eyebrow">▸ TARGET ACQUIRED</span>
+          <span className="lh-hunt-target-eyebrow">▸ TARGET {isUnseen ? 'UNSEEN' : 'ACQUIRED'}</span>
           <span className="lh-hunt-target-jlpt">N{card.jlpt}</span>
           <span className="lh-hunt-target-cont">{leech.lapses || 0} lapses</span>
         </div>
@@ -33,7 +33,7 @@ const LHHunt = ({ leech, stage, stageIdx, onPick, feedback }) => {
             <span className="lh-retic lh-retic-tr" />
             <span className="lh-retic lh-retic-bl" />
             <span className="lh-retic lh-retic-br" />
-            <span className="lh-hunt-target-k">{card.k}</span>
+            <span className={`lh-hunt-target-k${isUnseen ? ' is-unseen-glyph' : ''}`}>{card.k}</span>
           </div>
         </div>
       </div>

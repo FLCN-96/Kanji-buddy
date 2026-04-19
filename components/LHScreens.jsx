@@ -46,6 +46,13 @@ const LHPre = ({ pb, tweaks, onStart }) => (
       </div>
     </div>
 
+    <div className="kb-unseen-legend">
+      <span className="kb-unseen-legend-mk">新</span>
+      <span className="kb-unseen-legend-msg">
+        <b>green halo</b> = first sighting (synthetic target) · result won't update SRS
+      </span>
+    </div>
+
     <div className="lh-pre-meta">
       <div className="lh-pre-meta-cell">
         <div className="lh-pre-meta-lbl">targets</div>

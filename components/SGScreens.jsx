@@ -44,6 +44,13 @@ const SGPre = ({ pb, cellCount, difficulty, onStart }) => {
         </div>
       </div>
 
+      <div className="kb-unseen-legend">
+        <span className="kb-unseen-legend-mk">新</span>
+        <span className="kb-unseen-legend-msg">
+          <b>green halo</b> = first sighting · result won't update SRS
+        </span>
+      </div>
+
       <div className={`sg-pre-meta sg-pre-meta-${pb > 0 ? 3 : 2}`}>
         <div className="sg-pre-meta-cell">
           <div className="sg-pre-meta-lbl">cards</div>

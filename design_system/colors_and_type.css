@@ -391,3 +391,48 @@ a:hover { color: #fff; border-bottom-color: var(--accent-cyan); }
   background: var(--accent-cyan-bg);
   color: #fff;
 }
+
+/* ============================================================
+   Shared: unseen-card indicator (challenge modes)
+   The Run flow is the only writer to card_states, so any kanji
+   appearing in a challenge that doesn't have a state row is one
+   the user has never met. Flag it green so the player knows the
+   attempt is a guess — and that no SRS damage is taken either way
+   since challenges never touch card_states.
+   ============================================================ */
+.is-unseen-glyph {
+  color: var(--accent-lime) !important;
+  text-shadow:
+    0 0 6px rgba(163,230,53,.6),
+    0 0 18px rgba(163,230,53,.32) !important;
+}
+.is-unseen-frame {
+  box-shadow: 0 0 0 1px var(--accent-lime),
+              0 0 14px rgba(163,230,53,.30),
+              inset 0 0 18px rgba(163,230,53,.06) !important;
+  border-color: var(--accent-lime) !important;
+}
+
+.kb-unseen-legend {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  border: 1px dashed var(--accent-lime);
+  background: rgba(163,230,53,.06);
+  font-size: 11px; letter-spacing: .04em;
+  color: var(--accent-lime);
+  font-family: var(--font-mono);
+}
+.kb-unseen-legend-mk {
+  font-family: var(--font-jp-serif); font-weight: 700;
+  font-size: 14px;
+  color: var(--accent-lime);
+  text-shadow: 0 0 6px rgba(163,230,53,.55);
+  padding: 0 4px;
+}
+.kb-unseen-legend-msg {
+  color: var(--fg-1);
+}
+.kb-unseen-legend-msg b {
+  color: var(--accent-lime);
+  font-weight: 700;
+}

@@ -135,12 +135,16 @@ const SurvivalApp = ({ cards }) => {
   // Ref (not state) so loading card_states mid-mount doesn't re-trigger the
   // ready-phase countdown effect. Survival reads it at deal-time only.
   const cardStatesRef = React.useRef([]);
+  const seenSetRef = React.useRef(new Set());
 
   React.useEffect(() => {
     if (!window.DB) return;
     window.DB.open()
       .then(() => window.DB.getAllCardStates())
-      .then(s => { cardStatesRef.current = s || []; })
+      .then(s => {
+        cardStatesRef.current = s || [];
+        seenSetRef.current = (window.Daily?.seenIdxSet || (() => new Set()))(cardStatesRef.current);
+      })
       .catch(() => {});
   }, []);
 
@@ -300,6 +304,7 @@ const SurvivalApp = ({ cards }) => {
               heartBreak={heartBreak}
               pressure={pressure}
               sectorFlash={sectorFlash}
+              isUnseen={!seenSetRef.current.has(question.card.idx)}
             />
           )}
           {phase === 'end' && (

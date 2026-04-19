@@ -3,8 +3,11 @@
 // The left lane shows the kanji; the right lane shows the meaning OR reading.
 // Tiles in each lane are RANDOMLY ORDERED so positions don't leak the answer.
 
-const MTTile = ({ pair, col, isSelected, isShake, isResolved, onPick, slotIdx }) => {
+const MTTile = ({ pair, col, isSelected, isShake, isResolved, onPick, slotIdx, isUnseen }) => {
   const isKanji = col === 'k';
+  // Unseen halo only on the kanji-side tile — the value (meaning/reading) is
+  // a string, not a card to flag. The value tile borrows the same green
+  // border via is-unseen-frame so the matched pair reads as a unit.
   const cls = [
     'mt-tile',
     isKanji ? 'mt-tile-k' : 'mt-tile-v',
@@ -12,6 +15,7 @@ const MTTile = ({ pair, col, isSelected, isShake, isResolved, onPick, slotIdx })
     isSelected ? 'is-selected' : '',
     isShake ? 'is-shake' : '',
     isResolved ? 'is-resolved' : '',
+    isUnseen ? 'is-unseen-frame' : '',
   ].filter(Boolean).join(' ');
 
   return (
@@ -24,7 +28,7 @@ const MTTile = ({ pair, col, isSelected, isShake, isResolved, onPick, slotIdx })
       style={{'--slot': slotIdx}}
     >
       {isKanji ? (
-        <span className="mt-tile-k-glyph">{pair.card.k}</span>
+        <span className={`mt-tile-k-glyph${isUnseen ? ' is-unseen-glyph' : ''}`}>{pair.card.k}</span>
       ) : (
         <>
           <span className="mt-tile-v-tag">{pair.side === 'mean' ? 'MEANING' : 'READING'}</span>
@@ -39,7 +43,8 @@ const MTTile = ({ pair, col, isSelected, isShake, isResolved, onPick, slotIdx })
   );
 };
 
-const MTLanes = ({ pairs, resolved, selected, shake, combo, onPick }) => {
+const MTLanes = ({ pairs, resolved, selected, shake, combo, onPick, seenSet }) => {
+  const isUnseen = (p) => seenSet ? !seenSet.has(p.card.idx) : false;
   // Stable shuffle per pair.id for value-column position
   const valueOrder = React.useMemo(() => {
     const order = [...pairs];
@@ -68,6 +73,7 @@ const MTLanes = ({ pairs, resolved, selected, shake, combo, onPick }) => {
               isShake={shake && shake.kId === p.id}
               isResolved={!!resolved[p.id]}
               onPick={onPick}
+              isUnseen={isUnseen(p)}
             />
           ))}
         </div>
@@ -105,6 +111,7 @@ const MTLanes = ({ pairs, resolved, selected, shake, combo, onPick }) => {
               isShake={shake && shake.vId === p.id}
               isResolved={!!resolved[p.id]}
               onPick={onPick}
+              isUnseen={isUnseen(p)}
             />
           ))}
         </div>

@@ -170,6 +170,7 @@ const LeechHuntApp = ({ cards }) => {
   // Ref (not state) so the ready-phase countdown effect doesn't restart when
   // card_states finish loading — the hunt only reads it at roster-build time.
   const cardStatesRef = React.useRef([]);
+  const seenSetRef = React.useRef(new Set());
   // Cached near-user pool used for synthetic padding + distractors. Computed
   // once per hunt (in the ready countdown) so dealStage stays cheap.
   const nearPoolRef = React.useRef(null);
@@ -178,7 +179,10 @@ const LeechHuntApp = ({ cards }) => {
     if (!window.DB) return;
     window.DB.open()
       .then(() => window.DB.getAllCardStates())
-      .then(s => { cardStatesRef.current = s || []; })
+      .then(s => {
+        cardStatesRef.current = s || [];
+        seenSetRef.current = (window.Daily?.seenIdxSet || (() => new Set()))(cardStatesRef.current);
+      })
       .catch(() => {});
   }, []);
 
@@ -388,6 +392,7 @@ const LeechHuntApp = ({ cards }) => {
               stageIdx={stageIdx}
               onPick={onStageAnswer}
               feedback={feedback}
+              isUnseen={!seenSetRef.current.has(roster[activeIdx].card.idx)}
             />
           )}
           {phase === 'end' && (

@@ -17,7 +17,7 @@ const TAHud = ({ hits, misses, combo }) => (
   </div>
 );
 
-const TAPlay = ({ q, onPick, feedback, clockMs, totalMs, danger, combo, comboBurst }) => {
+const TAPlay = ({ q, onPick, feedback, clockMs, totalMs, danger, combo, comboBurst, isUnseen }) => {
   const barTotal = totalMs > 0 ? totalMs : 60_000;
   const barPct = Math.max(0, Math.min(100, (clockMs / barTotal) * 100));
 
@@ -30,14 +30,14 @@ const TAPlay = ({ q, onPick, feedback, clockMs, totalMs, danger, combo, comboBur
         </div>
       </div>
 
-      <div className={`ta-card${feedback ? (feedback.ok ? ' is-hit' : ' is-miss') : ''}`}>
+      <div className={`ta-card${feedback ? (feedback.ok ? ' is-hit' : ' is-miss') : ''}${isUnseen ? ' is-unseen-frame' : ''}`}>
         <div className="ta-card-meta">
           <span>JLPT N{q.card.jlpt}</span>
-          <span className="ta-card-prompt">what does this mean?</span>
+          <span className="ta-card-prompt">{isUnseen ? 'first sighting · what does this mean?' : 'what does this mean?'}</span>
           <span>idx {String(q.card.idx).padStart(4,'0')}</span>
         </div>
         <div className="ta-card-glyph-wrap">
-          <div className="ta-card-glyph">{q.card.k}</div>
+          <div className={`ta-card-glyph${isUnseen ? ' is-unseen-glyph' : ''}`}>{q.card.k}</div>
           <div className="ta-card-glyph-ghost" aria-hidden="true">{q.card.k}</div>
         </div>
       </div>
