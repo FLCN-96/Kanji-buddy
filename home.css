@@ -324,23 +324,93 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
 .kb-section-title::before { content: '▸'; color: var(--accent-cyan); }
 .kb-section-r { font-size: 10px; color: var(--fg-2); letter-spacing: .08em; }
 
-/* RUN primary — big CTA */
+/* RUN primary — big CTA. Layered drama (corner brackets, top specular
+   highlight, slow cyan shine sweep) so the daily action feels premium
+   without the chaotic flair the OVERCLOCK tile leans on. */
 .kb-run-primary {
   border: 2px solid var(--accent-cyan);
-  background: linear-gradient(180deg, var(--accent-cyan-bg), transparent 60%);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), transparent 18%),
+    linear-gradient(180deg, var(--accent-cyan-bg), transparent 60%);
   padding: var(--sp-4);
   display: grid; grid-template-columns: 1fr auto;
   align-items: center; gap: var(--sp-3);
   cursor: pointer;
   position: relative;
-  box-shadow: 0 0 18px rgba(34,211,238,.25), inset 0 0 0 1px var(--accent-cyan);
+  overflow: hidden;
+  box-shadow:
+    0 0 18px rgba(34,211,238,.25),
+    inset 0 0 0 1px var(--accent-cyan),
+    inset 0 1px 0 rgba(255,255,255,.16);
   transition: all var(--dur-fast) var(--ease-snap);
   font-family: var(--font-mono);
   color: var(--fg-0);
   text-align: left;
 }
-.kb-run-primary:hover { box-shadow: 0 0 28px rgba(34,211,238,.45), inset 0 0 0 1px var(--accent-cyan); transform: translateY(-1px); }
+/* Slow cyan shine — same GPU-composited transform technique used by the
+   hot-tile glimmer. Lives on ::after; the overachiever variant overrides
+   it with its own ::after, so this stays scoped to the regular CTA. */
+.kb-run-primary::after {
+  content: '';
+  position: absolute;
+  top: -30%;
+  bottom: -30%;
+  left: 0;
+  width: 22%;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(180,240,255,.10) 30%,
+    rgba(220,250,255,.42) 50%,
+    rgba(180,240,255,.10) 70%,
+    transparent 100%
+  );
+  transform: translate3d(-180%, 0, 0) rotate(22deg);
+  transform-origin: center;
+  will-change: transform;
+  animation: kb-rp-shine 11s cubic-bezier(.3,.7,.4,1) infinite;
+  z-index: 1;
+}
+@keyframes kb-rp-shine {
+  0%   { transform: translate3d(-180%, 0, 0) rotate(22deg); }
+  18%  { transform: translate3d(560%, 0, 0)  rotate(22deg); }
+  100% { transform: translate3d(560%, 0, 0)  rotate(22deg); }
+}
+
+.kb-run-primary:hover {
+  box-shadow:
+    0 0 32px rgba(34,211,238,.55),
+    inset 0 0 0 1px var(--accent-cyan),
+    inset 0 1px 0 rgba(255,255,255,.22);
+  transform: translateY(-1px);
+}
 .kb-run-primary:active { transform: scale(.99); }
+
+/* Corner brackets — quiet ◤◥◣◢ in cyan with a soft halo. Lift slightly
+   on hover. Skipped on overachiever via the JSX gate. */
+.kb-rp-corner {
+  position: absolute;
+  font-size: 9px;
+  color: var(--accent-cyan);
+  text-shadow: 0 0 4px rgba(34,211,238,.55);
+  opacity: .8;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-snap),
+              text-shadow var(--dur-fast) var(--ease-snap);
+}
+.kb-rp-corner.tl { top: 5px; left: 6px; }
+.kb-rp-corner.tr { top: 5px; right: 6px; }
+.kb-rp-corner.bl { bottom: 5px; left: 6px; }
+.kb-rp-corner.br { bottom: 5px; right: 6px; }
+.kb-run-primary:hover .kb-rp-corner {
+  opacity: 1;
+  text-shadow: 0 0 9px rgba(34,211,238,.85);
+}
+
+/* Body wrapper + arrow — sit above the shine layer */
+.kb-rp-body { position: relative; z-index: 2; }
 .kb-run-primary .kb-rp-top { font-size: 10px; color: var(--accent-cyan); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 4px; }
 .kb-run-primary .kb-rp-label {
   font-weight: 700; font-size: 22px; letter-spacing: .02em;
@@ -349,17 +419,24 @@ body[data-density="compact"] .kb-stats-row { grid-template-columns: 1fr 1fr; }
 }
 .kb-run-primary .kb-rp-sub { font-size: 11px; color: var(--fg-1); margin-top: 4px; }
 .kb-run-primary .kb-rp-arrow {
+  position: relative; z-index: 2;
   font-size: 28px; color: var(--accent-cyan);
-  transition: transform var(--dur-fast) var(--ease-snap);
+  text-shadow: 0 0 8px rgba(34,211,238,.55);
+  transition: transform var(--dur-fast) var(--ease-snap),
+              text-shadow var(--dur-fast) var(--ease-snap);
 }
-.kb-run-primary:hover .kb-rp-arrow { transform: translateX(4px); }
+.kb-run-primary:hover .kb-rp-arrow {
+  transform: translateX(4px);
+  text-shadow: 0 0 14px rgba(34,211,238,.85);
+}
 .kb-run-primary.is-disabled {
   opacity: .55; border-color: var(--line-bright); box-shadow: none; background: var(--bg-1);
   cursor: default;
 }
 .kb-run-primary.is-disabled .kb-rp-label { color: var(--fg-1); text-shadow: none; }
 .kb-run-primary.is-disabled .kb-rp-top { color: var(--fg-2); }
-.kb-run-primary.is-disabled .kb-rp-arrow { color: var(--fg-2); }
+.kb-run-primary.is-disabled .kb-rp-arrow { color: var(--fg-2); text-shadow: none; }
+.kb-run-primary.is-disabled::after { display: none; }
 
 /* Overclock — post-quota bonus sortie. Deliberately under-powered: the HOT
    challenge tile should read as the bigger reward after the daily is done,

@@ -35,6 +35,10 @@ const RunPrimary = ({ state, deck, onRun }) => {
     + (disabled     ? ' is-disabled'     : '')
     + (overachiever ? ' is-overachiever' : '');
 
+  // Cornered HUD brackets only on the regular daily CTA — they'd clash with
+  // the overclock tile's chaotic radial-gradient halo.
+  const showCorners = !disabled && !overachiever;
+
   return (
     <button
       className={cls}
@@ -42,7 +46,15 @@ const RunPrimary = ({ state, deck, onRun }) => {
       data-screen-label={overachiever ? 'run-primary-overclock' : 'run-primary'}
       data-overachiever={overachiever ? 'true' : undefined}
     >
-      <div>
+      {showCorners && (
+        <>
+          <span className="kb-rp-corner tl" aria-hidden>◤</span>
+          <span className="kb-rp-corner tr" aria-hidden>◥</span>
+          <span className="kb-rp-corner bl" aria-hidden>◣</span>
+          <span className="kb-rp-corner br" aria-hidden>◢</span>
+        </>
+      )}
+      <div className="kb-rp-body">
         <div className="kb-rp-top">{topLabel}</div>
         <div className="kb-rp-label" data-text={label}>{label}</div>
         <div className="kb-rp-sub">{subCopy}</div>
