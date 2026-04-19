@@ -115,27 +115,34 @@ const Countdown = ({ state }) => {
   );
 };
 
-const DuePanel = ({ state }) => {
+const DuePanel = ({ state, dueCount }) => {
   const conf = {
     fresh: { count: 42, unit: 'due', segs: [1,1,1,1,1,1,0,0,0,0,0,0], sub: 'new 8 · review 34 · leech 3', cls: 'cyan' },
-    clear: { count: 0, unit: 'due', segs: [], sub: 'queue clear. next drop 07:14:33', cls: 'dim' },
+    clear: { count: 0,  unit: 'due', segs: [], sub: 'queue clear. next drop 07:14:33', cls: 'dim' },
     behind: { count: 180, unit: 'overdue', segs: Array(12).fill(1), sub: 'new 22 · review 141 · leech 17', cls: 'amber' },
   }[state] || { count: 42, unit: 'due', segs: [1,1,1,1,1,1,0,0,0,0,0,0], sub: 'new 8 · review 34 · leech 3', cls: 'cyan' };
+
+  const realCount = dueCount !== null ? dueCount : conf.count;
+  const realCls   = realCount === 0 ? 'dim' : realCount > 100 ? 'amber' : 'cyan';
+  const filledSegs = Math.round((realCount / Math.max(realCount, 42)) * 12);
+  const realSegs   = dueCount !== null
+    ? Array.from({length: 12}, (_, i) => i < filledSegs ? 1 : 0)
+    : conf.segs;
 
   return (
     <div className="kb-due" data-screen-label="due-panel">
       <div className="kb-due-head">
         <span className="kb-due-lbl">▸ DAILY QUEUE</span>
-        <span className="kb-due-lbl">{state === 'behind' ? 'amber' : state === 'clear' ? 'clear' : 'green'}</span>
+        <span className="kb-due-lbl">{realCount === 0 ? 'clear' : realCount > 100 ? 'amber' : 'green'}</span>
       </div>
-      <div className={`kb-due-count ${conf.cls}`}>
-        {conf.count}<span className="unit">{conf.unit}</span>
+      <div className={`kb-due-count ${realCls}`}>
+        {realCount}<span className="unit">{conf.unit}</span>
       </div>
-      <div className="kb-due-sub">{conf.sub}</div>
+      <div className="kb-due-sub">{dueCount !== null ? `${realCount} cards due now` : conf.sub}</div>
       <div className="kb-due-seg">
         {Array.from({length: 12}).map((_, i) => {
-          const filled = conf.segs[i];
-          const isAmber = state === 'behind' && filled;
+          const filled = realSegs[i];
+          const isAmber = realCls === 'amber' && filled;
           return <div key={i} className={`kb-due-seg-s${filled ? (isAmber ? ' is-amber' : ' is-filled') : ''}`} />;
         })}
       </div>
@@ -143,9 +150,9 @@ const DuePanel = ({ state }) => {
   );
 };
 
-const StreakPanel = ({ state }) => {
-  const days = state === 'behind' ? 0 : state === 'clear' ? 12 : 12;
-  const best = 28;
+const StreakPanel = ({ state, streak, bestStreak }) => {
+  const days = streak !== undefined ? streak : (state === 'behind' ? 0 : 12);
+  const best = bestStreak !== undefined ? bestStreak : 28;
   return (
     <div className="kb-streak" data-screen-label="streak-panel">
       <div className="kb-streak-flame">

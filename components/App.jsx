@@ -15,7 +15,57 @@ const VARIANTS = [
   { id: 'game', label: 'GAME' },
 ];
 
-const Topbar = ({ state }) => {
+const FirstRunModal = ({ onDone }) => {
+  const [name, setName] = React.useState('');
+  const submit = (e) => {
+    e.preventDefault();
+    const n = name.trim() || 'Operator';
+    window.DB.createUser(n).then(() => onDone(n));
+  };
+  return (
+    <div style={{
+      position:'fixed', inset:0, zIndex:200,
+      background:'rgba(10,14,20,.92)', backdropFilter:'blur(4px)',
+      display:'flex', alignItems:'center', justifyContent:'center',
+    }}>
+      <div style={{
+        background:'var(--bg-1)', border:'1px solid var(--accent-cyan)',
+        padding:'32px 28px', maxWidth:340, width:'90%',
+        boxShadow:'0 0 40px rgba(0,229,255,.2)',
+        fontFamily:'var(--font-mono)',
+      }}>
+        <div style={{color:'var(--accent-cyan)',fontSize:11,letterSpacing:'.15em',marginBottom:20}}>
+          ▸ FIRST BOOT // initialize operator
+        </div>
+        <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:12}}>
+          <input
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="operator name"
+            autoFocus
+            maxLength={24}
+            style={{
+              background:'var(--bg-0)', border:'1px solid var(--accent-cyan)',
+              color:'var(--fg-0)', padding:'10px 12px',
+              fontFamily:'var(--font-mono)', fontSize:14,
+              outline:'none', letterSpacing:'.05em',
+            }}
+          />
+          <button type="submit" style={{
+            background:'var(--accent-cyan)', border:'none',
+            color:'var(--bg-0)', padding:'10px', fontFamily:'var(--font-mono)',
+            fontSize:12, letterSpacing:'.15em', textTransform:'uppercase',
+            cursor:'pointer', fontWeight:700,
+          }}>
+            INITIALIZE
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const Topbar = ({ state, displayName }) => {
   const [time, setTime] = React.useState(() => new Date());
   React.useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 10000);
@@ -27,23 +77,22 @@ const Topbar = ({ state }) => {
       <div className="kb-wm">kanji-buddy</div>
       <div className="kb-top-right">
         <span className="kb-hb">LIVE</span>
-        <span>OPFS</span>
+        <span style={{color:'var(--fg-2)'}}>{displayName || '—'}</span>
         <span>{hhmm}</span>
       </div>
     </header>
   );
 };
 
-const StatusBar = ({ state }) => {
-  const due = state === 'clear' ? 0 : state === 'behind' ? 180 : 42;
+const StatusBar = ({ state, dueCount }) => {
+  const due = dueCount !== null ? dueCount : (state === 'clear' ? 0 : state === 'behind' ? 180 : 42);
+  const cls = due === 0 ? 'kb-dim' : due > 100 ? 'kb-amb' : 'kb-cyan';
   return (
     <footer className="kb-statusbar">
       <div className="kb-statusbar-l">
         <span>STACK · <b>3</b></span>
         <span>CARDS · <b>4,821</b></span>
-        <span className={state==='behind'?'kb-amb':(state==='clear'?'kb-dim':'kb-cyan')}>
-          DUE · <b>{due}</b>
-        </span>
+        <span className={cls}>DUE · <b>{due}</b></span>
       </div>
       <span>v0.3.1</span>
     </footer>
@@ -106,6 +155,33 @@ const App = () => {
   });
   const [tweaksOpen, setTweaksOpen] = React.useState(false);
   const [editMode, setEditMode] = React.useState(false);
+  const [user, setUser] = React.useState(null);
+  const [userLoaded, setUserLoaded] = React.useState(false);
+  const [dueCount, setDueCount] = React.useState(null);
+  const [deckChoice, setDeckChoice] = React.useState(null); // null | 'imported' | 'bundled'
+
+  React.useEffect(() => {
+    if (!window.DB) { setUserLoaded(true); return; }
+    window.DB.open()
+      .then(() => window.DB.getUser())
+      .then(u => {
+        setUser(u);
+        setUserLoaded(true);
+        if (u?.settings?.deckChoice) setDeckChoice(u.settings.deckChoice);
+      })
+      .catch(() => setUserLoaded(true));
+    window.DB.getDueCards()
+      .then(cards => setDueCount(cards.length))
+      .catch(() => {});
+  }, []);
+
+  const onDeckImportDone = (choice) => {
+    setDeckChoice(choice);
+    // refresh due count after import
+    if (window.DB) {
+      window.DB.getDueCards().then(c => setDueCount(c.length)).catch(() => {});
+    }
+  };
 
   React.useEffect(() => {
     document.body.dataset.accent = tweaks.accent;
@@ -174,8 +250,14 @@ const App = () => {
 
   return (
     <>
+      {userLoaded && !user && (
+        <FirstRunModal onDone={(name) => setUser({ display_name: name })} />
+      )}
+      {userLoaded && user && !deckChoice && window.DeckImport && (
+        <DeckImport onDone={onDeckImportDone} />
+      )}
       <div className={variantClass}>
-        <Topbar state={tweaks.state} />
+        <Topbar state={tweaks.state} displayName={user?.display_name} />
         <VariantTabs variant={tweaks.variant} onSet={(v) => setTweak('variant', v)} />
 
         <main className="kb-main" data-screen-label={`home-${tweaks.variant}`}>
@@ -184,8 +266,8 @@ const App = () => {
           <Countdown state={tweaks.state} />
 
           <div className="kb-stats-row">
-            <DuePanel state={tweaks.state} />
-            <StreakPanel state={tweaks.state} />
+            <DuePanel state={tweaks.state} dueCount={dueCount} />
+            <StreakPanel state={tweaks.state} streak={user?.current_streak} bestStreak={user?.best_streak} />
           </div>
 
           {tweaks.variant === 'game' && <XpBar />}
@@ -205,7 +287,7 @@ const App = () => {
           <div style={{height: 8}} />
         </main>
 
-        <StatusBar state={tweaks.state} />
+        <StatusBar state={tweaks.state} dueCount={dueCount} />
       </div>
 
       {/* Floating Tweaks toggle (only shows when host edit mode off, to preview) */}

@@ -134,6 +134,26 @@ const TimeAttackApp = ({ cards }) => {
   const questionStart = React.useRef(null);
   const lockedRef = React.useRef(false);
 
+  // save score + session to DB when game ends
+  React.useEffect(() => {
+    if (phase !== 'end' || !window.DB) return;
+    window.DB.saveScore({
+      mode: 'time_attack',
+      score,
+      tier: pickTier(score).id,
+      duration_s: tweaks.duration,
+    }).catch(() => {});
+    window.DB.saveSession({
+      mode: 'time_attack',
+      duration_s: tweaks.duration,
+      cards_reviewed: hits + misses,
+      hits,
+      misses,
+      hard: 0,
+      xp_earned: score * 10,
+    }).then(() => window.DB.recordSessionStreak()).catch(() => {});
+  }, [phase]);
+
   // persist tweaks
   React.useEffect(() => {
     document.body.dataset.accent = tweaks.accent;

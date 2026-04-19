@@ -1,0 +1,10 @@
+# Archive deck source — imported via browser, not needed in repo
+uploads/*.zip
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
