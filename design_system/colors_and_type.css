@@ -1,0 +1,250 @@
+/* ============================================================
+   Kanji-buddy Design System
+   colors_and_type.css — foundation tokens + semantic mappings
+   ============================================================ */
+
+/* Google Fonts fallbacks — see fonts/README.md for substitution notes */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&display=swap');
+
+:root {
+  /* ---------- Color: base palette ---------- */
+  --bg-0: #0a0e14;             /* page background, near-black cool */
+  --bg-1: #0e1420;             /* elevated panel / card */
+  --bg-2: #141c2b;             /* hover surface, inputs */
+  --bg-3: #1a2435;             /* pressed surface */
+  --bg-scrim: rgba(10, 14, 20, 0.88);
+
+  --fg-0: #e6edf3;             /* primary foreground (bone, not white) */
+  --fg-1: #aab4c2;             /* secondary text, meta */
+  --fg-2: #6b7686;             /* tertiary, disabled-ish */
+  --fg-3: #3a4553;             /* quaternary — barely visible */
+
+  --line-dim: #1e2838;         /* default 1px border */
+  --line-med: #2a3647;         /* separators */
+  --line-bright: #44526b;      /* emphasised divider */
+
+  /* ---------- Color: brand accents ---------- */
+  --accent-cyan: #22d3ee;      /* primary action, active state, HIT */
+  --accent-cyan-dim: #0891a8;
+  --accent-cyan-bg: rgba(34, 211, 238, 0.08);
+
+  --accent-magenta: #ff3dff;   /* destructive, reading highlight */
+  --accent-magenta-dim: #c21fd1;
+  --accent-magenta-bg: rgba(255, 61, 255, 0.08);
+
+  --accent-amber: #f5a524;     /* due-now, partial correct */
+  --accent-amber-bg: rgba(245, 165, 36, 0.12);
+
+  --accent-lime: #a3e635;      /* streak / bonus — rare use */
+
+  /* ---------- Color: semantic ---------- */
+  --success: var(--accent-cyan);
+  --warning: var(--accent-amber);
+  --danger:  #ff5c6a;
+  --danger-bg: rgba(255, 92, 106, 0.10);
+  --info:    #8ab4ff;
+
+  /* ---------- Overlays & textures ---------- */
+  --grid-overlay:
+    repeating-linear-gradient(0deg,  rgba(255,255,255,0.025) 0 1px, transparent 1px 40px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 40px);
+  --scanline-overlay:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 3px);
+
+  /* ---------- Spacing (4px base grid) ---------- */
+  --sp-0: 0;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-20: 80px;
+
+  /* ---------- Radii (angular by default) ---------- */
+  --r-0: 0;
+  --r-1: 2px;
+  --r-2: 4px;
+
+  /* ---------- Borders ---------- */
+  --bw-1: 1px;
+  --bw-2: 2px;
+
+  /* ---------- Glow system (shadows are glow, not drop) ---------- */
+  --glow-cyan:    0 0 0 1px #22d3ee, 0 0 12px rgba(34, 211, 238, 0.35);
+  --glow-cyan-sm: 0 0 0 1px #22d3ee, 0 0 6px  rgba(34, 211, 238, 0.25);
+  --glow-magenta: 0 0 0 1px #ff3dff, 0 0 12px rgba(255, 61, 255, 0.35);
+  --glow-amber:   0 0 0 1px #f5a524, 0 0 10px rgba(245, 165, 36, 0.30);
+  --glow-danger:  0 0 0 1px #ff5c6a, 0 0 10px rgba(255, 92, 106, 0.30);
+  --glow-text-cyan: 0 0 6px rgba(34, 211, 238, 0.55);
+
+  /* ---------- Motion ---------- */
+  --ease-snap:  cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out:   cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-in:    cubic-bezier(0.32, 0, 0.67, 0);
+  --dur-fast:   120ms;
+  --dur-base:   200ms;
+  --dur-slow:   320ms;
+
+  /* ---------- Type: families ---------- */
+  --font-mono:       'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+  --font-jp-serif:   'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  --font-jp-sans:    'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+  --font-ui:         var(--font-mono);   /* mono is our body font too */
+
+  /* ---------- Type: scale ---------- */
+  --fs-10: 10px;    /* micro — labels, chips */
+  --fs-11: 11px;    /* uppercase section labels */
+  --fs-12: 12px;    /* meta, timestamps */
+  --fs-13: 13px;    /* table rows, dense ui */
+  --fs-14: 14px;    /* body default */
+  --fs-16: 16px;    /* emphasis body, inputs */
+  --fs-18: 18px;    /* h4 */
+  --fs-22: 22px;    /* h3 */
+  --fs-28: 28px;    /* h2 */
+  --fs-36: 36px;    /* h1 */
+  --fs-56: 56px;    /* display */
+  --fs-kanji-md: 120px;
+  --fs-kanji-lg: 240px;
+  --fs-kanji-xl: 320px;
+
+  /* ---------- Type: weights ---------- */
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-bold:    700;
+
+  /* ---------- Type: line-height ---------- */
+  --lh-tight: 1.1;
+  --lh-snug:  1.25;
+  --lh-base:  1.55;
+
+  /* ---------- Layout ---------- */
+  --maxw-content: 1200px;
+  --w-sidebar:    240px;
+  --h-topbar:     48px;
+  --h-statusbar:  28px;
+
+  /* ---------- z-index ---------- */
+  --z-overlay: 50;
+  --z-modal:   60;
+  --z-toast:   70;
+}
+
+/* ============================================================
+   Semantic element defaults
+   ============================================================ */
+
+html, body {
+  background: var(--bg-0);
+  color: var(--fg-0);
+  font-family: var(--font-ui);
+  font-size: var(--fs-14);
+  line-height: var(--lh-base);
+  font-weight: var(--fw-regular);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+::selection {
+  background: var(--accent-cyan);
+  color: var(--bg-0);
+}
+
+h1, .h1 {
+  font-family: var(--font-mono);
+  font-size: var(--fs-36);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+h2, .h2 {
+  font-family: var(--font-mono);
+  font-size: var(--fs-28);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  margin: 0;
+}
+h3, .h3 {
+  font-family: var(--font-mono);
+  font-size: var(--fs-22);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-snug);
+  margin: 0;
+}
+h4, .h4 {
+  font-family: var(--font-mono);
+  font-size: var(--fs-18);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-snug);
+  margin: 0;
+}
+
+p {
+  margin: 0 0 var(--sp-4) 0;
+  color: var(--fg-0);
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  font-weight: var(--fw-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-1);
+}
+
+.meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  color: var(--fg-2);
+  letter-spacing: 0.02em;
+}
+
+.kanji {
+  font-family: var(--font-jp-serif);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+}
+.kanji-lg { font-size: var(--fs-kanji-lg); }
+.kanji-xl { font-size: var(--fs-kanji-xl); }
+.reading {
+  font-family: var(--font-jp-sans);
+  color: var(--accent-magenta);
+  font-weight: var(--fw-regular);
+}
+
+code, .code, kbd {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--bg-2);
+  border: 1px solid var(--line-dim);
+  padding: 1px 6px;
+  border-radius: var(--r-1);
+  color: var(--accent-cyan);
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-dim);
+  margin: var(--sp-6) 0;
+}
+
+a {
+  color: var(--accent-cyan);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--line-med);
+  transition: color var(--dur-fast) var(--ease-snap), border-color var(--dur-fast) var(--ease-snap);
+}
+a:hover { color: #fff; border-bottom-color: var(--accent-cyan); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
