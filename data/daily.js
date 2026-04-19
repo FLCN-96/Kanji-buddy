@@ -116,15 +116,19 @@
   // Brand-new users (no card_states): just the first MIN_POOL_DEFAULT
   // cards, so games still have enough material to deal a question.
   //
+  // Pool sizing: defaults are tuned so a fast 120s TimeAttack (≈100
+  // questions at 1.2s/each) doesn't exhaust the pool and start
+  // repeating cards. Match and Survival benefit from the headroom too.
+  //
   // Options:
-  //   minPool      floor for the returned pool (default 40)
-  //   frontier     upcoming-new cards to include (default 30)
+  //   minPool      floor for the returned pool (default 150)
+  //   frontier     upcoming-new cards to include (default 80)
   //   jlpt         restrict the result to a specific JLPT tier (used
   //                by Survival's depth scaffolding)
   // ──────────────────────────────────────────────────────────────
 
-  const MIN_POOL_DEFAULT = 40;
-  const FRONTIER_DEFAULT = 30;
+  const MIN_POOL_DEFAULT = 150;
+  const FRONTIER_DEFAULT = 80;
 
   function nearUserPool(cards, cardStates, opts) {
     const o = opts || {};
