@@ -173,6 +173,57 @@ const FirstRunModal = ({ onDone }) => {
   );
 };
 
+// Three states the streak can be in:
+//   hot    — last session was TODAY → streak is live and already counted.
+//            Particulate sparks render to celebrate it.
+//   cold   — last session was YESTERDAY and streak ≥ 1 → still alive but
+//            today's activity hasn't been recorded yet. Dim, no sparks,
+//            tooltip nudges the user to keep it.
+//   broken — last session ≥ 2 days ago, or streak === 0 → next session
+//            will reset. Red error glow, count shown crossed-out.
+//   fresh  — brand-new user with no sessions on file. Quiet.
+const computeStreakState = (user) => {
+  const days = user?.current_streak ?? 0;
+  const lastIso = user?.last_session_date;
+  if (!lastIso && days === 0) return { state: 'fresh', days: 0 };
+  const last = new Date(lastIso); last.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  if (last.getTime() === today.getTime())     return { state: 'hot',    days };
+  if (last.getTime() === yesterday.getTime() && days >= 1) return { state: 'cold', days };
+  return { state: 'broken', days };
+};
+
+const StreakChip = ({ user }) => {
+  const { state, days } = computeStreakState(user);
+  if (state === 'fresh') {
+    return (
+      <span className="kb-streak-chip is-fresh" title="no streak yet · finish today's daily run to start one">
+        <span className="kb-streak-chip-icon" aria-hidden>·</span>
+        <span className="kb-streak-chip-num">START</span>
+      </span>
+    );
+  }
+  const meta = {
+    hot:    { icon: '▲', cls: 'is-hot',    title: `${days}-day streak · counted for today` },
+    cold:   { icon: '·', cls: 'is-cold',   title: `${days}-day streak · do today's run before midnight to keep it` },
+    broken: { icon: '✕', cls: 'is-broken', title: `${days}-day streak broken · next session resets to 1` },
+  }[state];
+  return (
+    <span className={`kb-streak-chip ${meta.cls}`} title={meta.title}>
+      <span className="kb-streak-chip-icon" aria-hidden>{meta.icon}</span>
+      <span className="kb-streak-chip-num">{days}d</span>
+      {state === 'hot' && (
+        <>
+          <span className="kb-streak-spark" style={{'--sx': '14%', '--sd': '0s'}}   aria-hidden />
+          <span className="kb-streak-spark" style={{'--sx': '52%', '--sd': '.9s'}}  aria-hidden />
+          <span className="kb-streak-spark" style={{'--sx': '82%', '--sd': '1.7s'}} aria-hidden />
+        </>
+      )}
+    </span>
+  );
+};
+
 const Topbar = ({ displayName, user }) => {
   const [time, setTime] = React.useState(() => new Date());
   const [wm, typing]    = useGreeting(user);
@@ -185,7 +236,7 @@ const Topbar = ({ displayName, user }) => {
     <header className={`kb-top${typing ? ' is-greeting' : ''}`}>
       <div className={`kb-wm${typing ? ' is-typing' : ''}`}>{wm}</div>
       <div className="kb-top-right" aria-hidden={typing ? 'true' : undefined}>
-        <span className="kb-hb">LIVE</span>
+        <StreakChip user={user} />
         <span style={{color:'var(--fg-2)'}}>{displayName || '—'}</span>
         <span>{hhmm}</span>
         <a href="Settings.html" className="kb-top-cog" aria-label="settings">⚙</a>
@@ -194,16 +245,13 @@ const Topbar = ({ displayName, user }) => {
   );
 };
 
-const StatusBar = ({ totalCards, dueCount, streak }) => {
+const StatusBar = ({ totalCards, dueCount }) => {
   const due = dueCount ?? 0;
   const dueCls = due === 0 ? 'kb-dim' : due > 100 ? 'kb-amb' : 'kb-cyan';
-  const days = streak ?? 0;
-  const streakCls = days > 0 ? 'kb-amb' : 'kb-dim';
   return (
     <footer className="kb-statusbar">
       <div className="kb-statusbar-l">
         <span>CARDS · <b>{totalCards ? totalCards.toLocaleString() : '—'}</b></span>
-        <span className={streakCls}>STREAK · <b>{days}d</b></span>
         <span className={dueCls}>DUE · <b>{due}</b></span>
       </div>
       <span>v0.3.1</span>
@@ -373,7 +421,7 @@ const App = ({ cards }) => {
           <div style={{height: 8}} />
         </main>
 
-        <StatusBar totalCards={cards?.length} dueCount={dueCount} streak={user?.current_streak} />
+        <StatusBar totalCards={cards?.length} dueCount={dueCount} />
       </div>
     </>
   );
