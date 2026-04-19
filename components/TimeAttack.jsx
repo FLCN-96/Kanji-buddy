@@ -13,9 +13,10 @@ const TWEAK_DEFAULTS_TA = {
 // single-highest combo tier keeps late-run combos meaningful without
 // stacking. PB and clean-sweep are completion rewards.
 const TA_XP_HIT = 4;
-const TA_XP_MISS = -1;
+const TA_XP_MISS = -2;
 const TA_XP_PB = 30;
 const TA_XP_CLEAN = 25;
+const TA_MISS_PENALTY_MS = 3000;
 const taComboTier = (maxCombo) =>
   maxCombo >= 20 ? 40 :
   maxCombo >= 15 ? 25 :
@@ -266,8 +267,7 @@ const TimeAttackApp = ({ cards }) => {
       setCombo(0);
       setGlitch(true);
       setTimeout(() => setGlitch(false), 360);
-      // -1s penalty
-      setEndAt(e => e == null ? e : e - 1000);
+      setEndAt(e => e == null ? e : e - TA_MISS_PENALTY_MS);
     }
 
     // advance after short reveal
@@ -327,7 +327,7 @@ const TimeAttackApp = ({ cards }) => {
               pb={prevPb}
             />
           )}
-          {phase === 'ready' && <TAReady n={countdown} variant={tweaks.countdown} onVariant={(v) => setTweak('countdown', v)} />}
+          {phase === 'ready' && <TAReady n={countdown} variant={tweaks.countdown} />}
           {phase === 'play' && question && (
             <TAPlay
               q={question}
