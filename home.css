@@ -15,16 +15,6 @@ body {
   overscroll-behavior: none;
 }
 
-/* ---------- Accent-swap via data attribute ---------- */
-body[data-accent="dim"] {
-  --accent-cyan: #4ba6b8;
-  --accent-cyan-bg: rgba(75,166,184,0.10);
-  --accent-magenta: #c95a9e;
-  --accent-magenta-bg: rgba(201,90,158,0.10);
-  --glow-cyan: 0 0 0 1px #4ba6b8, 0 0 10px rgba(75,166,184,0.30);
-  --glow-magenta: 0 0 0 1px #c95a9e, 0 0 10px rgba(201,90,158,0.30);
-}
-
 /* ---------- Scanline overlay ---------- */
 body[data-scanlines="on"]::after {
   content: ''; position: fixed; inset: 0;

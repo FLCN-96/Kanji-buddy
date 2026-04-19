@@ -3,7 +3,6 @@
 // Correct = SAVED (locked). Wrong = LEAKED immediately. Decay timeout = LEAKED.
 
 const TWEAK_DEFAULTS_SG = {
-  accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
   countdown: 'dissolve',
@@ -110,7 +109,6 @@ const StreakGuardApp = ({ cards }) => {
   }, []);
 
   React.useEffect(() => {
-    document.body.dataset.accent = tweaks.accent;
     document.body.dataset.scanlines = tweaks.scanlines;
     document.body.dataset.density = tweaks.density;
   }, [tweaks]);

@@ -2,7 +2,6 @@
 // Wrong pair → -2s penalty. Speed bonus per match.
 
 const TWEAK_DEFAULTS_MT = {
-  accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
   countdown: 'dissolve',
@@ -152,7 +151,6 @@ const MatchApp = ({ cards }) => {
   }, []);
 
   React.useEffect(() => {
-    document.body.dataset.accent = tweaks.accent;
     document.body.dataset.scanlines = tweaks.scanlines;
     document.body.dataset.density = tweaks.density;
   }, [tweaks]);

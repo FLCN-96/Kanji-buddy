@@ -9,12 +9,6 @@ body {
   overflow-x: hidden;
   overscroll-behavior: none;
 }
-body[data-accent="dim"] {
-  --accent-cyan: #4ba6b8;
-  --accent-cyan-bg: rgba(75,166,184,0.10);
-  --accent-magenta: #c95a9e;
-  --accent-magenta-bg: rgba(201,90,158,0.10);
-}
 body[data-scanlines="on"]::after {
   content: ''; position: fixed; inset: 0;
   background:

@@ -1,7 +1,6 @@
 // Settings — display name + appearance preferences. Writes to localStorage and DB.
 
 const TWEAK_DEFAULTS = {
-  accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
   hero: 'on',
@@ -15,7 +14,6 @@ const readTweaks = () => {
 };
 
 const applyBodyDataset = (tw) => {
-  document.body.dataset.accent = tw.accent;
   document.body.dataset.scanlines = tw.scanlines;
   document.body.dataset.density = tw.density;
   document.body.dataset.hero = tw.hero;
@@ -352,8 +350,6 @@ const Settings = () => {
 
         <section className="kb-set-section">
           <div className="kb-set-section-head">▸ APPEARANCE</div>
-          <OptRow label="ACCENT" value={tweaks.accent} onSet={setKey('accent')}
-            options={[{id:'cyan',label:'cyan+mag'},{id:'dim',label:'teal+rose'}]} />
           <OptRow label="SCANLINES" value={tweaks.scanlines} onSet={setKey('scanlines')}
             options={[{id:'off',label:'off'},{id:'on',label:'on'}]} />
           <OptRow label="DENSITY" value={tweaks.density} onSet={setKey('density')}
