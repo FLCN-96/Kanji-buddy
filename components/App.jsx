@@ -213,6 +213,7 @@ const App = ({ cards }) => {
   const [user, setUser] = React.useState(null);
   const [userLoaded, setUserLoaded] = React.useState(false);
   const [deck, setDeck] = React.useState(null);       // {new, due, leech, total} — today's Run preview
+  const [reviewedToday, setReviewedToday] = React.useState(0); // intraday progress for the queue bar
   const [dueCount, setDueCount] = React.useState(null); // raw SRS backlog for StatusBar
   const [promotion, setPromotion] = React.useState(null);
 
@@ -246,13 +247,14 @@ const App = ({ cards }) => {
       .then(() => window.DB.getAllCardStates())
       .then(states => {
         const todayStr = new Date().toDateString();
-        const reviewedToday = states.filter(s =>
+        const reviewed = states.filter(s =>
           s.last_reviewed && new Date(s.last_reviewed).toDateString() === todayStr
         ).length;
+        setReviewedToday(reviewed);
 
         // Gate: once today's quota is met, queue is clear until next midnight —
         // prevents the ~2000-card "new" pool from endlessly refilling the panel.
-        const dailyDone = reviewedToday >= window.Daily.DECK_SIZE;
+        const dailyDone = reviewed >= window.Daily.DECK_SIZE;
         const picks = dailyDone ? [] : window.Daily.selectDailyDeck(cards, states);
         setDeck({
           new:   picks.filter(c => c._bucket === 'new').length,
@@ -346,7 +348,7 @@ const App = ({ cards }) => {
           <Countdown state={state} />
 
           <div className="kb-stats-row">
-            <DuePanel state={state} deck={deck} />
+            <DuePanel state={state} deck={deck} reviewedToday={reviewedToday} />
             <StreakPanel state={state} streak={user?.current_streak} bestStreak={user?.best_streak} />
           </div>
 
