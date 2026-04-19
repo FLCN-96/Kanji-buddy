@@ -25,19 +25,11 @@ function buildLeeches(cards, n, cardStates) {
     .slice(0, n);
 
   const realLeeches = realStates.map((state, i) => {
-    const card    = byIdx.get(state.idx);
-    const lapses  = state.lapses  || 0;
-    const reviews = state.reviews || 0;
-    const total   = Math.max(1, lapses + reviews);
-    const missRate = lapses / total;
-    const history = Array.from({length: 8}, () => Math.random() < missRate ? 'x' : 'o');
-    // These ARE leeches — guarantee at least one visible miss in the history.
-    if (!history.includes('x')) history[Math.floor(Math.random() * 8)] = 'x';
+    const card = byIdx.get(state.idx);
     return {
       id: `leech-${i}`,
       card,
-      contamination: missRate,
-      history,
+      lapses: state.lapses || 0,
       status: 'pending', // pending | active | purged | weakened | survived
       cleansed: 0,
       firstTry: true,
@@ -62,25 +54,15 @@ function buildLeeches(cards, n, cardStates) {
   const scored = pool.map(c => ({ c, s: Math.random() + (5 - c.jlpt) * 0.2 }));
   scored.sort((a, b) => b.s - a.s);
 
-  const synthetic = scored.slice(0, needed).map((x, i) => {
-    const card = x.c;
-    const contamination = 0.58 + Math.random() * 0.32;
-    const history = Array.from({length: 8}, () => Math.random() < contamination ? 'x' : 'o');
-    while (history.filter(h => h === 'x').length < 4) {
-      const j = Math.floor(Math.random() * 8);
-      history[j] = 'x';
-    }
-    return {
-      id: `leech-${realLeeches.length + i}`,
-      card,
-      contamination,
-      history,
-      status: 'pending',
-      cleansed: 0,
-      firstTry: true,
-      synthetic: true,
-    };
-  });
+  const synthetic = scored.slice(0, needed).map((x, i) => ({
+    id: `leech-${realLeeches.length + i}`,
+    card: x.c,
+    lapses: 0,
+    status: 'pending',
+    cleansed: 0,
+    firstTry: true,
+    synthetic: true,
+  }));
 
   return [...realLeeches, ...synthetic];
 }
