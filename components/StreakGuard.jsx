@@ -3,7 +3,6 @@
 // Correct = SAVED (locked). Wrong = LEAKED immediately. Decay timeout = LEAKED.
 
 const TWEAK_DEFAULTS_SG = {
-  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -278,7 +277,7 @@ const StreakGuardApp = ({ cards }) => {
 
   return (
     <>
-      <div className={`run-shell sg-shell variant-${tweaks.variant}`} data-phase={phase}>
+      <div className="run-shell sg-shell variant-game" data-phase={phase}>
         <SGTopbar saved={saved} leaked={leaked} atRisk={atRisk} onQuit={quit} />
 
         <main className="run-main sg-main" data-screen-label={`sg-${phase}`}>

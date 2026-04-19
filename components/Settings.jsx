@@ -1,8 +1,6 @@
 // Settings — display name + appearance preferences. Writes to localStorage and DB.
 
-const TWEAK_KEYS = ['variant', 'accent', 'scanlines', 'density', 'hero'];
 const TWEAK_DEFAULTS = {
-  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -309,7 +307,7 @@ const Settings = () => {
 
   const resetDefaults = () => setTweaks({ ...TWEAK_DEFAULTS });
 
-  const variantClass = `kb-shell variant-${tweaks.variant}`;
+  const variantClass = 'kb-shell variant-game';
 
   return (
     <div className={variantClass}>
@@ -345,8 +343,6 @@ const Settings = () => {
 
         <section className="kb-set-section">
           <div className="kb-set-section-head">▸ APPEARANCE</div>
-          <OptRow label="VARIANT" value={tweaks.variant} onSet={setKey('variant')}
-            options={[{id:'calm',label:'calm'},{id:'hud',label:'hud'},{id:'game',label:'game'}]} />
           <OptRow label="ACCENT" value={tweaks.accent} onSet={setKey('accent')}
             options={[{id:'cyan',label:'cyan+mag'},{id:'dim',label:'teal+rose'}]} />
           <OptRow label="SCANLINES" value={tweaks.scanlines} onSet={setKey('scanlines')}

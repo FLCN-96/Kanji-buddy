@@ -1,7 +1,6 @@
 // LeechHunt — 3-stage cleanse per leech. 8 leeches, 3-miss fail limit.
 
 const TWEAK_DEFAULTS_LH = {
-  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -388,7 +387,7 @@ const LeechHuntApp = ({ cards }) => {
 
   return (
     <>
-      <div className={`run-shell lh-shell variant-${tweaks.variant}`} data-phase={phase}>
+      <div className="run-shell lh-shell variant-game" data-phase={phase}>
         <LHTopbar purged={purged} total={roster.length || tweaks.leechCount} misses={misses} missCap={tweaks.missCap} onQuit={quit} />
 
         <main className="run-main lh-main" data-screen-label={`lh-${phase}`}>

@@ -1,8 +1,8 @@
 // Top-level home app — shell, topbar, dashboard
-// Appearance preferences (variant/accent/scanlines/density/hero) live in Settings.
+// Appearance preferences (accent/scanlines/density/hero) live in Settings.
+// The `game` visual variant is shipped — no alternates are user-selectable.
 
 const TWEAK_DEFAULTS = {
-  variant: 'game',
   accent: 'cyan',
   scanlines: 'off',
   density: 'comfortable',
@@ -323,7 +323,7 @@ const App = ({ cards }) => {
     });
   };
 
-  const variantClass = `kb-shell variant-${tweaks.variant}`;
+  const variantClass = 'kb-shell variant-game';
 
   return (
     <>
@@ -341,7 +341,7 @@ const App = ({ cards }) => {
       <div className={variantClass}>
         <Topbar displayName={user?.display_name} user={user} />
 
-        <main className="kb-main" data-screen-label={`home-${tweaks.variant}`}>
+        <main className="kb-main" data-screen-label="home">
           {tweaks.hero === 'on' && <Hero kanji={todayKanji} />}
 
           <Countdown state={state} />
@@ -351,7 +351,7 @@ const App = ({ cards }) => {
             <StreakPanel state={state} streak={user?.current_streak} bestStreak={user?.best_streak} />
           </div>
 
-          {tweaks.variant === 'game' && <XpBar xp={user?.total_xp ?? 0} />}
+          <XpBar xp={user?.total_xp ?? 0} />
 
           <div className="kb-section-head">
             <span className="kb-section-title">Primary run</span>
