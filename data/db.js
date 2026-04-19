@@ -105,6 +105,10 @@ const DB = {
     return rw('card_states', 'readonly', s => s.get(idx));
   },
 
+  getAllCardStates() {
+    return rw('card_states', 'readonly', s => s.getAll());
+  },
+
   upsertCardState(state) {
     return rw('card_states', 'readwrite', s => s.put(state));
   },

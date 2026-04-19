@@ -1,4 +1,8 @@
-const CACHE = 'kb-v5';
+// Service worker — stale-while-revalidate for source files so deploys
+// land on next visit without forcing cache-version bumps. Cache-first
+// for heavy/stable assets (cards.json, icons, manifest, fonts).
+
+const CACHE = 'kb-v6';
 const CDN_CACHE = 'kb-cdn-v1';
 
 const LOCAL_ASSETS = [
@@ -60,6 +64,12 @@ const CDN_ASSETS = [
   'https://unpkg.com/@babel/standalone@7.29.0/babel.min.js',
 ];
 
+// Patterns that should revalidate on every visit (source files — they
+// change whenever we deploy and we want that to land immediately).
+const REVALIDATE_RX = /\.(jsx?|css|html)$/;
+// Heavy/rarely-changing assets: cache-first is fine.
+const CACHE_FIRST_RX = /\.(json|svg|png|ico|webp|woff2?)$/;
+
 self.addEventListener('install', (e) => {
   e.waitUntil(
     Promise.all([
@@ -83,45 +93,58 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+const staleWhileRevalidate = (cacheName) => (request) =>
+  caches.open(cacheName).then(c =>
+    c.match(request).then(cached => {
+      const fresh = fetch(request).then(res => {
+        if (res.ok) c.put(request, res.clone());
+        return res;
+      }).catch(() => cached);
+      return cached || fresh;
+    })
+  );
+
+const cacheFirst = (cacheName) => (request) =>
+  caches.open(cacheName).then(c =>
+    c.match(request).then(cached => cached || fetch(request).then(res => {
+      if (res.ok) c.put(request, res.clone());
+      return res;
+    }))
+  );
+
 self.addEventListener('fetch', (e) => {
   const { request } = e;
+  if (request.method !== 'GET') return;
   const url = new URL(request.url);
 
-  // CDN: cache-first
+  // CDN libs — stable versioned URLs, cache-first is fine.
   if (CDN_ASSETS.includes(request.url)) {
-    e.respondWith(
-      caches.open(CDN_CACHE).then(c =>
-        c.match(request).then(cached => cached || fetch(request).then(res => {
-          c.put(request, res.clone());
-          return res;
-        }))
-      )
-    );
+    e.respondWith(cacheFirst(CDN_CACHE)(request));
     return;
   }
 
-  // Google Fonts: stale-while-revalidate
+  // Google Fonts — SWR.
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    e.respondWith(
-      caches.open(CACHE).then(c =>
-        c.match(request).then(cached => {
-          const fresh = fetch(request).then(res => { c.put(request, res.clone()); return res; });
-          return cached || fresh;
-        })
-      )
-    );
+    e.respondWith(staleWhileRevalidate(CACHE)(request));
     return;
   }
 
-  // Local assets: cache-first, fall back to network
-  if (url.origin === self.location.origin) {
-    e.respondWith(
-      caches.open(CACHE).then(c =>
-        c.match(request).then(cached => cached || fetch(request).then(res => {
-          if (res.ok) c.put(request, res.clone());
-          return res;
-        }))
-      )
-    );
+  if (url.origin !== self.location.origin) return;
+
+  const path = url.pathname;
+
+  // Navigations (HTML documents) — SWR so fresh deploys land next visit.
+  if (request.mode === 'navigate' || REVALIDATE_RX.test(path)) {
+    e.respondWith(staleWhileRevalidate(CACHE)(request));
+    return;
   }
+
+  // Heavy / rare: cache-first.
+  if (CACHE_FIRST_RX.test(path)) {
+    e.respondWith(cacheFirst(CACHE)(request));
+    return;
+  }
+
+  // Default: SWR.
+  e.respondWith(staleWhileRevalidate(CACHE)(request));
 });
