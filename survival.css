@@ -153,9 +153,11 @@
   transition: all var(--dur-fast) var(--ease-snap);
   text-shadow: 0 0 12px rgba(255,92,106,.5);
 }
-.sv-pre-start:hover {
-  box-shadow: 0 0 32px rgba(255,92,106,.6), inset 0 0 0 1px var(--danger);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .sv-pre-start:hover {
+    box-shadow: 0 0 32px rgba(255,92,106,.6), inset 0 0 0 1px var(--danger);
+    transform: translateY(-1px);
+  }
 }
 .variant-calm .sv-pre-start { box-shadow: none; text-shadow: none; background: var(--bg-1); border-width: 1px; }
 .sv-pre-start .arrow { font-size: 24px; }
@@ -349,21 +351,23 @@
   display: flex; align-items: center; gap: var(--sp-3);
   transition: all var(--dur-fast) var(--ease-snap);
 }
-.sv-tile:hover:not(:disabled) {
-  border-color: var(--accent-cyan); color: var(--accent-cyan);
-  box-shadow: 0 0 14px rgba(34,211,238,.35);
-  transform: translateY(-1px);
-}
-/* On a fresh question the pointer is often still over the just-clicked
-   position; suppress :hover until it moves so the new tile doesn't read as
-   the previous selection's lingering glow. */
-.sv-tiles.is-pristine .sv-tile:hover:not(:disabled) {
-  border-color: var(--line-bright); color: var(--fg-0);
-  box-shadow: none;
-  transform: none;
-}
-.sv-tiles.is-pristine .sv-tile:hover:not(:disabled) .sv-tile-key {
-  border-color: var(--line-bright); color: var(--fg-2);
+@media (hover: hover) {
+  .sv-tile:hover:not(:disabled) {
+    border-color: var(--accent-cyan); color: var(--accent-cyan);
+    box-shadow: 0 0 14px rgba(34,211,238,.35);
+    transform: translateY(-1px);
+  }
+  /* On a fresh question the pointer is often still over the just-clicked
+     position; suppress :hover until it moves so the new tile doesn't read as
+     the previous selection's lingering glow. */
+  .sv-tiles.is-pristine .sv-tile:hover:not(:disabled) {
+    border-color: var(--line-bright); color: var(--fg-0);
+    box-shadow: none;
+    transform: none;
+  }
+  .sv-tiles.is-pristine .sv-tile:hover:not(:disabled) .sv-tile-key {
+    border-color: var(--line-bright); color: var(--fg-2);
+  }
 }
 .sv-tile:disabled { cursor: default; }
 .sv-tile-key {
@@ -373,7 +377,9 @@
   border: 1px solid var(--line-bright);
   flex-shrink: 0;
 }
-.sv-tile:hover:not(:disabled) .sv-tile-key { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+@media (hover: hover) {
+  .sv-tile:hover:not(:disabled) .sv-tile-key { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+}
 .sv-tile-text { flex: 1; line-height: 1.25; }
 .sv-tile.is-kanji .sv-tile-text {
   font-family: var(--font-jp-serif); font-weight: 700;
