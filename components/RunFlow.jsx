@@ -55,7 +55,7 @@ const PreRun = ({ composition, onStart, isOverclock }) => {
         <div className="run-pre-title">{title}</div>
         {isOverclock && (
           <div className="run-pre-overclock-sub">
-            daily quota cleared · cooling compromised · extra cycle keeps cards fresh
+            daily quota cleared · extra intake still grades into SRS · future reviews will climb
           </div>
         )}
       </div>
@@ -64,7 +64,7 @@ const PreRun = ({ composition, onStart, isOverclock }) => {
         <div className="run-pre-overclock-callout">
           <div className="run-pre-overclock-callout-row is-meta">
             <span className="run-pre-overclock-tag is-meta">▸</span>
-            <span className="run-pre-overclock-msg">streak already locked in for today · this is pure practice</span>
+            <span className="run-pre-overclock-msg">streak already locked in for today · verdicts still grade · fresh new kanji ahead</span>
           </div>
         </div>
       )}
