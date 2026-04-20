@@ -74,7 +74,22 @@ Large (≈6.7 MB) bundled deck. Each card has `idx` (1-based, used as the card_s
 
 ### Service worker (`sw.js`)
 
-`kb-v11` cache. Source files (`.jsx`/`.css`/`.html`) use stale-while-revalidate so deploys land on the next visit without bumping the cache version. Heavy assets (`.json`/`.svg`/`.png`/`.woff2`) are cache-first. Bump `CACHE` only when you need to force eviction (e.g. removed assets or changed precache list).
+`kb-v21` cache. Source files (`.jsx`/`.css`/`.html`) use stale-while-revalidate so deploys land on the next visit without bumping the cache version. Heavy assets (`.json`/`.svg`/`.png`/`.woff2`) are cache-first. Bump `CACHE` only when you need to force eviction (e.g. removed assets or changed precache list).
+
+`version.json` is handled network-only by an explicit route — it **must never be cached** or the client-side handshake below breaks.
+
+### Version handshake + update banner (`data/version.js`, `version.json`)
+
+iOS Safari (especially in home-screen PWA mode) can pin stale JS/HTML in its caches long after the SW has refetched fresh bytes, and users have no clean way to clear it. The handshake solves this:
+
+1. `.github/workflows/main.yml` stamps the commit SHA into two places on every deploy: `version.json` at the site root, and the `SERVED_SHA` sentinel inside `data/version.js`.
+2. Whatever `version.js` the browser ends up running carries the SHA of the deploy **it** came from — stale or not.
+3. On boot and every 5 minutes (plus on `visibilitychange`), `version.js` fetches `./version.json?t=<ts>` with `cache: 'no-store'`. `sw.js` serves that route network-only so the answer is always the currently-live SHA.
+4. If `SERVED_SHA !== remote.sha`, the page is stale → banner fires. Clicking it unregisters every SW, deletes every Cache Storage bucket, and `location.replace`s to the current URL with an `?upd=<sha>` cache-buster. IndexedDB and `localStorage` are left untouched — user progress survives.
+
+Locally, `SERVED_SHA === 'dev'` short-circuits the check so the banner never fires during development. If you rename the sentinel, also update the `sed` step and its grep guard in the workflow.
+
+A secondary trigger (`watchSW`) surfaces the banner on SW `updatefound` → `installed` transitions for browsers where that path works reliably (desktop / Android). Either signal firing is enough to notify the user.
 
 ## Conventions
 
