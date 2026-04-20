@@ -6,6 +6,37 @@
 /* Google Fonts fallbacks — see fonts/README.md for substitution notes */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&display=swap');
 
+/* Cross-document view transitions for MPA navigation.
+   Supporting browsers snapshot the outgoing page and cross-fade into the new
+   one — unsupported browsers silently ignore these rules and fall back to
+   today's instant hop, so there is no regression. */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: kb-nav-out 120ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+::view-transition-new(root) {
+  animation: kb-nav-in 200ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+@keyframes kb-nav-out {
+  to { opacity: 0; transform: scale(0.985); filter: blur(2px); }
+}
+@keyframes kb-nav-in {
+  from { opacity: 0; transform: scale(1.015); filter: blur(4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 1ms;
+    animation-timing-function: linear;
+  }
+  @keyframes kb-nav-out { to { opacity: 0; transform: none; filter: none; } }
+  @keyframes kb-nav-in  { from { opacity: 0; transform: none; filter: none; } }
+}
+
 :root {
   /* ---------- Color: base palette ---------- */
   --bg-0: #0a0e14;             /* page background, near-black cool */
@@ -225,6 +256,13 @@ code, .code, kbd {
   padding: 1px 6px;
   border-radius: var(--r-1);
   color: var(--accent-cyan);
+}
+
+/* Touch devices (phones, tablets) don't have a physical keyboard — hide
+   keyboard-shortcut hints. Matches coarse-pointer + no-hover, which excludes
+   desktops and laptops (including touchscreen laptops that also report fine). */
+@media (hover: none) and (pointer: coarse) {
+  .kbd-hint { display: none; }
 }
 
 hr {

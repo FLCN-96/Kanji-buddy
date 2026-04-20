@@ -103,7 +103,7 @@ const MTPre = ({ pb, tweaks, onStart, onAxis }) => {
         <span className="arrow">◉</span>
       </button>
 
-      <div className="mt-pre-hint">
+      <div className="mt-pre-hint kbd-hint">
         <kbd>SPACE</kbd> start · <kbd>ESC</kbd> deselect / quit
       </div>
     </div>

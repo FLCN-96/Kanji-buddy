@@ -59,7 +59,7 @@ const SVPre = ({ pb, onStart, promptMode }) => {
       </button>
 
       <div className="sv-pre-hint">
-        <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> pick · <kbd>ESC</kbd> quit · promptmode · {promptMode}
+        <span className="kbd-hint"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> pick · <kbd>ESC</kbd> quit · </span>promptmode · {promptMode}
       </div>
     </div>
   );
