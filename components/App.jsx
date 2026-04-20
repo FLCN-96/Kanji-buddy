@@ -200,26 +200,53 @@ const StreakChip = ({ user }) => {
     return (
       <span className="kb-streak-chip is-fresh" title="no streak yet · finish today's daily run to start one">
         <span className="kb-streak-chip-icon" aria-hidden>·</span>
-        <span className="kb-streak-chip-num">START</span>
+        <span className="kb-streak-chip-lbl">start</span>
+        <span className="kb-streak-chip-num">—</span>
       </span>
     );
   }
+  // Hot visuals scale with streak length — a 2-day warmup should look
+  // different from a 30-day monster. `is-milestone` gates the shimmer
+  // sweep so early streaks feel earned when it eventually kicks in.
+  const milestone = state === 'hot' && days >= 7;
   const meta = {
-    hot:    { icon: '▲', cls: 'is-hot',    title: `${days}-day streak · counted for today` },
-    cold:   { icon: '·', cls: 'is-cold',   title: `${days}-day streak · do today's run before midnight to keep it` },
-    broken: { icon: '✕', cls: 'is-broken', title: `${days}-day streak broken · next session resets to 1` },
+    hot:    { icon: '火', cls: 'is-hot',    title: `${days}-day streak · counted for today` },
+    cold:   { icon: '·',  cls: 'is-cold',   title: `${days}-day streak · do today's run before midnight to keep it` },
+    broken: { icon: '✕',  cls: 'is-broken', title: `${days}-day streak broken · next session resets to 1` },
   }[state];
+  // Spark count tiers by streak length so the pill gets visibly busier
+  // as the run gets longer. Staggered delays so they don't fire in sync.
+  let sparks = [];
+  if (state === 'hot') {
+    const base = [
+      { sx: '14%', sd: '0s',    sv: '24px' },
+      { sx: '50%', sd: '1.1s',  sv: '28px' },
+      { sx: '82%', sd: '2.0s',  sv: '26px' },
+    ];
+    const extra = [
+      { sx: '30%', sd: '.6s',   sv: '30px' },
+      { sx: '68%', sd: '1.6s',  sv: '32px' },
+    ];
+    sparks = days >= 3 ? [...base, ...extra] : base;
+  }
   return (
-    <span className={`kb-streak-chip ${meta.cls}`} title={meta.title}>
+    <span
+      className={`kb-streak-chip ${meta.cls}${milestone ? ' is-milestone' : ''}`}
+      title={meta.title}
+    >
       <span className="kb-streak-chip-icon" aria-hidden>{meta.icon}</span>
-      <span className="kb-streak-chip-num">{days}d</span>
-      {state === 'hot' && (
-        <>
-          <span className="kb-streak-spark" style={{'--sx': '14%', '--sd': '0s'}}   aria-hidden />
-          <span className="kb-streak-spark" style={{'--sx': '52%', '--sd': '.9s'}}  aria-hidden />
-          <span className="kb-streak-spark" style={{'--sx': '82%', '--sd': '1.7s'}} aria-hidden />
-        </>
-      )}
+      <span className="kb-streak-chip-lbl">streak</span>
+      <span className="kb-streak-chip-num">
+        {days}<span className="kb-streak-chip-unit">d</span>
+      </span>
+      {sparks.map((s, i) => (
+        <span
+          key={i}
+          className="kb-streak-spark"
+          style={{'--sx': s.sx, '--sd': s.sd, '--sv': s.sv}}
+          aria-hidden
+        />
+      ))}
     </span>
   );
 };

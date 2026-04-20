@@ -97,13 +97,17 @@ body[data-scanlines="on"]::after {
   transition: color var(--dur-fast) var(--ease-snap), border-color var(--dur-fast) var(--ease-snap), transform .4s;
 }
 .kb-top-cog:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); transform: rotate(60deg); }
-/* Streak chip — header-right indicator, replacing the old LIVE pulse.
-   Three live states (hot/cold/broken) plus a quiet 'fresh' for new
-   operators. Hot animates a few sparks rising out of the pill. */
+/* Streak chip — header-right indicator replacing the old LIVE pulse.
+   Four states: hot (live, counted today), cold (still alive, today's
+   session pending), broken (chain snapped, next run resets), fresh
+   (brand-new operator). Hot tiers up visually with streak length:
+   sparks double at 3d, a slow ember shine sweeps across at the 7d
+   `is-milestone` mark — so a long run visibly earns its drama. */
 .kb-streak-chip {
   position: relative;
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 2px 8px;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px 3px 8px;
+  min-height: 22px;
   border: 1px solid currentColor;
   font-family: var(--font-mono); font-weight: 700;
   font-size: 10px; letter-spacing: .12em;
@@ -113,28 +117,98 @@ body[data-scanlines="on"]::after {
   cursor: default;
   transition: color var(--dur-fast) var(--ease-snap),
               border-color var(--dur-fast) var(--ease-snap),
-              text-shadow var(--dur-fast) var(--ease-snap);
+              text-shadow var(--dur-fast) var(--ease-snap),
+              box-shadow var(--dur-base) var(--ease-snap);
 }
 .kb-streak-chip-icon {
-  font-size: 10px;
+  font-family: var(--font-jp-serif);
+  font-size: 13px;
   line-height: 1;
+  display: inline-flex; align-items: center;
+  /* 火 sits a hair high in the serif — nudge it down so baselines line up */
+  transform: translateY(.5px);
+}
+.kb-streak-chip-lbl {
+  font-size: 9px;
+  letter-spacing: .18em;
+  color: var(--fg-2);
+  font-weight: 500;
 }
 .kb-streak-chip-num {
   font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  line-height: 1;
+}
+.kb-streak-chip-unit {
+  font-size: 9px;
+  opacity: .75;
+  margin-left: 1px;
+  letter-spacing: 0;
 }
 
+/* ── HOT ──────────────────────────────────────────────────── */
 .kb-streak-chip.is-hot {
   color: var(--accent-amber);
   border-color: var(--accent-amber);
+  /* flame-gradient seat: amber gets heavier at the bottom, so the
+     sparks rising from bottom:0 look like they're coming out of embers */
+  background:
+    linear-gradient(180deg, rgba(245,165,36,0) 0%, rgba(245,165,36,.16) 70%, rgba(255,120,30,.22) 100%),
+    rgba(245,165,36,.04);
   text-shadow: 0 0 6px rgba(245,165,36,.55);
-  background: rgba(245,165,36,.06);
+  box-shadow:
+    0 0 10px rgba(245,165,36,.28),
+    inset 0 -6px 12px rgba(255,120,30,.15);
+  animation: kb-streak-breathe 2.8s ease-in-out infinite;
 }
+.kb-streak-chip.is-hot .kb-streak-chip-icon {
+  color: var(--accent-amber);
+  text-shadow:
+    0 0 8px rgba(245,165,36,.9),
+    0 0 16px rgba(255,120,30,.5);
+  animation: kb-streak-flicker 1.6s ease-in-out infinite;
+}
+.kb-streak-chip.is-hot .kb-streak-chip-lbl {
+  color: var(--accent-amber);
+  opacity: .8;
+}
+.kb-streak-chip.is-hot .kb-streak-chip-num {
+  color: var(--accent-amber);
+  text-shadow: 0 0 6px rgba(245,165,36,.65), 0 0 12px rgba(245,165,36,.3);
+}
+
+/* Milestone shimmer (7d+): a slow ember sweep across the pill, scoped
+   to ::before so it doesn't fight the breathing box-shadow on the
+   main element. Same GPU-cheap translate3d technique run-primary uses. */
+.kb-streak-chip.is-hot.is-milestone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,200,120,.25) 45%,
+    rgba(255,240,200,.5) 50%,
+    rgba(255,200,120,.25) 55%,
+    transparent 100%
+  );
+  transform: translate3d(-110%, 0, 0);
+  pointer-events: none;
+  animation: kb-streak-shimmer 3.6s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+
+/* ── COLD ─────────────────────────────────────────────────── */
 .kb-streak-chip.is-cold {
-  color: var(--fg-2);
+  color: var(--fg-1);
   border-color: var(--line-bright);
-  background: transparent;
+  background: var(--bg-2);
 }
 .kb-streak-chip.is-cold .kb-streak-chip-icon { color: var(--fg-3); }
+.kb-streak-chip.is-cold .kb-streak-chip-lbl  { color: var(--fg-2); }
+.kb-streak-chip.is-cold .kb-streak-chip-num  { color: var(--fg-1); }
+
+/* ── BROKEN ───────────────────────────────────────────────── */
 .kb-streak-chip.is-broken {
   color: var(--danger);
   border-color: var(--danger);
@@ -142,47 +216,82 @@ body[data-scanlines="on"]::after {
   text-shadow: 0 0 6px rgba(255,92,106,.55);
   animation: kb-streak-error 2.4s ease-in-out infinite;
 }
+.kb-streak-chip.is-broken .kb-streak-chip-lbl { color: var(--danger); opacity: .85; }
 .kb-streak-chip.is-broken .kb-streak-chip-num {
   text-decoration: line-through;
   text-decoration-color: rgba(255,92,106,.7);
 }
+
+/* ── FRESH ────────────────────────────────────────────────── */
 .kb-streak-chip.is-fresh {
-  color: var(--fg-3);
+  color: var(--fg-2);
   border-color: var(--line-bright);
   border-style: dashed;
+  background: transparent;
 }
+.kb-streak-chip.is-fresh .kb-streak-chip-icon { color: var(--fg-3); font-family: var(--font-mono); }
+.kb-streak-chip.is-fresh .kb-streak-chip-lbl  { color: var(--fg-2); }
+.kb-streak-chip.is-fresh .kb-streak-chip-num  { color: var(--fg-3); }
 
+/* ── keyframes ────────────────────────────────────────────── */
 @keyframes kb-streak-error {
   0%, 100% { box-shadow: 0 0 4px rgba(255,92,106,.3); }
   50%      { box-shadow: 0 0 12px rgba(255,92,106,.7); }
 }
+@keyframes kb-streak-breathe {
+  0%, 100% {
+    box-shadow:
+      0 0 10px rgba(245,165,36,.28),
+      inset 0 -6px 12px rgba(255,120,30,.15);
+  }
+  50% {
+    box-shadow:
+      0 0 18px rgba(245,165,36,.55),
+      inset 0 -8px 16px rgba(255,120,30,.32);
+  }
+}
+@keyframes kb-streak-flicker {
+  0%, 100% { transform: translateY(.5px) scale(1);    opacity: 1; }
+  35%      { transform: translateY(.1px) scale(1.04); opacity: .95; }
+  65%      { transform: translateY(.7px) scale(.98);  opacity: 1; }
+}
+@keyframes kb-streak-shimmer {
+  0%   { transform: translate3d(-110%, 0, 0); }
+  55%  { transform: translate3d(210%, 0, 0); }
+  100% { transform: translate3d(210%, 0, 0); }
+}
 
-/* Sparks — only mounted on the hot variant in JSX. Each span gets a
-   custom --sx start position and --sd delay so they trigger out of
-   sync. Translate-only animation so the compositor can handle it. */
+/* Sparks — mounted by StreakChip for the hot variant. Each span gets
+   a custom --sx start position, --sd delay, and --sv vertical travel
+   so they trigger out of sync and reach different heights. */
 .kb-streak-spark {
   position: absolute;
-  bottom: 2px; left: var(--sx, 30%);
-  width: 2px; height: 2px;
+  bottom: 1px; left: var(--sx, 30%);
+  width: 3px; height: 3px;
   background: var(--accent-amber);
-  box-shadow: 0 0 6px var(--accent-amber);
+  box-shadow:
+    0 0 6px var(--accent-amber),
+    0 0 12px rgba(255,120,30,.55);
   border-radius: 50%;
   pointer-events: none;
   opacity: 0;
   will-change: transform, opacity;
-  animation: kb-streak-spark 2.6s ease-out infinite;
+  animation: kb-streak-spark 2.8s ease-out infinite;
   animation-delay: var(--sd, 0s);
 }
 @keyframes kb-streak-spark {
-  0%   { transform: translate3d(0, 0, 0) scale(.4); opacity: 0; }
+  0%   { transform: translate3d(0, 0, 0) scale(.45); opacity: 0; }
   10%  { opacity: 1; }
-  60%  { opacity: .9; }
-  100% { transform: translate3d(0, -22px, 0) scale(.2); opacity: 0; }
+  60%  { opacity: .85; }
+  100% { transform: translate3d(-1px, calc(var(--sv, 26px) * -1), 0) scale(.15); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .kb-streak-spark { animation: none; opacity: 0; }
+  .kb-streak-chip.is-hot,
   .kb-streak-chip.is-broken { animation: none; }
+  .kb-streak-chip.is-hot .kb-streak-chip-icon { animation: none; }
+  .kb-streak-chip.is-hot.is-milestone::before { animation: none; opacity: 0; }
 }
 
 /* ---------- Main content ---------- */
