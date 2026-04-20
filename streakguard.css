@@ -172,7 +172,9 @@
   transition: all var(--dur-fast) var(--ease-snap);
   text-shadow: 0 0 12px rgba(34,211,238,.5);
 }
-.sg-pre-start:hover { box-shadow: 0 0 32px rgba(34,211,238,.6), inset 0 0 0 1px var(--accent-cyan); transform: translateY(-1px); }
+@media (hover: hover) {
+  .sg-pre-start:hover { box-shadow: 0 0 32px rgba(34,211,238,.6), inset 0 0 0 1px var(--accent-cyan); transform: translateY(-1px); }
+}
 .variant-calm .sg-pre-start { box-shadow: none; text-shadow: none; background: var(--bg-1); border-width: 1px; }
 .sg-pre-start .arrow { font-size: 22px; }
 
@@ -231,10 +233,12 @@
   transition: transform var(--dur-fast) var(--ease-snap), border-color var(--dur-fast) var(--ease-out);
   overflow: hidden;
 }
-.sg-cell:hover:not(:disabled) {
-  border-color: var(--accent-cyan); color: var(--accent-cyan);
-  box-shadow: 0 0 14px rgba(34,211,238,.35);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .sg-cell:hover:not(:disabled) {
+    border-color: var(--accent-cyan); color: var(--accent-cyan);
+    box-shadow: 0 0 14px rgba(34,211,238,.35);
+    transform: translateY(-1px);
+  }
 }
 .sg-cell:disabled { cursor: default; }
 
@@ -413,7 +417,9 @@
   color: var(--fg-2); padding: 2px 8px; cursor: pointer;
   font-family: var(--font-mono); font-size: 12px;
 }
-.sg-quiz-close:hover { border-color: var(--danger); color: var(--danger); }
+@media (hover: hover) {
+  .sg-quiz-close:hover { border-color: var(--danger); color: var(--danger); }
+}
 
 .sg-quiz-body {
   padding: var(--sp-4) var(--sp-3);
@@ -460,9 +466,11 @@
   display: flex; align-items: center; gap: var(--sp-2);
   transition: all var(--dur-fast) var(--ease-snap);
 }
-.sg-tile:hover:not(:disabled) {
-  border-color: var(--accent-cyan); color: var(--accent-cyan);
-  box-shadow: 0 0 12px rgba(34,211,238,.3);
+@media (hover: hover) {
+  .sg-tile:hover:not(:disabled) {
+    border-color: var(--accent-cyan); color: var(--accent-cyan);
+    box-shadow: 0 0 12px rgba(34,211,238,.3);
+  }
 }
 .sg-tile:disabled { cursor: default; }
 .sg-tile-key {
@@ -472,7 +480,9 @@
   border: 1px solid var(--line-bright);
   flex-shrink: 0;
 }
-.sg-tile:hover:not(:disabled) .sg-tile-key { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+@media (hover: hover) {
+  .sg-tile:hover:not(:disabled) .sg-tile-key { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+}
 .sg-tile-text { flex: 1; line-height: 1.25; }
 .sg-tile.is-correct {
   border-color: var(--accent-cyan); color: var(--accent-cyan);

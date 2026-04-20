@@ -277,7 +277,9 @@ a {
   border-bottom: 1px dashed var(--line-med);
   transition: color var(--dur-fast) var(--ease-snap), border-color var(--dur-fast) var(--ease-snap);
 }
-a:hover { color: #fff; border-bottom-color: var(--accent-cyan); }
+@media (hover: hover) {
+  a:hover { color: #fff; border-bottom-color: var(--accent-cyan); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -408,25 +410,31 @@ a:hover { color: #fff; border-bottom-color: var(--accent-cyan); }
 .kb-confirm-btn-cancel {
   color: var(--fg-1);
 }
-.kb-confirm-btn-cancel:hover {
-  color: var(--fg-0);
-  background: var(--bg-2);
+@media (hover: hover) {
+  .kb-confirm-btn-cancel:hover {
+    color: var(--fg-0);
+    background: var(--bg-2);
+  }
 }
 .kb-confirm-btn-confirm.tone-danger {
   color: var(--accent-magenta);
   text-shadow: 0 0 6px rgba(255,61,255,.45);
 }
-.kb-confirm-btn-confirm.tone-danger:hover {
-  background: var(--accent-magenta-bg);
-  color: #fff;
+@media (hover: hover) {
+  .kb-confirm-btn-confirm.tone-danger:hover {
+    background: var(--accent-magenta-bg);
+    color: #fff;
+  }
 }
 .kb-confirm-btn-confirm.tone-info {
   color: var(--accent-cyan);
   text-shadow: 0 0 6px rgba(34,211,238,.45);
 }
-.kb-confirm-btn-confirm.tone-info:hover {
-  background: var(--accent-cyan-bg);
-  color: #fff;
+@media (hover: hover) {
+  .kb-confirm-btn-confirm.tone-info:hover {
+    background: var(--accent-cyan-bg);
+    color: #fff;
+  }
 }
 
 /* ============================================================
