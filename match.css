@@ -218,9 +218,11 @@
   font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
   color: var(--fg-2);
 }
-.mt-pre-axis-btn:hover {
-  color: var(--fg-0);
-  border-color: var(--accent-cyan);
+@media (hover: hover) {
+  .mt-pre-axis-btn:hover {
+    color: var(--fg-0);
+    border-color: var(--accent-cyan);
+  }
 }
 .mt-pre-axis-btn.is-active {
   border-color: var(--accent-cyan);
@@ -276,9 +278,11 @@
   transition: all var(--dur-fast) var(--ease-snap);
   text-shadow: 0 0 12px rgba(255,61,255,.55);
 }
-.mt-pre-start:hover {
-  box-shadow: 0 0 32px rgba(255,61,255,.6), inset 0 0 0 1px var(--accent-magenta);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .mt-pre-start:hover {
+    box-shadow: 0 0 32px rgba(255,61,255,.6), inset 0 0 0 1px var(--accent-magenta);
+    transform: translateY(-1px);
+  }
 }
 .mt-pre-start .arrow {
   font-size: 18px;
@@ -377,16 +381,18 @@
 }
 .mt-lane-k .mt-tile { --dir: -10px; }
 .mt-lane-v .mt-tile { --dir: 10px; }
-.mt-tile:hover:not(:disabled) {
-  border-color: var(--accent-cyan);
-  background: linear-gradient(180deg, var(--accent-cyan-bg), var(--bg-1));
-  transform: translateY(-1px);
-  box-shadow: 0 0 14px rgba(34,211,238,.3);
-}
-.mt-lane-v .mt-tile:hover:not(:disabled) {
-  border-color: var(--accent-magenta);
-  background: linear-gradient(180deg, var(--accent-magenta-bg), var(--bg-1));
-  box-shadow: 0 0 14px rgba(255,61,255,.3);
+@media (hover: hover) {
+  .mt-tile:hover:not(:disabled) {
+    border-color: var(--accent-cyan);
+    background: linear-gradient(180deg, var(--accent-cyan-bg), var(--bg-1));
+    transform: translateY(-1px);
+    box-shadow: 0 0 14px rgba(34,211,238,.3);
+  }
+  .mt-lane-v .mt-tile:hover:not(:disabled) {
+    border-color: var(--accent-magenta);
+    background: linear-gradient(180deg, var(--accent-magenta-bg), var(--bg-1));
+    box-shadow: 0 0 14px rgba(255,61,255,.3);
+  }
 }
 .mt-tile.is-selected {
   border-color: var(--accent-magenta);
