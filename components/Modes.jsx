@@ -22,13 +22,13 @@ const RunPrimary = ({ state, deck, onRun }) => {
   const mins         = count > 0 ? Math.max(1, Math.ceil(count * 9 / 60)) : 0;
 
   const topLabel = loading      ? '▸ syncing deck…'
-                 : overachiever ? '▸ EXTRA RUN? · entirely optional'
+                 : overachiever ? '▸ EXTRA CYCLE? · entirely optional'
                  : '▸ resume daily run';
   const label    = loading      ? 'RUN'
                  : overachiever ? 'OVERCLOCK'
                  : 'RUN';
   const subCopy  = loading      ? 'loading…'
-                 : overachiever ? 'daily quota cleared · extra practice cycle'
+                 : overachiever ? 'quota cleared · extra intake · future forecast grows'
                  : `${count} ${count === 1 ? 'card' : 'cards'} · ~${mins}m · srs priority`;
 
   const cls = `kb-run-primary`
