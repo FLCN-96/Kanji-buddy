@@ -1,10 +1,15 @@
 // MATCH — 60s lane match. Pair kanji ↔ meaning OR kanji ↔ reading.
 // Wrong pair → -2s penalty. Speed bonus per match.
+//
+// Rounds: the board deals N pairs at once; the player must clear all of
+// them before the next set arrives. (The previous one-at-a-time refill
+// made new tiles trivial to identify by their entry animation — a giant
+// hint that "this is the new one to look at".)
 
 const TWEAK_DEFAULTS_MT = {
   scanlines: 'off',
   countdown: 'dissolve',
-  boardSize: 7,
+  boardSize: 6,
   axis: 'mix',
   duration: 60,
 };
@@ -36,17 +41,36 @@ function pickReading(card) {
   return null;
 }
 
-// Build N pair entries. Each entry = { id, kanji, side (mean|read), value }
-// All values must be unique within the board. `sourcePool` is the
-// near-user-frontier slice supplied by the caller (see Daily.nearUserPool).
-function buildPairs(sourcePool, n, axis) {
+// Build one round of N pair entries. Each entry = { id, card, side, value }.
+// `sourcePool` is the near-user-frontier slice from Daily.nearUserPool.
+// `seenSet` is the set of card idxs the user has encountered via Run; if
+// it has any overlap with the pool, we lead with one familiar card so the
+// round always contains an anchor the user knows — prevents "all 6 are
+// brand-new" rounds that happen when the frontier slice dominates the pool.
+// `roundId` is woven into pair IDs so React remounts every tile between
+// rounds and the slide-in animation fires fresh.
+function buildRound(sourcePool, n, axis, seenSet, roundId) {
   const pool = (sourcePool || []).filter(c => c.k && c.mean);
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+  const familiar = (seenSet && seenSet.size)
+    ? shuffle(pool.filter(c => seenSet.has(c.idx)))
+    : [];
+
+  // Lead the candidate list with one familiar card (if we have any) so
+  // the guarantee holds even when later candidates get skipped for
+  // duplicate-value collisions. The leader itself can't collide because
+  // usedValues is empty when it's considered.
+  const leaderIdx = familiar.length ? familiar[0].idx : null;
+  const rest = shuffle(pool.filter(c => c.idx !== leaderIdx));
+  const ordered = leaderIdx != null ? [familiar[0], ...rest] : rest;
+
   const pairs = [];
   const usedValues = new Set();
+  const usedCards = new Set();
 
-  for (const c of shuffled) {
+  for (const c of ordered) {
     if (pairs.length >= n) break;
+    if (usedCards.has(c.idx)) continue;
     let side = axis;
     if (axis === 'mix') side = Math.random() < 0.5 ? 'mean' : 'read';
     let value;
@@ -63,7 +87,13 @@ function buildPairs(sourcePool, n, axis) {
     const key = `${side}:${value}`;
     if (usedValues.has(key)) continue;
     usedValues.add(key);
-    pairs.push({ id: `p-${c.idx}-${pairs.length}`, card: c, side, value });
+    usedCards.add(c.idx);
+    pairs.push({
+      id: `p-${roundId}-${c.idx}-${pairs.length}`,
+      card: c,
+      side,
+      value,
+    });
   }
   return pairs;
 }
@@ -116,8 +146,6 @@ const MatchApp = ({ cards }) => {
   const [selected, setSelected] = React.useState(null); // {col:'k'|'v', id}
   const [shake, setShake] = React.useState(null); // {kId, vId, until}
   const [pop, setPop] = React.useState([]); // [{id, x, y, t, color}]
-  const [poolIdx, setPoolIdx] = React.useState(0); // refill pointer
-  const [shufflePool, setShufflePool] = React.useState([]);
 
   const [timeLeft, setTimeLeft] = React.useState(tweaks.duration * 1000);
   const [matches, setMatches] = React.useState(0);
@@ -147,8 +175,11 @@ const MatchApp = ({ cards }) => {
   const cardStatesRef = React.useRef([]);
   const seenSetRef = React.useRef(new Set());
   // Cached near-user pool for the current play session — avoids recomputing
-  // the helper every shuffle-pool refill.
+  // the helper every round.
   const nearPoolRef = React.useRef(null);
+  // Monotonic round counter. Woven into pair IDs so React remounts every
+  // tile between rounds and the slide-in animation fires fresh.
+  const roundRef = React.useRef(0);
 
   React.useEffect(() => {
     if (!window.DB) return;
@@ -174,17 +205,17 @@ const MatchApp = ({ cards }) => {
       n -= 1;
       if (n <= 0) {
         setCountdown(0);
-        // build initial board + pool from the user's frontier slice
+        // Build the first round from the user's frontier slice.
         const nearPool = (window.Daily && window.Daily.nearUserPool)
           ? window.Daily.nearUserPool(cards, cardStatesRef.current)
           : cards;
         nearPoolRef.current = nearPool;
-        const totalNeeded = Math.min(nearPool.length, Math.max(tweaks.boardSize * 4, 28));
-        const pool = buildPairs(nearPool, totalNeeded, tweaks.axis);
-        const initial = pool.slice(0, tweaks.boardSize);
+        roundRef.current = 1;
+        const initial = buildRound(
+          nearPool, tweaks.boardSize, tweaks.axis,
+          seenSetRef.current, roundRef.current,
+        );
         setPairs(initial);
-        setShufflePool(pool);
-        setPoolIdx(tweaks.boardSize);
         setResolved({});
         setSelected(null);
         setMatches(0); setMisses(0); setScore(0); setCombo(0); setBestCombo(0);
@@ -266,45 +297,30 @@ const MatchApp = ({ cards }) => {
       .catch(() => {});
   }, [phase]);
 
-  // Refill: when a pair is matched, remove both tiles and pull next from pool
-  const replaceWithNext = (matchedIds) => {
-    setPairs(prev => {
-      let next = [...prev];
-      let pIdx = poolIdx;
-      let pool = shufflePool;
-      const replaced = [];
-      for (const id of matchedIds) {
-        const slot = next.findIndex(p => p.id === id);
-        if (slot >= 0) {
-          const src = nearPoolRef.current || cards;
-          if (pIdx >= pool.length) {
-            // regenerate pool
-            const fresh = buildPairs(src, Math.max(tweaks.boardSize * 4, 28), tweaks.axis);
-            pool = fresh;
-            pIdx = 0;
-            setShufflePool(fresh);
-          }
-          // ensure no value collision with remaining tiles
-          let candidate = pool[pIdx++];
-          let safety = 0;
-          while (safety < 40 && next.some(p => !matchedIds.includes(p.id) && p.value === candidate.value && p.side === candidate.side)) {
-            if (pIdx >= pool.length) {
-              const fresh = buildPairs(src, Math.max(tweaks.boardSize * 4, 28), tweaks.axis);
-              pool = fresh;
-              pIdx = 0;
-              setShufflePool(fresh);
-            }
-            candidate = pool[pIdx++];
-            safety++;
-          }
-          next[slot] = candidate;
-          replaced.push(candidate);
-        }
-      }
-      setPoolIdx(pIdx);
-      return next;
-    });
-  };
+  // Round advance: when every pair on the board is matched, wait for the
+  // fade-out animation to land (.36s) then deal a fresh round. Delay is a
+  // ref rather than magic in the match handler so the effect cleans up
+  // correctly if the phase changes (e.g. clock expires) mid-transition.
+  React.useEffect(() => {
+    if (phase !== 'play') return;
+    if (!pairs.length) return;
+    const allResolved = pairs.every(p => resolved[p.id]);
+    if (!allResolved) return;
+    const t = setTimeout(() => {
+      const src = nearPoolRef.current || cards;
+      roundRef.current += 1;
+      const next = buildRound(
+        src, tweaks.boardSize, tweaks.axis,
+        seenSetRef.current, roundRef.current,
+      );
+      setPairs(next);
+      setResolved({});
+      // Reset the speed-bonus clock so the first match of the new round
+      // isn't penalized for the round-swap + reading-in time.
+      lastMatchAtRef.current = performance.now();
+    }, 520);
+    return () => clearTimeout(t);
+  }, [pairs, resolved, phase, tweaks.boardSize, tweaks.axis, cards]);
 
   const popAt = (rect, color) => {
     const x = rect.left + rect.width/2;
@@ -371,9 +387,6 @@ const MatchApp = ({ cards }) => {
       const colorK = newCombo >= 5 ? 'magenta' : 'cyan';
       if (kEl) popAt(kEl.getBoundingClientRect(), colorK);
       if (vEl) popAt(vEl.getBoundingClientRect(), colorK);
-
-      // remove + refill after pop animation
-      setTimeout(() => replaceWithNext([kSel]), 360);
     } else {
       // WRONG
       setMisses(m => m + 1);
@@ -392,6 +405,7 @@ const MatchApp = ({ cards }) => {
     setPhase('ready');
     penaltyAccumRef.current = 0;
     finishedRef.current = false;
+    roundRef.current = 0;
   };
   const goHome = () => { window.location.href = 'Home.html'; };
   const quit = () => {
