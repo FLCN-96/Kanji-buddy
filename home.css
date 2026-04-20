@@ -1206,3 +1206,176 @@ body[data-hero="off"] .kb-hero { display: none; }
     transform: none !important;
   }
 }
+
+/* =========================================================
+   FORECAST PANEL — replaces the old ring-and-tier progress
+   reading with a 7-day review-load sparkline. Reuses the
+   .kb-progress chassis; `.is-forecast` swaps the ring slot.
+   ========================================================= */
+.kb-progress.is-forecast .kb-progress-ring-wrap.is-forecast {
+  width: 52px; height: 40px;
+  right: 8px; top: 8px;
+}
+.kb-progress.is-forecast .kb-progress-sub {
+  padding-right: 58px;
+}
+.kb-forecast-spark {
+  display: block;
+  overflow: visible;
+}
+.kb-forecast-spark-base {
+  stroke: var(--line-med);
+  stroke-width: 1;
+  opacity: .6;
+}
+.kb-forecast-spark-bar {
+  fill: currentColor;
+  transition: height var(--dur-base) var(--ease-snap),
+              y      var(--dur-base) var(--ease-snap),
+              fill   var(--dur-base) var(--ease-snap);
+}
+.kb-forecast-spark-bar.is-empty {
+  fill: var(--line-med);
+}
+.kb-progress.is-forecast.tier-cyan    .kb-forecast-spark { color: var(--accent-cyan);    filter: drop-shadow(0 0 3px rgba(34,211,238,.55)); }
+.kb-progress.is-forecast.tier-amber   .kb-forecast-spark { color: var(--accent-amber);   filter: drop-shadow(0 0 3px rgba(245,165,36,.55)); }
+.kb-progress.is-forecast.tier-magenta .kb-forecast-spark { color: var(--accent-magenta); filter: drop-shadow(0 0 3px rgba(255,61,255,.55)); }
+
+/* =========================================================
+   JŌYŌ LADDER — segmented progress bar below challenge modes.
+   Segment flex-grow ∝ tier population so the bar visually
+   encodes deck composition (N1 dominates). Per-tier fill shows
+   done/total; clearing a whole tier lights up its inset border.
+   Legend below mirrors tier colours and surfaces the raw ratios.
+   ========================================================= */
+.kb-ladder {
+  border: 1px solid var(--line-dim);
+  background: var(--bg-1);
+  padding: var(--sp-3) var(--sp-3) var(--sp-3);
+  display: flex; flex-direction: column;
+  gap: var(--sp-3);
+  position: relative;
+  overflow: hidden;
+}
+.kb-ladder::before {
+  /* thin top-edge highlight, matches the run-primary chassis */
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34,211,238,.22), transparent);
+  pointer-events: none;
+}
+.kb-ladder.is-max::before {
+  background: linear-gradient(90deg, transparent, rgba(255,61,255,.28), transparent);
+}
+.kb-ladder-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: var(--sp-3);
+}
+.kb-ladder-lbl {
+  font-size: 10px; color: var(--fg-2);
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.kb-ladder-meta {
+  font-family: var(--font-mono);
+  font-size: 12px; color: var(--fg-1); letter-spacing: .04em;
+  white-space: nowrap;
+  display: inline-flex; align-items: baseline; gap: 1px;
+}
+.kb-ladder-meta.is-dim { color: var(--fg-2); }
+.kb-ladder-done {
+  font-weight: 700;
+  color: var(--accent-cyan);
+  text-shadow: 0 0 6px rgba(34,211,238,.4);
+  font-size: 14px;
+}
+.kb-ladder.is-max .kb-ladder-done {
+  color: var(--accent-magenta);
+  text-shadow: 0 0 6px rgba(255,61,255,.45);
+}
+.kb-ladder-sep { color: var(--fg-3); margin: 0 4px; }
+.kb-ladder-total { color: var(--fg-1); }
+.kb-ladder-pct { color: var(--fg-2); margin-left: 6px; }
+
+.kb-ladder-bar {
+  display: flex; gap: 2px;
+  height: 14px; width: 100%;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 1px, transparent 1px 6px),
+    var(--bg-0);
+  border: 1px solid var(--line-dim);
+  padding: 1px;
+}
+.kb-ladder-seg {
+  position: relative;
+  min-width: 4px;
+  background: var(--bg-2);
+  overflow: hidden;
+  transition: box-shadow var(--dur-base) var(--ease-snap);
+}
+.kb-ladder-seg.is-loading {
+  animation: kb-ladder-pulse 1.4s ease-in-out infinite;
+}
+@keyframes kb-ladder-pulse {
+  0%, 100% { background: var(--bg-2); }
+  50%      { background: var(--bg-3); }
+}
+.kb-ladder-seg-fill {
+  height: 100%;
+  transition: width var(--dur-slow) var(--ease-snap),
+              box-shadow var(--dur-base) var(--ease-snap);
+}
+.kb-ladder-seg.tier-cyan    .kb-ladder-seg-fill {
+  background: linear-gradient(180deg, var(--accent-cyan) 0%, var(--accent-cyan-dim) 100%);
+  box-shadow: 0 0 8px rgba(34,211,238,.5), inset 0 1px 0 rgba(255,255,255,.22);
+}
+.kb-ladder-seg.tier-amber   .kb-ladder-seg-fill {
+  background: linear-gradient(180deg, var(--accent-amber) 0%, #a86e18 100%);
+  box-shadow: 0 0 8px rgba(245,165,36,.42), inset 0 1px 0 rgba(255,255,255,.22);
+}
+.kb-ladder-seg.tier-magenta .kb-ladder-seg-fill {
+  background: linear-gradient(180deg, var(--accent-magenta) 0%, var(--accent-magenta-dim) 100%);
+  box-shadow: 0 0 8px rgba(255,61,255,.42), inset 0 1px 0 rgba(255,255,255,.22);
+}
+.kb-ladder-seg.tier-extra   .kb-ladder-seg-fill {
+  background: linear-gradient(180deg, var(--fg-1) 0%, var(--fg-2) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.15);
+}
+/* clearing a whole tier: thin inset ring in the tier colour, plus a
+   faint outward glow. makes "N5 done" land visually even at the
+   ~4% wide N5 slice. */
+.kb-ladder-seg.is-full.tier-cyan    { box-shadow: inset 0 0 0 1px var(--accent-cyan),    0 0 6px rgba(34,211,238,.45); }
+.kb-ladder-seg.is-full.tier-amber   { box-shadow: inset 0 0 0 1px var(--accent-amber),   0 0 6px rgba(245,165,36,.45); }
+.kb-ladder-seg.is-full.tier-magenta { box-shadow: inset 0 0 0 1px var(--accent-magenta), 0 0 6px rgba(255,61,255,.45); }
+.kb-ladder-seg.is-full.tier-extra   { box-shadow: inset 0 0 0 1px var(--fg-1),           0 0 6px rgba(170,180,194,.35); }
+
+.kb-ladder-legend {
+  display: flex; flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-4);
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: .06em;
+}
+.kb-ladder-legend-item {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-width: 0;
+}
+.kb-ladder-legend-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  background: var(--fg-3);
+}
+.kb-ladder-legend-item.tier-cyan    .kb-ladder-legend-dot { background: var(--accent-cyan);    box-shadow: 0 0 5px rgba(34,211,238,.6); }
+.kb-ladder-legend-item.tier-amber   .kb-ladder-legend-dot { background: var(--accent-amber);   box-shadow: 0 0 5px rgba(245,165,36,.55); }
+.kb-ladder-legend-item.tier-magenta .kb-ladder-legend-dot { background: var(--accent-magenta); box-shadow: 0 0 5px rgba(255,61,255,.55); }
+.kb-ladder-legend-item.tier-extra   .kb-ladder-legend-dot { background: var(--fg-1); }
+.kb-ladder-legend-lbl {
+  color: var(--fg-1); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em;
+}
+.kb-ladder-legend-val {
+  color: var(--fg-2); font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 420px) {
+  .kb-ladder-legend { gap: var(--sp-2) var(--sp-3); }
+  .kb-ladder-legend-item { gap: 4px; }
+  .kb-ladder-legend-val { font-size: 9.5px; }
+}

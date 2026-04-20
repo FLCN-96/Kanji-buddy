@@ -167,15 +167,20 @@ const DuePanel = ({ state, deck, reviewedToday = 0 }) => {
   );
 };
 
-// Progress panel — your position on the JLPT ladder.
-// Rotates through four framings of the same truth so players can read
-// their position as a tier name, a percentage, or a distance-remaining.
-// Arc colour tracks the tier you're currently working on, so even a
-// glance at the ring tells you where you are on the ladder.
+// Forecast panel — what's coming at you on the SRS calendar.
+// Rotates through three framings of near-future review load: tomorrow's
+// intake, the 7-day rolling total, and the heaviest single day in the
+// next 30. The ladder story has moved to <LadderBar> below the challenge
+// grid; this slot now answers "what did I just sign up for?" — the
+// question overachievers actually care about post-grind.
+// A 7-day sparkline replaces the old ring so the shape of the week is
+// readable at a glance; colour tone tracks tomorrow's load severity
+// (cyan = quiet, amber = busy, magenta = slammed).
 
-// Per-tier accent for ring colour + headline glow. Cyan = easiest,
-// magenta = hardest, mirroring the rank-ladder cyan→magenta→amber
-// progression so the colour language stays consistent with XpBar.
+// Per-tier accent shared by ForecastPanel's tone mapping AND LadderBar's
+// per-tier segment colours. Cyan = easiest, magenta = hardest, mirroring
+// the rank-ladder cyan→amber→magenta progression so the colour language
+// stays consistent with XpBar.
 const JLPT_TIER_META = {
   5: { label: 'N5', color: 'cyan'    },
   4: { label: 'N4', color: 'cyan'    },
@@ -228,30 +233,114 @@ function computeTierProgress(cards, states) {
   return { tiers, total, done, nextTier, extras };
 }
 
-const ProgressRing = ({ pct, color }) => {
-  const r = 18;
-  const circ = 2 * Math.PI * r;
-  const p = Math.max(0, Math.min(100, pct || 0));
-  const offset = circ * (1 - p / 100);
+// ─────────────────────────────────────────────────────────────
+// Forecast computation — buckets card_states due_dates by
+// calendar-day offset from today for the next 30 days, then
+// pulls out the summary metrics the rotating panel surfaces.
+// Offset 1 = tomorrow, 7 = one week out, etc. Overdue / today
+// are intentionally excluded (the DuePanel already owns those).
+// ─────────────────────────────────────────────────────────────
+const FORECAST_HORIZON = 30;
+const FORECAST_WEEK    = 7;
+
+function computeForecast(states, now) {
+  const today = new Date(now || new Date());
+  today.setHours(0, 0, 0, 0);
+  const todayMs = today.getTime();
+  const byDay = new Map();
+  let hasFuture = false;
+
+  for (const s of (states || [])) {
+    if (!s || !s.due_date) continue;
+    const due = new Date(s.due_date);
+    due.setHours(0, 0, 0, 0);
+    const offset = Math.round((due.getTime() - todayMs) / 86400000);
+    if (offset < 1 || offset > FORECAST_HORIZON) continue;
+    byDay.set(offset, (byDay.get(offset) || 0) + 1);
+    hasFuture = true;
+  }
+
+  let week = 0;
+  for (let d = 1; d <= FORECAST_WEEK; d++) week += byDay.get(d) || 0;
+
+  let peakOffset = null, peakCount = 0;
+  for (const [off, cnt] of byDay) {
+    if (cnt > peakCount) { peakCount = cnt; peakOffset = off; }
+  }
+
+  let nextDueOffset = null;
+  for (let d = 1; d <= FORECAST_HORIZON; d++) {
+    if (byDay.has(d)) { nextDueOffset = d; break; }
+  }
+
+  return {
+    byDay,
+    tomorrow: byDay.get(1) || 0,
+    week,
+    peakOffset,
+    peakCount,
+    nextDueOffset,
+    hasFuture,
+  };
+}
+
+function formatFutureLabel(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  const wk = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+  return `${wk} +${offset}d`;
+}
+
+// Sparkline sitting in the ring slot — 7 vertical bars, index 0 =
+// tomorrow. Heights normalised to the busiest day in the window so a
+// light week still reads. Zero-load days render as a flat pip so the
+// axis is always visible.
+const ForecastSpark = ({ byDay }) => {
+  const DAYS = 7;
+  const vals = [];
+  let max = 0;
+  for (let d = 1; d <= DAYS; d++) {
+    const v = byDay.get(d) || 0;
+    vals.push(v);
+    if (v > max) max = v;
+  }
+  const W = 52, H = 40;
+  const bw = 4, gap = 4;
+  const totalW = DAYS * bw + (DAYS - 1) * gap;
+  const x0 = Math.floor((W - totalW) / 2);
   return (
-    <svg className={`kb-progress-ring tier-${color}`} viewBox="0 0 48 48" width="48" height="48" aria-hidden="true">
-      <circle cx="24" cy="24" r={r} className="kb-progress-ring-track" />
-      <circle
-        cx="24" cy="24" r={r}
-        className="kb-progress-ring-arc"
-        style={{ strokeDasharray: circ, strokeDashoffset: offset }}
-        transform="rotate(-90 24 24)"
-      />
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="kb-forecast-spark" aria-hidden="true">
+      <line x1="0" y1={H - 0.5} x2={W} y2={H - 0.5} className="kb-forecast-spark-base" />
+      {vals.map((v, i) => {
+        const ratio = max > 0 ? v / max : 0;
+        const h = v > 0 ? Math.max(3, Math.round(ratio * (H - 4))) : 1;
+        const x = x0 + i * (bw + gap);
+        const y = H - h - 0.5;
+        return (
+          <rect
+            key={i}
+            x={x}
+            y={y}
+            width={bw}
+            height={h}
+            className={v === 0 ? 'kb-forecast-spark-bar is-empty' : 'kb-forecast-spark-bar'}
+          />
+        );
+      })}
     </svg>
   );
 };
 
 const ProgressPanel = ({ cards, states }) => {
-  const progress = React.useMemo(
-    () => computeTierProgress(cards, states),
-    [cards, states]
+  // Component name kept so App.jsx / shared imports don't have to
+  // renumber. Conceptually this is now a "forecast" panel — see the
+  // header comment above JLPT_TIER_META.
+  const forecast = React.useMemo(
+    () => computeForecast(states, new Date()),
+    [states]
   );
-  const { total, done, nextTier, extras } = progress;
+  const { byDay, tomorrow, week, peakOffset, peakCount, nextDueOffset, hasFuture } = forecast;
+  const loaded = Array.isArray(states);
 
   const [frame, setFrame] = React.useState(0);
   const [paused, setPaused] = React.useState(false);
@@ -270,89 +359,167 @@ const ProgressPanel = ({ cards, states }) => {
     };
   }, []);
 
+  const frameCount = hasFuture ? 3 : 1;
   React.useEffect(() => {
-    if (paused || reducedMotion || !nextTier) return;
-    const id = setInterval(() => setFrame(f => (f + 1) % 4), 4000);
+    if (paused || reducedMotion || frameCount <= 1) return;
+    const id = setInterval(() => setFrame(f => (f + 1) % frameCount), 4000);
     return () => clearInterval(id);
-  }, [paused, reducedMotion, nextTier]);
+  }, [paused, reducedMotion, frameCount]);
 
-  const overallPct = total > 0 ? Math.floor((done / total) * 100) : 0;
-  const tierRemaining = nextTier ? Math.max(0, nextTier.total - nextTier.done) : 0;
-  const tierPct = nextTier && nextTier.total > 0
-    ? Math.floor((nextTier.done / nextTier.total) * 100)
-    : 100;
-  const tierColor = nextTier ? nextTier.color : 'cyan';
+  // Keep frame pointer in range when frameCount shrinks (e.g. deck
+  // goes from scheduled → empty mid-session).
+  React.useEffect(() => {
+    if (frame >= frameCount) setFrame(0);
+  }, [frameCount, frame]);
 
-  // Post-JLPT phase: all 5 JLPT tiers cleared but the 163 jōyō extras
-  // still have cards left. Surface them as their own headline so the
-  // panel doesn't false-flag MAX (and so the user knows there's more
-  // to chew on after N1).
-  const extrasRemaining = Math.max(0, extras.total - extras.done);
-  const inExtrasPhase = !nextTier && extrasRemaining > 0;
+  // Tone tracks tomorrow's load severity so the whole panel reads at
+  // a glance: cyan-quiet up to 10, amber-busy through 25, magenta
+  // above. These thresholds are deliberately gentle — the idea is to
+  // reassure a new user, not scream at an overachiever.
+  const tone = tomorrow >= 26 ? 'magenta' : tomorrow >= 11 ? 'amber' : 'cyan';
 
-  let head, headUnit, sub, ringPct;
-  if (!nextTier && total === 0) {
-    // Cards haven't loaded yet (or DB is empty) — neutral placeholder
-    // so we don't flash "MAX" during the first paint.
-    head = '—';
-    headUnit = null;
-    sub = 'loading ladder…';
-    ringPct = 0;
-  } else if (inExtrasPhase) {
-    head = `${extrasRemaining}`;
-    headUnit = 'extras left';
-    sub = `JLPT cleared · ${extras.done.toLocaleString()} / ${extras.total.toLocaleString()} jōyō extras done`;
-    ringPct = overallPct;
-  } else if (!nextTier) {
-    head = 'MAX';
-    headUnit = null;
-    sub = `all ${total.toLocaleString()} jōyō learned · ladder cleared`;
-    ringPct = 100;
+  let head, headUnit, sub;
+  if (!loaded) {
+    head = '—'; headUnit = null; sub = 'loading schedule…';
+  } else if (!hasFuture) {
+    head = '0'; headUnit = 'queued'; sub = 'calendar clear · no reviews in next 30d';
   } else if (frame === 0) {
-    head = nextTier.label;
-    headUnit = 'next tier';
-    sub = `${tierRemaining} ${tierRemaining === 1 ? 'card' : 'cards'} til clear`;
-    ringPct = overallPct;
+    head = `${tomorrow}`;
+    headUnit = tomorrow === 1 ? 'due +1d' : 'due +1d';
+    if (tomorrow === 0) {
+      const nd = nextDueOffset || 1;
+      sub = `quiet morning · next wave builds +${nd}d out`;
+    } else if (tomorrow >= 26) {
+      sub = 'heavy inbox · pace yourself';
+    } else if (tomorrow >= 11) {
+      sub = 'steady wave incoming';
+    } else {
+      sub = `light load after today's run`;
+    }
   } else if (frame === 1) {
-    head = `${overallPct}`;
-    headUnit = '% overall';
-    sub = `${done.toLocaleString()} / ${total.toLocaleString()} learned`;
-    ringPct = overallPct;
-  } else if (frame === 2) {
-    head = `${tierPct}`;
-    headUnit = `% ${nextTier.label}`;
-    sub = `${nextTier.done} / ${nextTier.total} in ${nextTier.label}`;
-    ringPct = tierPct;
+    head = `${week}`;
+    headUnit = 'next 7d';
+    const avg = Math.round(week / FORECAST_WEEK);
+    sub = week === 0
+      ? 'rolling week clear'
+      : `rolling week · avg ${avg} / day`;
   } else {
-    head = `${tierRemaining}`;
-    headUnit = `til ${nextTier.label}`;
-    sub = `${nextTier.done} / ${nextTier.total} in ${nextTier.label}`;
-    ringPct = tierPct;
+    head = peakCount > 0 ? `${peakCount}` : '—';
+    headUnit = peakOffset ? `peak +${peakOffset}d` : 'peak';
+    sub = peakOffset
+      ? `biggest day in next 30 · ${formatFutureLabel(peakOffset)}`
+      : 'no future concentration';
   }
 
   return (
     <div
-      className={`kb-progress tier-${tierColor}`}
-      data-screen-label="progress-panel"
+      className={`kb-progress is-forecast tier-${tone}`}
+      data-screen-label="forecast-panel"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="kb-progress-ring-wrap">
-        <ProgressRing pct={ringPct} color={tierColor} />
+      <div className="kb-progress-ring-wrap is-forecast">
+        <ForecastSpark byDay={byDay} />
       </div>
-      <div className="kb-progress-lbl">▸ PROGRESS</div>
+      <div className="kb-progress-lbl">▸ FORECAST</div>
       <div className="kb-progress-val">
         {head}
         {headUnit && <span className="unit">{headUnit}</span>}
       </div>
       <div className="kb-progress-sub">{sub}</div>
-      {nextTier && (
+      {frameCount > 1 && (
         <div className="kb-progress-dots" aria-hidden="true">
-          {[0,1,2,3].map(i => (
+          {Array.from({ length: frameCount }).map((_, i) => (
             <span key={i} className={i === frame ? 'is-on' : ''} />
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+// LadderBar — segmented jōyō progress bar, rendered below the
+// challenge grid. Each segment's flex-grow is proportional to its
+// tier population so the bar visually encodes deck composition
+// (N1 is more than half the deck). Per-segment fill shows
+// done/total with that tier's colour. Jōyō-but-not-JLPT cards
+// appear as a final "+" segment when any exist, so the 163
+// extras aren't silently dropped.
+// ─────────────────────────────────────────────────────────────
+const LadderBar = ({ cards, states }) => {
+  const { tiers, total, done, extras } = React.useMemo(
+    () => computeTierProgress(cards, states),
+    [cards, states]
+  );
+  const loaded = !!cards && !!cards.length;
+
+  if (!loaded || !total) {
+    return (
+      <div className="kb-ladder" data-screen-label="ladder-bar">
+        <div className="kb-ladder-head">
+          <span className="kb-ladder-lbl">▸ JŌYŌ LADDER</span>
+          <span className="kb-ladder-meta is-dim">loading…</span>
+        </div>
+        <div className="kb-ladder-bar" aria-hidden="true">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="kb-ladder-seg is-loading" style={{ flex: 1 }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const showExtras = extras.total > 0;
+  const segments = showExtras
+    ? [...tiers, { label: '+', color: 'extra', total: extras.total, done: extras.done }]
+    : tiers;
+
+  const overallPct = Math.floor((done / total) * 100);
+  const cleared = done >= total;
+
+  return (
+    <div className={`kb-ladder${cleared ? ' is-max' : ''}`} data-screen-label="ladder-bar">
+      <div className="kb-ladder-head">
+        <span className="kb-ladder-lbl">▸ JŌYŌ LADDER</span>
+        <span className="kb-ladder-meta">
+          <b className="kb-ladder-done">{done.toLocaleString()}</b>
+          <span className="kb-ladder-sep">/</span>
+          <span className="kb-ladder-total">{total.toLocaleString()}</span>
+          <span className="kb-ladder-pct">· {overallPct}%</span>
+        </span>
+      </div>
+      <div
+        className="kb-ladder-bar"
+        role="img"
+        aria-label={`${done} of ${total} jōyō kanji learned, ${overallPct} percent`}
+      >
+        {segments.map(t => {
+          const pct = t.total > 0 ? Math.min(100, Math.round((t.done / t.total) * 100)) : 0;
+          const full = pct >= 100 && t.total > 0;
+          return (
+            <div
+              key={t.label}
+              className={`kb-ladder-seg tier-${t.color}${full ? ' is-full' : ''}`}
+              style={{ flexGrow: t.total, flexShrink: 0, flexBasis: 0 }}
+              title={`${t.label} · ${t.done.toLocaleString()} / ${t.total.toLocaleString()} (${pct}%)`}
+            >
+              <div className="kb-ladder-seg-fill" style={{ width: `${pct}%` }} />
+            </div>
+          );
+        })}
+      </div>
+      <div className="kb-ladder-legend">
+        {segments.map(t => (
+          <div key={t.label} className={`kb-ladder-legend-item tier-${t.color}`}>
+            <span className="kb-ladder-legend-dot" aria-hidden="true" />
+            <span className="kb-ladder-legend-lbl">{t.label}</span>
+            <span className="kb-ladder-legend-val">
+              {t.done.toLocaleString()}/{t.total.toLocaleString()}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -385,4 +552,4 @@ const XpBar = ({ xp = 0 }) => {
   );
 };
 
-Object.assign(window, { Hero, Countdown, DuePanel, ProgressPanel, XpBar, formatCountdown, secondsUntilMidnight });
+Object.assign(window, { Hero, Countdown, DuePanel, ProgressPanel, LadderBar, XpBar, formatCountdown, secondsUntilMidnight });
