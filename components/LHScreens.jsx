@@ -5,7 +5,7 @@ const LHPre = ({ pb, tweaks, onStart }) => (
     <div className="lh-pre-head">
       <div className="lh-pre-eyebrow">▸ LEECH HUNT · BRIEFING</div>
       <div className="lh-pre-title">TARGETS ACQUIRED · {tweaks.leechCount}</div>
-      <div className="lh-pre-sub">cards you keep missing · contain them or lose the run</div>
+      <div className="lh-pre-sub">3 from your study log · 1 stretch bounty for fun</div>
     </div>
 
     <div className="lh-pre-stages">
@@ -49,7 +49,7 @@ const LHPre = ({ pb, tweaks, onStart }) => (
     <div className="kb-unseen-legend">
       <span className="kb-unseen-legend-mk">新</span>
       <span className="kb-unseen-legend-msg">
-        <b>green halo</b> = first sighting (synthetic target) · result won't update SRS
+        <b>green halo</b> = stretch bounty · unseen card · result won't update SRS
       </span>
     </div>
 

@@ -1,68 +1,110 @@
-// LeechHunt — 3-stage cleanse per leech. 8 leeches, 3-miss fail limit.
+// LeechHunt — 3-stage cleanse per leech. 4 bounties (3 known + 1 challenge),
+// 3-miss fail limit.
 
 const TWEAK_DEFAULTS_LH = {
   scanlines: 'off',
   countdown: 'dissolve',
-  leechCount: 8,
+  leechCount: 4,
   missCap: 3,
 };
 
+const LH_KNOWN_SLOTS = 3;
+const LH_CHALLENGE_SLOTS = 1;
+
 const PB_KEY_LH = 'kb-lh-pb';
 
-// Build a leech roster. Real leeches (card_states with lapses ≥ LEECH_LAPSES)
-// come first, sorted by lapse count. If the user has fewer real leeches than
-// the target count, we pad with synthetic practice targets (harder-JLPT cards
-// they haven't lapsed on yet) so the mode still has enough meat to chew on.
-function buildLeeches(cards, n, cardStates) {
+// Build a 4-card bounty roster: 3 "known" slots drawn from cards the operator
+// has actually touched (real leeches first, then any reviewed card with a
+// randomised priority nudge so repeat plays rotate targets), plus 1 "challenge"
+// slot — an unseen card one JLPT tier harder than what they've seen, for fun.
+//
+// Brand-new operators (not enough reviewed cards to fill 3 known slots) get
+// the remainder padded from the easy front of the deck so the hunt still deals.
+function buildLeeches(cards, _n, cardStates) {
   const LEECH_LAPSES = (window.Daily && window.Daily.LEECH_LAPSES) || 3;
   const byIdx = new Map(cards.map(c => [c.idx, c]));
+  const states = (cardStates || []).filter(s => s && s.idx != null && byIdx.has(s.idx));
+  const seenIdx = new Set(states.map(s => s.idx));
 
-  const realStates = (cardStates || [])
-    .filter(s => (s.lapses || 0) >= LEECH_LAPSES && byIdx.has(s.idx))
-    .sort((a, b) => (b.lapses || 0) - (a.lapses || 0))
-    .slice(0, n);
+  // Score reviewed cards: real leeches heavily prioritised, then lapses and
+  // reviews, with a random nudge so identical-score cards shuffle between runs.
+  const scored = states.map(s => {
+    const lapses = s.lapses || 0;
+    const reviews = s.reviews || 0;
+    const base = lapses >= LEECH_LAPSES ? 100 : 0;
+    return { s, k: base + lapses * 5 + reviews * 0.5 + Math.random() * 2 };
+  }).sort((a, b) => b.k - a.k);
 
-  const realLeeches = realStates.map((state, i) => {
-    const card = byIdx.get(state.idx);
-    return {
-      id: `leech-${i}`,
-      card,
-      lapses: state.lapses || 0,
-      status: 'pending', // pending | active | purged | weakened | survived
-      cleansed: 0,
-      firstTry: true,
-      synthetic: false,
-    };
-  });
-
-  const needed = n - realLeeches.length;
-  if (needed <= 0) return realLeeches;
-
-  const realIdxSet = new Set(realLeeches.map(l => l.card.idx));
-  // Pull synthetic targets from the user's study frontier (discovered cards +
-  // upcoming JLPT-tier neighbours) instead of the full ~2200-card library, so
-  // brand-new operators don't face JLPT-1 kanji they've never seen.
-  const nearPool = (window.Daily && window.Daily.nearUserPool)
-    ? window.Daily.nearUserPool(cards, cardStates)
-    : cards;
-  let pool = nearPool.filter(c => c.ex && c.ex.length >= 1 && !realIdxSet.has(c.idx));
-  if (pool.length < needed) {
-    pool = cards.filter(c => c.ex && c.ex.length >= 1 && !realIdxSet.has(c.idx));
+  const knownPicked = [];
+  const usedIdx = new Set();
+  for (const { s } of scored) {
+    if (knownPicked.length >= LH_KNOWN_SLOTS) break;
+    const card = byIdx.get(s.idx);
+    if (!card || !card.ex || !card.ex.length) continue;
+    knownPicked.push({ card, lapses: s.lapses || 0, synthetic: false });
+    usedIdx.add(card.idx);
   }
-  const scored = pool.map(c => ({ c, s: Math.random() + (5 - c.jlpt) * 0.2 }));
-  scored.sort((a, b) => b.s - a.s);
 
-  const synthetic = scored.slice(0, needed).map((x, i) => ({
-    id: `leech-${realLeeches.length + i}`,
-    card: x.c,
-    lapses: 0,
-    status: 'pending',
+  // Top up with easy novice-friendly cards if the operator hasn't reviewed
+  // enough yet — brand-new users still get a playable hunt.
+  if (knownPicked.length < LH_KNOWN_SLOTS) {
+    const pad = cards
+      .filter(c => !usedIdx.has(c.idx) && c.ex && c.ex.length >= 1)
+      .slice(0, 40)
+      .map(c => ({ c, k: Math.random() }))
+      .sort((a, b) => a.k - b.k);
+    for (const { c } of pad) {
+      if (knownPicked.length >= LH_KNOWN_SLOTS) break;
+      knownPicked.push({ card: c, lapses: 0, synthetic: true });
+      usedIdx.add(c.idx);
+    }
+  }
+
+  // Challenge slot: unseen card, prefer one JLPT tier harder than the
+  // operator's hardest seen tier (JLPT 5 = easy, 1 = hard). Fall back to any
+  // unseen near-frontier card if the preferred tier is thin.
+  const seenJlpts = new Set(cards.filter(c => seenIdx.has(c.idx)).map(c => c.jlpt));
+  const hardestSeen = seenJlpts.size ? Math.min(...seenJlpts) : 5;
+  const targetJlpt = Math.max(1, hardestSeen - 1);
+
+  const unseenWithEx = (extra) => cards.filter(c =>
+    !seenIdx.has(c.idx) &&
+    !usedIdx.has(c.idx) &&
+    c.ex && c.ex.length >= 1 &&
+    (!extra || extra(c))
+  );
+
+  let pool = unseenWithEx(c => c.jlpt === targetJlpt);
+  if (pool.length < 4) pool = unseenWithEx(c => c.jlpt <= hardestSeen);
+  if (pool.length < 4) pool = unseenWithEx();
+
+  const challengePicked = [];
+  if (pool.length) {
+    // Bias toward earlier-idx cards (roughly more common) within the eligible
+    // pool, then shuffle the top slice so repeat plays vary.
+    const slice = pool.slice(0, Math.max(30, Math.min(pool.length, 200)));
+    const shuffled = slice.map(c => ({ c, k: Math.random() })).sort((a, b) => a.k - b.k);
+    for (let i = 0; i < LH_CHALLENGE_SLOTS && i < shuffled.length; i++) {
+      challengePicked.push({ card: shuffled[i].c, lapses: 0, synthetic: true });
+      usedIdx.add(shuffled[i].c.idx);
+    }
+  }
+
+  // Shuffle combined roster so the challenge card isn't always in the same slot.
+  const combined = [...knownPicked, ...challengePicked]
+    .map(x => ({ x, k: Math.random() }))
+    .sort((a, b) => a.k - b.k)
+    .map(y => y.x);
+
+  return combined.map((raw, i) => ({
+    id: `leech-${i}`,
+    card: raw.card,
+    lapses: raw.lapses,
+    status: 'pending', // pending | active | purged | weakened | survived
     cleansed: 0,
     firstTry: true,
-    synthetic: true,
+    synthetic: raw.synthetic,
   }));
-
-  return [...realLeeches, ...synthetic];
 }
 
 function dealStage(leech, stageIdx, pool) {
