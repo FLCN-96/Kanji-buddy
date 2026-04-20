@@ -73,7 +73,7 @@ const SGPre = ({ pb, cellCount, difficulty, onStart }) => {
         <span className="arrow">◉</span>
       </button>
 
-      <div className="sg-pre-hint">
+      <div className="sg-pre-hint kbd-hint">
         <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> pick · <kbd>ESC</kbd> back / quit
       </div>
     </div>

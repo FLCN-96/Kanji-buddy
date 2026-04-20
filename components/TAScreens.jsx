@@ -63,7 +63,7 @@ const TAPre = ({ duration, onDuration, onStart, pb }) => {
         <span className="arrow">▸</span>
       </button>
 
-      <div className="ta-pre-hint">
+      <div className="ta-pre-hint kbd-hint">
         <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> pick tile · <kbd>ESC</kbd> quit
       </div>
     </div>

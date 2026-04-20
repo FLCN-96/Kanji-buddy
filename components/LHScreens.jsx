@@ -75,7 +75,7 @@ const LHPre = ({ pb, tweaks, onStart }) => (
       <span className="arrow">◉</span>
     </button>
 
-    <div className="lh-pre-hint">
+    <div className="lh-pre-hint kbd-hint">
       <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> pick · <kbd>ESC</kbd> abort
     </div>
   </div>

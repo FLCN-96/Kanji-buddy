@@ -131,7 +131,7 @@ const PreRun = ({ composition, onStart, isOverclock }) => {
         </span>
         <span className="arrow">▸</span>
       </button>
-      <div className="run-pre-hint">
+      <div className="run-pre-hint kbd-hint">
         press <kbd>SPACE</kbd> to begin · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> for verdicts · <kbd>ESC</kbd> to quit
       </div>
     </div>
