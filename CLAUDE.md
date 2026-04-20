@@ -54,7 +54,7 @@ Home gates the panel as **clear** once `reviewed-today >= Daily.DECK_SIZE`, even
 
 ### SRS (`data/srs.js`)
 
-Standard SM-2. Verdict → quality: `miss=1, hard=3, ok=4, easy=5`. Lapse path (`q<3`) resets `interval_days=0`, `reviews=0`, increments `lapses`, and reschedules `+6h` for same-day relearn. Pass path uses fixed graduation (1d, 6d) for the first two reviews, then `interval × ease`. Easy adds a 1.3× bonus. Ease floor 1.3.
+Standard SM-2. Verdict → quality: `miss=1, hard=3, ok=4, easy=5`. Lapse path (`q<3`) resets `interval_days=0`, `reviews=0`, increments `lapses`, and reschedules `+6h` for same-day relearn. Pass path uses fixed graduation (1d, 6d) for the first two reviews, then `interval × ease`. Easy adds a 1.3× bonus. Ease floor 1.3. Intervals ≥ 4d are fuzzed by ±~15% (min ±1d) to spread same-day cohorts across the calendar — the 1d graduation step is left alone.
 
 Run is the only consumer; challenge modes do not touch card_states.
 
