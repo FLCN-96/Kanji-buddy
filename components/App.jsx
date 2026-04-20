@@ -396,6 +396,12 @@ const App = ({ cards }) => {
           </div>
           <ChallengeGrid onPick={onPick} hotId={hotChallengeId} dailyDone={state === 'clear'} />
 
+          <div className="kb-section-head">
+            <span className="kb-section-title">Jōyō ladder</span>
+            <span className="kb-section-r">N5 → N1</span>
+          </div>
+          <LadderBar cards={cards} states={cardStates} />
+
           <div style={{height: 8}} />
         </main>
       </div>
