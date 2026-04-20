@@ -23,6 +23,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Stamp deploy version
+        run: |
+          BUILT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          printf '{"sha":"%s","built":"%s"}\n' "${GITHUB_SHA}" "${BUILT}" > version.json
+          # Rewrite the SERVED_SHA sentinel in data/version.js so every
+          # deployed build carries the exact SHA it was cut from. The
+          # handshake compares this against a network-only fetch of
+          # version.json — if they disagree, the client is stale.
+          sed -i "s|const SERVED_SHA = 'dev';|const SERVED_SHA = '${GITHUB_SHA}';|" data/version.js
+          # Fail loudly if the sed above silently no-ops (e.g. the
+          # sentinel gets renamed in the source but the workflow
+          # doesn't), so we don't ship a build with a broken handshake.
+          grep -q "const SERVED_SHA = '${GITHUB_SHA}';" data/version.js
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3

@@ -2,7 +2,7 @@
 // land on next visit without forcing cache-version bumps. Cache-first
 // for heavy/stable assets (cards.json, icons, manifest, fonts).
 
-const CACHE = 'kb-v20';
+const CACHE = 'kb-v21';
 const CDN_CACHE = 'kb-cdn-v2';
 const NAV_FALLBACK = './Home.html';
 
@@ -40,6 +40,7 @@ const LOCAL_ASSETS = [
   './data/daily.js',
   './data/srs.js',
   './data/rank.js',
+  './data/version.js',
   './components/App.jsx',
   './components/ConfirmModal.jsx',
   './components/Dashboard.jsx',
@@ -132,6 +133,27 @@ self.addEventListener('fetch', (e) => {
   const { request } = e;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
+
+  // Version manifest — NEVER cache. The client-side handshake
+  // (data/version.js) depends on this fetch always hitting the
+  // network so the banner can detect deploys even when every other
+  // asset is pinned in a stale cache.
+  if (url.origin === self.location.origin && url.pathname.endsWith('/version.json')) {
+    e.respondWith(
+      fetch(request, { cache: 'no-store' }).catch(() =>
+        new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } })
+      )
+    );
+    return;
+  }
+
+  // Allow the client to ask us to step aside for one-off fresh
+  // fetches (e.g. `fetch(url, { headers: { 'x-kb-bypass-sw': '1' }})`).
+  // Handy for cache-busting flows that don't want to fight the SW.
+  if (request.headers && request.headers.get('x-kb-bypass-sw')) {
+    e.respondWith(fetch(request));
+    return;
+  }
 
   // CDN libs — stable versioned URLs, cache-first is fine.
   if (CDN_ASSETS.includes(request.url)) {
