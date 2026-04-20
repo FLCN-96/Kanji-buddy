@@ -22,7 +22,7 @@ const MTPre = ({ pb, tweaks, onStart, onAxis }) => {
       <div className="mt-pre-head">
         <div className="mt-pre-eyebrow">▸ MATCH · LANE SPRINT</div>
         <div className="mt-pre-title">PAIR {tweaks.boardSize} · {tweaks.duration}s</div>
-        <div className="mt-pre-sub">connect kanji to its meaning or reading. clear pairs, board refills.</div>
+        <div className="mt-pre-sub">connect kanji to its meaning or reading. clear the set, next {tweaks.boardSize} deal in together.</div>
       </div>
 
       {/* Demo lane diagram */}
@@ -58,7 +58,7 @@ const MTPre = ({ pb, tweaks, onStart, onAxis }) => {
         </div>
         <div className="mt-pre-rule">
           <span className="mt-rk mt-rk-neutral">⟳</span>
-          <span>matched tiles vanish, fresh pairs slide in</span>
+          <span>clear all {tweaks.boardSize} to deal the next set — no drip-feed tells</span>
         </div>
       </div>
 
