@@ -69,17 +69,18 @@ const TATopbar = ({ phase, clockMs, score, onQuit }) => {
   const mm = String(Math.floor(s/60)).padStart(2,'0');
   const ss = String(s%60).padStart(2,'0');
   const danger = phase === 'play' && clockMs <= 10_000 && clockMs > 0;
+  const crit   = phase === 'play' && clockMs <= 3_000  && clockMs > 0;
   return (
     <header className="run-top ta-top">
       <div className="run-top-l">
         <button className="run-quit" onClick={onQuit}>‹ quit</button>
         <span className="run-lbl ta-lbl">▸ TIME ATTACK</span>
       </div>
-      <div className={`ta-top-clock${danger ? ' is-danger' : ''}`}>
+      <div className={`ta-top-clock${danger ? ' is-danger' : ''}${crit ? ' is-crit' : ''}`}>
         {phase === 'play' ? `${mm}:${ss}` : phase === 'pre' ? 'PRE-FLIGHT' : phase === 'ready' ? 'STAND BY' : 'TIME UP'}
       </div>
       <div className="run-top-r">
-        <span className="ta-top-score">{phase === 'end' ? 'FINAL' : 'SCORE'} · <b>{score}</b></span>
+        <span className="ta-top-score">{phase === 'end' ? 'FINAL' : 'SCORE'} · <b key={score}>{score}</b></span>
       </div>
     </header>
   );
@@ -346,11 +347,12 @@ const TimeAttackApp = ({ cards }) => {
               feedback={tileFeedback}
               clockMs={clockMs}
               totalMs={tweaks.duration * 1000}
-              danger={clockMs <= 10_000}
               penaltyTick={penaltyTick}
               combo={combo}
               comboBurst={comboBurst}
               isUnseen={!seenSetRef.current.has(question.card.idx)}
+              hits={hits}
+              misses={misses}
             />
           )}
           {phase === 'end' && (
@@ -371,8 +373,6 @@ const TimeAttackApp = ({ cards }) => {
             />
           )}
         </main>
-
-        {phase === 'play' && <TAHud hits={hits} misses={misses} combo={combo} />}
       </div>
 
       <ConfirmModal
