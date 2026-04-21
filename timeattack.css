@@ -28,13 +28,26 @@
   font-size: 10px;
   color: var(--fg-2);
   letter-spacing: .12em;
+  border: 1px solid var(--line-dim);
+  background: var(--accent-cyan-bg);
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: border-color var(--dur-fast) var(--ease-snap), box-shadow var(--dur-fast) var(--ease-snap);
 }
 .ta-top-score b {
-  color: var(--fg-0);
+  color: var(--accent-cyan);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
-  margin-left: 4px;
+  text-shadow: 0 0 8px rgba(34,211,238,.55);
+  display: inline-block;
+  animation: ta-score-bump 280ms var(--ease-snap);
+}
+@keyframes ta-score-bump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.18); text-shadow: 0 0 14px rgba(34,211,238,.9); }
+  100% { transform: scale(1); }
 }
 
 /* ================= Pre-flight ================= */
@@ -488,27 +501,98 @@
 }
 .ta-clock-ticks span:last-child { border-right: 0; }
 
+/* Scanline sweep — a 2px highlight that races across the bar.
+   Dormant at safe tension; activates at warn+ to add motion to the countdown. */
+.ta-clock-bar-sweep {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+}
+.ta-clock-bar-sweep::before {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 24px; height: 100%;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255,255,255,.45) 50%,
+    transparent 100%);
+  transform: translateX(-24px);
+  animation: ta-bar-sweep 2.2s linear infinite;
+}
+@keyframes ta-bar-sweep {
+  0%   { transform: translateX(-24px); }
+  100% { transform: translateX(100vw); }
+}
+
 /* ================= Play — card ================= */
 .ta-card {
   border: 1px solid var(--line-dim);
   background: var(--bg-1);
   display: flex; flex-direction: column;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   transition: border-color var(--dur-fast) var(--ease-snap), box-shadow var(--dur-fast) var(--ease-snap);
 }
+
+/* Corner brackets — cyberpunk bezel frame around the prompt card.
+   Color shifts with tension tier via cascades below. */
+.ta-card-corner {
+  position: absolute;
+  width: 14px; height: 14px;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 8px rgba(34,211,238,.45);
+  pointer-events: none;
+  transition: border-color var(--dur-fast) var(--ease-snap), box-shadow var(--dur-fast) var(--ease-snap);
+}
+.ta-card-corner.tl { top: -2px; left: -2px; border-top: 2px solid; border-left: 2px solid; }
+.ta-card-corner.tr { top: -2px; right: -2px; border-top: 2px solid; border-right: 2px solid; }
+.ta-card-corner.bl { bottom: -2px; left: -2px; border-bottom: 2px solid; border-left: 2px solid; }
+.ta-card-corner.br { bottom: -2px; right: -2px; border-bottom: 2px solid; border-right: 2px solid; }
+
+/* "First sighting" — small lime edge accent + corner badge, not a full frame takeover */
+.ta-card.is-new-card {
+  box-shadow: inset 2px 0 0 var(--accent-lime);
+}
+.ta-card-new-badge {
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: 9px; letter-spacing: .2em;
+  color: var(--accent-lime);
+  border: 1px solid var(--accent-lime);
+  background: rgba(163,230,53,.08);
+  padding: 2px 6px;
+  text-shadow: 0 0 6px rgba(163,230,53,.6);
+  margin-right: var(--sp-2);
+}
+
 .ta-card-meta {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 6px var(--sp-3);
+  display: flex; align-items: stretch;
   border-bottom: 1px solid var(--line-dim);
   font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
   color: var(--fg-2);
+  min-height: 28px;
+  padding-left: 6px;
 }
+.ta-card-meta-cell {
+  display: flex; align-items: center;
+  padding: 6px var(--sp-3);
+}
+.ta-card-meta-cell + .ta-card-meta-cell {
+  border-left: 1px solid var(--line-dim);
+}
+.ta-card-meta-jlpt { color: var(--fg-1); }
 .ta-card-prompt {
   color: var(--accent-cyan);
   letter-spacing: .06em;
   text-transform: none;
   font-size: 11px;
+  flex: 1;
+  transition: color var(--dur-fast) var(--ease-snap);
+}
+.ta-card-idx {
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
 }
 .ta-card-glyph-wrap {
   flex: 1;
@@ -674,29 +758,40 @@
 }
 .ta-tile.is-dim { opacity: .35; }
 
-/* ================= HUD ================= */
+/* ================= HUD — inline readout strip ================= */
 .ta-hud {
-  position: fixed;
-  right: 10px; top: calc(96px + env(safe-area-inset-top));
-  display: flex; flex-direction: column; gap: 6px;
-  z-index: 8;
-  pointer-events: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 1px solid var(--line-dim);
+  border-top: 0;
+  background: var(--bg-1);
+  transition: border-color var(--dur-fast) var(--ease-snap);
 }
 .ta-hud-col {
-  min-width: 54px;
-  background: var(--bg-1);
-  border: 1px solid var(--line-dim);
-  padding: 4px 6px;
-  text-align: right;
+  padding: 6px var(--sp-3);
   font-family: var(--font-mono);
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--sp-2);
+  border-left: 1px solid var(--line-dim);
 }
-.ta-hud-lbl { font-size: 9px; letter-spacing: .12em; color: var(--fg-2); text-transform: uppercase; }
-.ta-hud-val { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.ta-hud-val.ok { color: var(--accent-cyan); }
-.ta-hud-val.miss { color: var(--danger); }
-.ta-hud-val.mag { color: var(--accent-magenta); }
+.ta-hud-col:first-child { border-left: 0; }
+.ta-hud-lbl { font-size: 9px; letter-spacing: .18em; color: var(--fg-2); text-transform: uppercase; }
+.ta-hud-val { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ta-hud-val.ok {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 8px rgba(34,211,238,.45);
+}
+.ta-hud-val.miss {
+  color: var(--danger);
+  text-shadow: 0 0 8px rgba(255,92,106,.45);
+}
+.ta-hud-val.mag {
+  color: var(--accent-magenta);
+  text-shadow: 0 0 8px rgba(255,61,255,.45);
+}
 .ta-hud-val.mag.is-hot {
-  text-shadow: 0 0 10px rgba(255,61,255,.8);
+  text-shadow: 0 0 12px rgba(255,61,255,.9);
   animation: ta-combo-hot .7s ease-in-out infinite;
 }
 @keyframes ta-combo-hot {
@@ -732,6 +827,102 @@
   35% { transform: translate(-50%, -52%) scale(1); }
   85% { opacity: 1; }
   100% { opacity: 0; transform: translate(-50%, -80%) scale(1); }
+}
+
+/* =========================================================
+   Tension tiers — race-to-the-finish escalation.
+   Driven by data-tension attr on .ta-play (safe|warn|danger|crit).
+   Only transform/opacity/filter/box-shadow — no layout thrash.
+   Threshold crossings are rare (≤4/round) so these transitions
+   don't fight with the 60fps clock tick.
+   ========================================================= */
+
+/* Ambient vignette closing in as tension rises. position: fixed so it
+   hugs the viewport regardless of where .ta-play sits in the layout. */
+.ta-play-vignette {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  background: radial-gradient(ellipse at center,
+    transparent 55%,
+    rgba(245,165,36,.18) 100%);
+  transition: opacity var(--dur-slow) var(--ease-snap), background var(--dur-slow) var(--ease-snap);
+}
+
+/* ---- warn ---- amber creep, vignette fades in, sweep activates ---- */
+.ta-play[data-tension="warn"] .ta-play-vignette { opacity: 1; }
+.ta-play[data-tension="warn"] .ta-clock-bar {
+  border-color: var(--accent-amber);
+}
+.ta-play[data-tension="warn"] .ta-clock-bar-sweep { opacity: .9; }
+.ta-play[data-tension="warn"] .ta-card-prompt { color: var(--accent-amber); }
+
+/* ---- danger ---- vignette goes red, HUD outline reddens, sweep stays ---- */
+.ta-play[data-tension="danger"] .ta-play-vignette {
+  opacity: 1;
+  background: radial-gradient(ellipse at center,
+    transparent 48%,
+    rgba(255,92,106,.26) 100%);
+}
+.ta-play[data-tension="danger"] .ta-clock-bar-sweep { opacity: .95; }
+.ta-play[data-tension="danger"] .ta-card-prompt { color: var(--danger); }
+.ta-play[data-tension="danger"] .ta-card-corner {
+  border-color: var(--danger);
+  box-shadow: 0 0 10px rgba(255,92,106,.6);
+}
+.ta-play[data-tension="danger"] .ta-hud {
+  border-color: var(--danger);
+}
+
+/* ---- crit ---- last 3 seconds: timer jitters, glyph goes chroma-split,
+        tile borders flicker, whole shell saturates ---- */
+.ta-play[data-tension="crit"] {
+  filter: saturate(1.15);
+}
+.ta-play[data-tension="crit"] .ta-play-vignette {
+  opacity: 1;
+  background: radial-gradient(ellipse at center,
+    transparent 38%,
+    rgba(255,92,106,.42) 100%);
+  animation: ta-vignette-pulse 600ms var(--ease-snap) infinite;
+}
+@keyframes ta-vignette-pulse {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.35); }
+}
+.ta-play[data-tension="crit"] .ta-card-corner {
+  border-color: var(--danger);
+  box-shadow: 0 0 14px rgba(255,92,106,.85);
+  animation: ta-corner-flicker 240ms steps(2, end) infinite;
+}
+@keyframes ta-corner-flicker {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .55; }
+}
+.ta-play[data-tension="crit"] .ta-card-glyph {
+  text-shadow:
+    -2px 0 0 var(--danger),
+    2px 0 0 var(--accent-cyan),
+    0 0 10px rgba(255,92,106,.4);
+}
+.ta-play[data-tension="crit"] .ta-tile:not(.is-correct):not(.is-wrong) {
+  animation: ta-tile-flicker 360ms steps(2, end) infinite;
+}
+@keyframes ta-tile-flicker {
+  0%, 100% { border-color: var(--line-bright); }
+  50%      { border-color: var(--danger); }
+}
+
+/* Timer itself jitters at crit — reuses existing ta-glitch keyframe cadence.
+   Class is toggled by TATopbar when clockMs ≤ 3s; overrides is-danger pulse. */
+.ta-top-clock.is-crit {
+  animation: ta-glitch .24s steps(2, end) infinite;
+  color: var(--danger);
+  text-shadow:
+    -2px 0 0 var(--danger),
+    2px 0 0 var(--accent-cyan),
+    0 0 10px rgba(255,92,106,.55);
 }
 
 /* ================= End ================= */
