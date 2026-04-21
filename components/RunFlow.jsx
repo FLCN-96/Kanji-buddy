@@ -139,7 +139,7 @@ const PreRun = ({ composition, onStart, isOverclock }) => {
 };
 
 // EndRun — fed real user data (streak, total_xp, xpGained) so nothing is faked.
-const EndRun = ({ results, cards, duration, onAgain, onHome, user, xpGained, isOverclock }) => {
+const EndRun = ({ results, cards, duration, onHome, user, xpGained, isOverclock }) => {
   const counts = { miss:0, hard:0, ok:0, easy:0 };
   results.forEach(r => { if (counts[r] != null) counts[r]++; });
   const total = results.length;
@@ -166,6 +166,14 @@ const EndRun = ({ results, cards, duration, onAgain, onHome, user, xpGained, isO
   const curRank = ranks?.cur?.label || 'RANK —';
   const nextRank = ranks?.next || null;
   const toNext = nextRank ? Math.max(0, nextRank.min - nextXp) : null;
+  // Map rank tier -> its accent so the XP panel label follows the ladder's
+  // four-color arc instead of locking to magenta. Matches home.css .tier-*.
+  const tierColor = ({
+    cyan: 'var(--accent-cyan)',
+    magenta: 'var(--accent-magenta)',
+    amber: 'var(--accent-amber)',
+    transcend: '#fefce8',
+  })[ranks?.cur?.color] || 'var(--accent-cyan)';
 
   const streakDelta = streakDays > (user?._streakBefore ?? streakDays) ? '▲ +1' : null;
 
@@ -208,7 +216,7 @@ const EndRun = ({ results, cards, duration, onAgain, onHome, user, xpGained, isO
           </div>
         </div>
         <div className="run-end-panel">
-          <div className="run-end-p-head"><span>▸ XP GAINED</span><span style={{color:'var(--accent-magenta)'}}>{curRank.replace(/^RANK /, '')}</span></div>
+          <div className="run-end-p-head"><span>▸ XP GAINED</span><span style={{color: tierColor}}>{curRank.replace(/^RANK /, '')}</span></div>
           <div className="run-end-p-val xp">
             +{xp}<span style={{fontSize:11,color:'var(--fg-2)',marginLeft:6,fontWeight:400,letterSpacing:'.12em',textTransform:'uppercase'}}>xp</span>
           </div>
@@ -236,8 +244,7 @@ const EndRun = ({ results, cards, duration, onAgain, onHome, user, xpGained, isO
       )}
       <div style={{height: 16}} />
       <div className="run-end-actions">
-        <button className="run-end-btn" onClick={onHome}>‹ HOME</button>
-        <button className="run-end-btn primary" onClick={onAgain}>RUN AGAIN ▸</button>
+        <button className="run-end-btn primary" onClick={onHome}>‹ HOME</button>
       </div>
     </div>
   );

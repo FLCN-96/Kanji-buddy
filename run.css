@@ -42,6 +42,14 @@ body[data-scanlines="on"]::after {
   background: var(--bg-1);
   position: sticky; top: 0; z-index: 10;
 }
+/* Run / Overclock have a centered counter between QUIT and LIVE — geometric
+   centering (not flex auto-spacing) so it doesn't drift as side-group widths
+   change. Other modes keep their 2-part flex layout. */
+.run-top:has(> .run-timer) {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+}
+.run-top:has(> .run-timer) .run-top-l { justify-self: start; }
+.run-top:has(> .run-timer) .run-top-r { justify-self: end; }
 .run-top-l { display: flex; align-items: center; gap: var(--sp-3); }
 .run-quit {
   background: transparent; border: 1px solid var(--line-dim);
@@ -57,13 +65,14 @@ body[data-scanlines="on"]::after {
 .run-timer {
   font-family: var(--font-mono); font-weight: 700;
   font-size: 12px; letter-spacing: .08em; color: var(--fg-0);
+  text-align: center; white-space: nowrap;
 }
 .run-top-r { display: flex; align-items: center; gap: var(--sp-3); font-size: 10px; color: var(--fg-2); letter-spacing: .12em; }
 
 
 /* Segment progress */
 .run-seg {
-  display: flex; gap: 2px; padding: 10px var(--sp-4) 0;
+  display: flex; gap: var(--sp-1); padding: var(--sp-3) var(--sp-4) 0;
 }
 .run-seg-s { flex: 1; height: 6px; background: var(--bg-2); border: 1px solid var(--line-dim); }
 .run-seg-s.hit { background: var(--accent-cyan); border-color: var(--accent-cyan); box-shadow: 0 0 4px rgba(34,211,238,.5); }
@@ -88,13 +97,27 @@ body[data-scanlines="on"]::after {
   min-height: 280px;
   position: relative;
   overflow: hidden;
+  perspective: 1400px;
+  transform-origin: center center;
   transition: border-color var(--dur-base) var(--ease-snap), box-shadow var(--dur-base) var(--ease-snap);
+  animation: card-flip-in 420ms var(--ease-snap) both;
 }
 .run-card.revealed { border-color: var(--accent-cyan); box-shadow: 0 0 14px rgba(34,211,238,.2); }
+/* Quiz cards remount per-card (React key on idx) so the flip plays between
+   cards. Intro cards animate in via .run-intro which overrides. */
+@keyframes card-flip-in {
+  0%   { transform: rotateY(-72deg) translateZ(-40px); opacity: 0; }
+  55%  { opacity: 1; }
+  100% { transform: rotateY(0) translateZ(0); opacity: 1; }
+}
+.run-intro { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .run-card { animation: none; }
+}
 
 .run-card-strip {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 6px var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
   border-bottom: 1px solid var(--line-dim);
   font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-2);
 }
@@ -158,27 +181,26 @@ body[data-scanlines="on"]::after {
 .run-card.revealed .run-k-meta { opacity: 1; max-height: 700px; }
 
 .run-readings {
-  display: flex; flex-direction: column; gap: 4px; align-items: center;
+  display: flex; flex-direction: column; gap: var(--sp-1); align-items: center;
   margin-bottom: var(--sp-3);
 }
 .run-reading {
   font-family: var(--font-jp-sans);
   font-size: 15px;
   color: var(--accent-magenta);
-  display: inline-flex; align-items: baseline; gap: 8px;
+  display: inline-flex; align-items: baseline; gap: var(--sp-2);
 }
 .run-reading.on { color: var(--fg-1); }
 .run-reading .tag {
   font-family: var(--font-mono);
   font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
   color: var(--fg-2);
-  padding: 2px 5px; border: 1px solid var(--line-dim);
+  padding: 2px 6px; border: 1px solid var(--line-dim);
 }
 .run-reading .gloss {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--fg-2);
-  margin-left: 6px;
 }
 .run-reading .r-text { font-weight: 500; }
 .run-reading.main .r-text { color: var(--accent-magenta); font-weight: 700; }
@@ -194,7 +216,7 @@ body[data-scanlines="on"]::after {
 }
 
 .run-examples {
-  display: flex; flex-direction: column; gap: 4px;
+  display: flex; flex-direction: column; gap: var(--sp-1);
   margin-top: var(--sp-3);
   padding: var(--sp-3);
   border-top: 1px dashed var(--line-dim);
@@ -206,15 +228,15 @@ body[data-scanlines="on"]::after {
 }
 .run-examples-head {
   font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-2);
-  margin-bottom: 4px;
+  margin-bottom: var(--sp-2);
 }
 .run-ex {
   display: grid; grid-template-columns: auto 1fr;
-  gap: 10px; align-items: baseline;
-  padding: 4px 0;
+  gap: var(--sp-3); align-items: baseline;
+  padding: var(--sp-1) 0;
   border-bottom: 1px solid transparent;
 }
-.run-ex + .run-ex { border-top: 1px solid var(--line-dim); padding-top: 6px; }
+.run-ex + .run-ex { border-top: 1px solid var(--line-dim); padding-top: var(--sp-2); }
 .run-ex-word {
   font-family: var(--font-jp-sans);
   font-size: 16px;
@@ -225,7 +247,7 @@ body[data-scanlines="on"]::after {
 .run-ex-word .r {
   font-size: 10px;
   color: var(--accent-magenta);
-  margin-top: 1px;
+  margin-top: 2px;
 }
 .run-ex-m {
   font-size: 11px;
@@ -413,7 +435,7 @@ body[data-scanlines="on"]::after {
 .run-pre-stat { padding: var(--sp-3); text-align: center; border-right: 1px solid var(--line-dim); }
 .run-pre-stat:last-child { border-right: 0; }
 .run-pre-stat-lbl { font-size: 9px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; }
-.run-pre-stat-val { font-family: var(--font-mono); font-weight: 700; font-size: 22px; color: var(--fg-0); margin-top: 4px; }
+.run-pre-stat-val { font-family: var(--font-mono); font-weight: 700; font-size: 22px; color: var(--fg-0); margin-top: var(--sp-1); }
 .run-pre-stat-val.cyan { color: var(--accent-cyan); }
 .run-pre-stat-val.amb { color: var(--accent-amber); }
 .run-pre-breakdown {
@@ -428,9 +450,9 @@ body[data-scanlines="on"]::after {
 .run-pre-breakdown-bar .new { background: var(--accent-cyan); }
 .run-pre-breakdown-bar .rev { background: var(--accent-magenta); opacity: .7; }
 .run-pre-breakdown-bar .lch { background: var(--accent-amber); }
-.run-pre-legend { display: flex; gap: var(--sp-3); font-size: 10px; color: var(--fg-2); margin-top: 8px; letter-spacing: .06em; }
-.run-pre-legend b { color: var(--fg-0); font-weight: 500; margin-right: 4px; }
-.run-pre-legend .dot { display: inline-block; width: 8px; height: 8px; margin-right: 4px; vertical-align: middle; }
+.run-pre-legend { display: flex; gap: var(--sp-3); font-size: 10px; color: var(--fg-2); margin-top: var(--sp-2); letter-spacing: .06em; }
+.run-pre-legend b { color: var(--fg-0); font-weight: 500; margin-right: var(--sp-1); }
+.run-pre-legend .dot { display: inline-block; width: 8px; height: 8px; margin-right: var(--sp-1); vertical-align: middle; }
 .run-pre-legend .dot.new { background: var(--accent-cyan); }
 .run-pre-legend .dot.rev { background: var(--accent-magenta); opacity: .7; }
 .run-pre-legend .dot.lch { background: var(--accent-amber); }
@@ -445,17 +467,17 @@ body[data-scanlines="on"]::after {
   margin-bottom: var(--sp-2); display: flex; justify-content: space-between;
 }
 .run-pre-verdicts-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-2);
 }
 .run-pre-vk {
   border: 1px solid var(--line-dim); background: var(--bg-0);
-  padding: 8px 10px; display: flex; flex-direction: column; gap: 4px;
+  padding: var(--sp-2) var(--sp-3); display: flex; flex-direction: column; gap: var(--sp-1);
   font-family: var(--font-mono);
 }
-.run-pre-vk-head { display: flex; align-items: baseline; gap: 6px; }
+.run-pre-vk-head { display: flex; align-items: baseline; gap: var(--sp-2); }
 .run-pre-vk-head .k {
   font-size: 9px; color: var(--fg-2); letter-spacing: .08em;
-  border: 1px solid var(--line-bright); padding: 0 4px;
+  border: 1px solid var(--line-bright); padding: 0 var(--sp-1);
   border-bottom-width: 2px;
 }
 .run-pre-vk-head .l { font-size: 12px; font-weight: 700; letter-spacing: .1em; }
@@ -516,6 +538,47 @@ body[data-scanlines="on"]::after {
   border-bottom-width: 2px;
   padding: 1px 6px; color: var(--fg-0);
   margin: 0 2px;
+}
+
+/* Prescreen entrance — panels cascade up so the screen feels loaded, not
+   slapped on. Each block animates once on mount; no JS needed. */
+@keyframes pre-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.run-pre-head,
+.run-pre-stats,
+.run-pre-breakdown,
+.run-pre-verdicts,
+.run-pre-start,
+.run-pre-hint {
+  animation: pre-rise 320ms var(--ease-snap) both;
+}
+.run-pre-head       { animation-delay: 0ms;   }
+.run-pre-stats      { animation-delay: 80ms;  }
+.run-pre-breakdown  { animation-delay: 160ms; }
+.run-pre-verdicts   { animation-delay: 240ms; }
+.run-pre-start      { animation-delay: 340ms; }
+.run-pre-hint       { animation-delay: 420ms; }
+
+/* Deck-composition bar fills from 0 on mount — reads as data being loaded
+   into the deck, not pre-rendered. Segment widths already flex from the
+   inline %-style; the shell grows into place. */
+.run-pre-breakdown-bar > div {
+  transform-origin: left center;
+  animation: bar-fill 420ms var(--ease-snap) 280ms both;
+}
+@keyframes bar-fill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .run-pre-head, .run-pre-stats, .run-pre-breakdown, .run-pre-verdicts,
+  .run-pre-start, .run-pre-hint,
+  .run-pre-breakdown-bar > div {
+    animation: none;
+  }
 }
 
 /* ================= End screen ================= */
@@ -586,7 +649,8 @@ body[data-scanlines="on"]::after {
   text-transform: lowercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-.run-end-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+.run-end-actions { display: flex; justify-content: center; }
+.run-end-actions .run-end-btn { padding: var(--sp-3) var(--sp-5); min-width: 220px; }
 .run-end-btn {
   padding: var(--sp-3);
   border: 1px solid var(--line-bright);
