@@ -89,21 +89,28 @@ function dealSurvQuestion(cards, cardStates, used, depth, mode) {
   return { card, prompt, tiles, correct, correctIdx: tiles.indexOf(correct) };
 }
 
-const SVTopbar = ({ phase, depth, best, onQuit }) => (
-  <header className="run-top sv-top">
-    <div className="run-top-l">
-      <button className="run-quit" onClick={onQuit}>‹ quit</button>
-      <span className="run-lbl sv-lbl">▸ SURVIVAL</span>
-    </div>
-    <div className="sv-top-depth">
-      <span className="sv-top-depth-lbl">DEPTH</span>
-      <span className="sv-top-depth-val" key={depth}>{String(depth).padStart(3,'0')}</span>
-    </div>
-    <div className="run-top-r">
-      <span className="sv-top-best">BEST · <b>{best}</b></span>
-    </div>
-  </header>
-);
+const SVTopbar = ({ phase, best, onQuit }) => {
+  // During play, the layer counter and biometric live inside the play column.
+  // The topbar collapses to a hairline strip with the abort affordance only —
+  // depth/PB are not part of the negotiation while the trace is running.
+  const playing = phase === 'play';
+  return (
+    <header className={`run-top sv-top${playing ? ' is-play' : ''}`}>
+      <div className="run-top-l">
+        <button className="run-quit sv-quit" onClick={onQuit} aria-label="abort trace">
+          {playing ? '[ABORT]' : '‹ abort'}
+        </button>
+        {!playing && <span className="run-lbl sv-lbl">// TRACE</span>}
+      </div>
+      <div className="sv-top-mid" aria-hidden>
+        {playing && <span className="sv-top-link">LINK ACTIVE</span>}
+      </div>
+      <div className="run-top-r">
+        {!playing && <span className="sv-top-best">DEEPEST · <b>{String(best).padStart(3,'0')}</b></span>}
+      </div>
+    </header>
+  );
+};
 
 const SurvivalApp = ({ cards }) => {
   const [tweaks] = React.useState(() => {
@@ -129,6 +136,11 @@ const SurvivalApp = ({ cards }) => {
   const [xpGained, setXpGained] = React.useState(0);
   const [confirmQuit, setConfirmQuit] = React.useState(false);
   const [modeIdx, setModeIdx] = React.useState(0); // for rotate
+  // EYES: phone-friendly hesitation tracker. Each second past a depth-scaled
+  // threshold (4s at depth 0, ~1.5s at depth 40) ticks eyes by 1. Resets per
+  // question. Drives a magenta edge-noise on the prompt at eyes >= 3 — pure
+  // cosmetic menace, no gameplay effect.
+  const [eyes, setEyes] = React.useState(0);
   const lockedRef = React.useRef(false);
   const qStart = React.useRef(null);
   // Ref (not state) so loading card_states mid-mount doesn't re-trigger the
@@ -163,10 +175,28 @@ const SurvivalApp = ({ cards }) => {
     const q = dealSurvQuestion(cards, cardStatesRef.current, usedSet, d, mode);
     setQuestion(q);
     setFeedback(null);
+    setEyes(0);
     lockedRef.current = false;
     qStart.current = performance.now();
     return q;
   }, [cards, pickMode]);
+
+  // Stall-time → EYES ticker. Threshold shrinks with depth: at depth 0 the
+  // system gives 4s before noticing; by depth 40 it's ~1.5s. Ticks every 1s
+  // past the threshold while the question is unanswered.
+  React.useEffect(() => {
+    if (phase !== 'play' || !question || feedback) return;
+    const threshold = Math.max(1.5, 4 - (depth / 40) * 2.5) * 1000;
+    let ticked = 0;
+    const id = setInterval(() => {
+      const elapsed = performance.now() - (qStart.current || 0);
+      if (elapsed > threshold) {
+        ticked += 1;
+        setEyes(e => e + 1);
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [phase, question, feedback, depth]);
 
   // 3-2-1 countdown
   React.useEffect(() => {
@@ -235,9 +265,17 @@ const SurvivalApp = ({ cards }) => {
     if (ok) {
       const nextDepth = depth + 1;
       setDepth(nextDepth);
-      // sector cleared?
+      // layer breach (every 10 depth) — JLPT escalates here too
       if (nextDepth > 0 && nextDepth % 10 === 0) {
-        setSectorFlash({ depth: nextDepth, t: Date.now() });
+        const newJlpt = jlptForDepth(nextDepth);
+        const oldJlpt = jlptForDepth(nextDepth - 1);
+        setSectorFlash({
+          depth: nextDepth,
+          sector: Math.floor(nextDepth / 10),
+          jlpt: newJlpt,
+          escalated: newJlpt !== oldJlpt,
+          t: Date.now(),
+        });
         setTimeout(() => setSectorFlash(null), 1100);
       }
       setTimeout(() => {
@@ -255,7 +293,7 @@ const SurvivalApp = ({ cards }) => {
   const restart = () => {
     setDepth(0); setUsed(new Set()); setHistory([]);
     setFeedback(null); setHeartBreak(false); setBeatPb(false); setQuestion(null);
-    setXpGained(0);
+    setXpGained(0); setEyes(0);
     setPhase('ready');
   };
   const goHome = () => { window.location.href = 'Home.html'; };
@@ -283,11 +321,15 @@ const SurvivalApp = ({ cards }) => {
   const pressure = Math.min(1, depth / 40); // 0..1 dread
   const tier = pickDepthTier(depth);
   const lastEight = history.slice(-8);
+  // Pressure bands — drives escalation cosmetics in CSS via data-band.
+  // 0: connected (calm). 1: active trace (depth 10+). 2: red alert (depth 25+).
+  // 3: breach imminent (depth 40+).
+  const band = depth >= 40 ? 3 : depth >= 25 ? 2 : depth >= 10 ? 1 : 0;
 
   return (
     <>
-      <div className={shellCls} data-phase={phase} style={{'--dread': pressure}}>
-        <SVTopbar phase={phase} depth={depth} best={pb} onQuit={quit} />
+      <div className={shellCls} data-phase={phase} data-band={band} style={{'--dread': pressure}}>
+        <SVTopbar phase={phase} best={pb} onQuit={quit} />
 
         <main className="run-main sv-main" data-screen-label={`sv-${phase}`}>
           {phase === 'pre' && <SVPre pb={pb} onStart={start} promptMode={tweaks.promptMode} />}
@@ -301,6 +343,8 @@ const SurvivalApp = ({ cards }) => {
               feedback={feedback}
               heartBreak={heartBreak}
               pressure={pressure}
+              band={band}
+              eyes={eyes}
               sectorFlash={sectorFlash}
               isUnseen={!seenSetRef.current.has(question.card.idx)}
             />
@@ -326,10 +370,10 @@ const SurvivalApp = ({ cards }) => {
 
       <ConfirmModal
         open={confirmQuit}
-        title="QUIT THE DESCENT?"
-        body="Run ends here · depth won't save."
-        confirmLabel="QUIT"
-        cancelLabel="STAY"
+        title="ABORT TRACE?"
+        body="Connection drops here · layer progress won't save."
+        confirmLabel="BURN SESSION"
+        cancelLabel="STAY HOT"
         onConfirm={goHome}
         onCancel={() => setConfirmQuit(false)}
       />
