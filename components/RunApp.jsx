@@ -226,12 +226,6 @@ const RunApp = ({ cards }) => {
     }, v === 'miss' ? 360 : 260);
   };
 
-  const restart = () => {
-    setResults([]); setRevealed(false); setCombo(0); setFlash(null);
-    setXpGained(0); setIntroIdx(0); setQuizIdx(0);
-    beginSession();
-  };
-
   const goHome = () => { window.location.href = 'Home.html'; };
   const quit = () => {
     if (phase === 'quiz' || phase === 'intro') { setConfirmQuit(true); return; }
@@ -253,7 +247,7 @@ const RunApp = ({ cards }) => {
         else if (e.key === '4') { if (revealed) verdict('easy'); }
         else if (e.key === 'Escape') { quit(); }
       } else if (phase === 'end') {
-        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); restart(); }
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); goHome(); }
       }
     };
     window.addEventListener('keydown', onKey);
@@ -313,6 +307,7 @@ const RunApp = ({ cards }) => {
         {phase === 'quiz' && activeQuiz && (
           <>
             <Card
+              key={activeQuiz.idx}
               card={activeQuiz}
               revealed={revealed}
               onReveal={reveal}
@@ -327,8 +322,7 @@ const RunApp = ({ cards }) => {
             results={results}
             cards={quizOrder}
             duration={duration}
-            onAgain={restart}
-            onHome={() => window.location.href = 'Home.html'}
+            onHome={goHome}
             user={user ? { ...user, _streakBefore: streakBefore } : null}
             xpGained={xpGained}
             isOverclock={isOverclock}
