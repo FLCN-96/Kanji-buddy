@@ -3,12 +3,18 @@
 .mt-shell { }
 
 /* ================= Topbar ================= */
+/* Three zones: [abort]  [timer + sweep bar]  [×mult │ combo │ score cluster].
+   The mode label is intentionally absent in-game — the player just came from
+   the pre-screen, so repeating "MATCH" just steals attention from the timer. */
 .mt-top { border-bottom-color: var(--accent-magenta); }
-.mt-lbl { color: var(--accent-magenta); }
 
 .mt-top-clock-wrap {
   display: flex; flex-direction: column; align-items: center;
-  gap: 4px; min-width: 160px;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  max-width: 360px;
+  margin: 0 var(--sp-3);
 }
 .mt-top-clock {
   font-family: var(--font-mono); font-weight: 700;
@@ -23,7 +29,10 @@
 .mt-clk-ms { font-size: 14px; opacity: .8; }
 .mt-clk-unit { font-size: 10px; letter-spacing: .14em; color: var(--fg-2); margin-left: 4px; }
 .mt-top-bar {
-  position: relative; width: 160px; height: 4px;
+  position: relative;
+  width: 100%;
+  max-width: 260px;
+  height: 4px;
   background: var(--bg-2);
   border: 1px solid var(--line-dim);
   overflow: hidden;
@@ -62,30 +71,59 @@
   80% { transform: translateX(2px); }
 }
 
-.mt-top-r { display: flex; gap: var(--sp-2); align-items: center; }
-.mt-pill {
-  font-family: var(--font-mono); font-weight: 700;
-  font-size: 13px; letter-spacing: .08em;
-  padding: 5px 10px;
+/* Readout cluster — ×mult │ combo │ score. One bordered frame with internal
+   1px dividers so the three values read as one instrument. Each cell has its
+   own accent when relevant: mult lights magenta when hot, combo lights amber
+   at ≥5, score is always cyan. */
+.mt-top-r { display: flex; align-items: center; }
+.mt-hud-cluster {
+  display: inline-flex; align-items: stretch;
   border: 1px solid var(--line-bright);
   background: var(--bg-1);
-  color: var(--fg-1);
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: 13px; letter-spacing: .08em;
 }
-.mt-pill-mult.is-hot {
-  color: var(--accent-magenta); border-color: var(--accent-magenta);
+.mt-hud-cell {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 5px 10px;
+  border-right: 1px solid var(--line-dim);
+  color: var(--fg-1);
+  font-variant-numeric: tabular-nums;
+  transition: color var(--dur-fast) var(--ease-snap),
+              background var(--dur-fast) var(--ease-snap);
+}
+.mt-hud-cell:last-child { border-right: 0; }
+.mt-hud-cell-lbl {
+  font-size: 9px; letter-spacing: .18em;
+  color: var(--fg-2); margin-right: 4px;
+}
+.mt-hud-mult { min-width: 46px; }
+.mt-hud-combo { min-width: 40px; }
+.mt-hud-score {
+  min-width: 64px;
+  color: var(--accent-cyan);
+  background: var(--accent-cyan-bg);
+  text-align: right;
+  text-shadow: 0 0 8px rgba(34,211,238,.35);
+}
+.mt-hud-cluster.is-hot .mt-hud-mult {
+  color: var(--accent-magenta);
   background: var(--accent-magenta-bg);
-  box-shadow: 0 0 12px rgba(255,61,255,.5);
+  box-shadow: inset 0 0 10px rgba(255,61,255,.35);
   animation: mt-mult-pulse 1s ease-in-out infinite;
 }
-@keyframes mt-mult-pulse {
-  0%,100% { box-shadow: 0 0 12px rgba(255,61,255,.5); }
-  50% { box-shadow: 0 0 22px rgba(255,61,255,.8); }
+.mt-hud-cluster.is-combo-hot .mt-hud-combo {
+  color: var(--accent-amber);
+  background: var(--accent-amber-bg);
+  box-shadow: inset 0 0 10px rgba(245,165,36,.35);
+  text-shadow: 0 0 8px rgba(245,165,36,.6);
 }
-.mt-pill-score {
-  color: var(--accent-cyan); border-color: var(--accent-cyan);
-  background: var(--accent-cyan-bg);
-  font-variant-numeric: tabular-nums;
-  min-width: 70px; text-align: right;
+.mt-hud-cluster.is-combo-hot .mt-hud-combo .mt-hud-cell-lbl {
+  color: var(--accent-amber);
+}
+@keyframes mt-mult-pulse {
+  0%,100% { box-shadow: inset 0 0 10px rgba(255,61,255,.35); }
+  50%     { box-shadow: inset 0 0 18px rgba(255,61,255,.6); }
 }
 
 /* ================= Pre-flight ================= */
@@ -307,31 +345,44 @@
 }
 
 /* ================= Board (play) ================= */
+/* Two columns, six shared rows. Each pair lives in one grid row, so the Nth
+   kanji tile and the Nth clue tile always occupy the same Y band regardless
+   of whether the clue text wraps. A decorative dashed spine is drawn via
+   `.mt-board::before` between the two columns — no grid column reserved. */
 .mt-main {
   position: relative;
   padding: var(--sp-3);
 }
 .mt-board {
+  position: relative;
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 90px 1fr;
-  gap: var(--sp-3);
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto repeat(6, minmax(56px, 1fr));
+  column-gap: var(--sp-4);
+  row-gap: 8px;
   max-width: 880px;
   width: 100%;
   margin: 0 auto;
-  align-items: stretch;
+}
+/* Decorative data bus between the two columns. 1px dashed vertical line,
+   non-interactive, sits behind the tiles. Replaces the old 90px rail column. */
+.mt-board::before {
+  content: '';
+  position: absolute;
+  top: 48px; bottom: 0;
+  left: 50%; width: 1px; margin-left: -.5px;
+  background: repeating-linear-gradient(180deg,
+    var(--line-dim) 0 4px, transparent 4px 8px);
+  pointer-events: none;
+  z-index: 0;
 }
 
-.mt-lane {
-  display: flex; flex-direction: column;
-  border: 1px solid var(--line-dim);
-  background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
-  min-height: 0;
-}
+/* Lane headers — two grid cells in row 1, one per column. */
 .mt-lane-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--line-dim);
+  border: 1px solid var(--line-dim);
   background: var(--bg-1);
 }
 .mt-lane-head-tag {
@@ -345,42 +396,41 @@
   box-shadow: 0 0 6px var(--accent-cyan);
   animation: mt-lane-pulse 1.4s ease-in-out infinite;
 }
-.mt-lane-v .mt-lane-head-pulse { background: var(--accent-magenta); box-shadow: 0 0 6px var(--accent-magenta); }
+.mt-lane-head-v .mt-lane-head-pulse {
+  background: var(--accent-magenta);
+  box-shadow: 0 0 6px var(--accent-magenta);
+}
 @keyframes mt-lane-pulse {
   0%,100% { opacity: 1; transform: scale(1); }
   50% { opacity: .4; transform: scale(.7); }
 }
-.mt-lane-tiles {
-  flex: 1;
-  display: flex; flex-direction: column;
-  gap: 8px;
-  padding: 10px;
-  min-height: 0;
-}
 
-/* Tiles */
+/* Tiles. Height is dictated by the grid row track (the taller of left/right
+   for that row), so no flex:1 or min-height needed. overflow:visible on
+   transient states lets the ::before bus line extend past the tile edge. */
 .mt-tile {
   position: relative;
-  flex: 1;
-  min-height: 56px;
   display: flex; align-items: center; justify-content: center;
   padding: 8px 14px;
-  border: 1px solid var(--line-bright);
+  border: 1px solid var(--line-dim);
   background: var(--bg-1);
   color: var(--fg-0);
   cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-snap);
+  transition: border-color var(--dur-fast) var(--ease-snap),
+              background var(--dur-fast) var(--ease-snap),
+              box-shadow var(--dur-fast) var(--ease-snap),
+              transform var(--dur-fast) var(--ease-snap);
   text-align: center;
   font-family: var(--font-mono);
-  overflow: hidden;
   animation: mt-tile-in .35s var(--ease-snap);
+  z-index: 1;
 }
 @keyframes mt-tile-in {
   from { opacity: 0; transform: translateX(var(--dir, 0)) scale(.95); }
   to { opacity: 1; transform: translateX(0) scale(1); }
 }
-.mt-lane-k .mt-tile { --dir: -10px; }
-.mt-lane-v .mt-tile { --dir: 10px; }
+.mt-tile.mt-tile-k { --dir: -10px; }
+.mt-tile.mt-tile-v { --dir: 10px; }
 @media (hover: hover) {
   .mt-tile:hover:not(:disabled) {
     border-color: var(--accent-cyan);
@@ -388,7 +438,7 @@
     transform: translateY(-1px);
     box-shadow: 0 0 14px rgba(34,211,238,.3);
   }
-  .mt-lane-v .mt-tile:hover:not(:disabled) {
+  .mt-tile.mt-tile-v:hover:not(:disabled) {
     border-color: var(--accent-magenta);
     background: linear-gradient(180deg, var(--accent-magenta-bg), var(--bg-1));
     box-shadow: 0 0 14px rgba(255,61,255,.3);
@@ -401,17 +451,48 @@
   transform: translateY(-2px);
   z-index: 2;
 }
-.mt-lane-k .mt-tile.is-selected {
+.mt-tile.mt-tile-k.is-selected {
   border-color: var(--accent-cyan);
   background: linear-gradient(180deg, var(--accent-cyan-bg), var(--bg-1) 80%);
   box-shadow: 0 0 22px rgba(34,211,238,.6), inset 0 0 0 1px var(--accent-cyan);
 }
+
+/* Mismatch: shake + red bus line sweeping inward from the tile's inner edge
+   toward the rail. Both tiles in the pair fire simultaneously, meeting at
+   the spine — reads as one bus error rather than two independent shivers. */
 .mt-tile.is-shake {
   animation: mt-tile-shake .42s var(--ease-snap);
   border-color: var(--danger) !important;
   background: var(--danger-bg) !important;
   color: var(--danger) !important;
   box-shadow: 0 0 18px rgba(255,92,106,.5) !important;
+  overflow: visible;
+  z-index: 3;
+}
+.mt-tile.is-shake::after {
+  content: '';
+  position: absolute;
+  top: 50%; margin-top: -.5px;
+  height: 1px;
+  background: var(--danger);
+  box-shadow: 0 0 10px var(--danger), 0 0 4px var(--danger);
+  transform-origin: var(--mt-bus-origin, center) center;
+  transform: scaleX(0);
+  animation: mt-pair-error .42s var(--ease-snap);
+  pointer-events: none;
+  z-index: 3;
+}
+.mt-tile.mt-tile-k.is-shake::after {
+  left: 0; right: -50%;
+  --mt-bus-origin: left;
+}
+.mt-tile.mt-tile-v.is-shake::after {
+  left: -50%; right: 0;
+  --mt-bus-origin: right;
+}
+@keyframes mt-pair-error {
+  0%, 100% { transform: scaleX(0); opacity: 0; }
+  25%, 75% { transform: scaleX(1); opacity: .9; }
 }
 @keyframes mt-tile-shake {
   0%,100% { transform: translateX(0); }
@@ -421,9 +502,41 @@
   60% { transform: translateX(4px); }
   80% { transform: translateX(-2px); }
 }
+
+/* Match: fade + scale, plus a cyan bus packet extending from the tile's
+   inner edge toward the spine. Kanji tile fires right-ward; clue tile
+   fires left-ward; the two lines meet at the dashed spine. */
 .mt-tile.is-resolved {
   animation: mt-tile-out .36s var(--ease-snap) forwards;
   pointer-events: none;
+  overflow: visible;
+  z-index: 3;
+}
+.mt-tile.is-resolved::after {
+  content: '';
+  position: absolute;
+  top: 50%; margin-top: -.5px;
+  height: 1px;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 10px var(--accent-cyan);
+  transform-origin: var(--mt-bus-origin, center) center;
+  transform: scaleX(0);
+  animation: mt-bus-flash .36s var(--ease-snap);
+  pointer-events: none;
+  z-index: 3;
+}
+.mt-tile.mt-tile-k.is-resolved::after {
+  left: 0; right: -50%;
+  --mt-bus-origin: left;
+}
+.mt-tile.mt-tile-v.is-resolved::after {
+  left: -50%; right: 0;
+  --mt-bus-origin: right;
+}
+@keyframes mt-bus-flash {
+  0%   { transform: scaleX(0); opacity: 0; }
+  40%  { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
 }
 @keyframes mt-tile-out {
   0% { transform: scale(1); opacity: 1; border-color: var(--accent-cyan); box-shadow: 0 0 24px rgba(34,211,238,.7); background: var(--accent-cyan-bg); }
@@ -431,6 +544,7 @@
   100% { transform: scale(.4); opacity: 0; }
 }
 
+/* Content */
 .mt-tile-k-glyph {
   font-family: var(--font-jp);
   font-size: 56px;
@@ -438,106 +552,69 @@
   color: var(--fg-0);
   text-shadow: 0 0 12px rgba(255,255,255,.05);
 }
-.mt-tile-v-tag {
-  position: absolute;
-  top: 4px; left: 6px;
-  font-size: 8px;
-  letter-spacing: .12em;
-  color: var(--fg-2);
-  text-transform: uppercase;
-}
 .mt-tile-v-text {
   font-family: var(--font-mono); font-weight: 500;
   font-size: 18px;
   color: var(--fg-0);
   text-align: center;
-  word-break: break-word;
+  /* Two-line clamp with normal word-break; grid row height sizes to the
+     tallest tile in the row, so left-lane kanji auto-matches wrapped clues. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
 }
 .mt-tile-side-read .mt-tile-v-text {
   font-family: var(--font-jp);
   font-size: 22px;
   letter-spacing: .04em;
 }
-.mt-tile-v-tag { color: var(--accent-cyan); }
-.mt-tile-side-read .mt-tile-v-tag { color: var(--accent-magenta); }
 
-/* corner decoration */
+/* Mix-axis mode: per-tile MEANING/READING tag is gone. Instead a 4px colored
+   inner stripe along the clue tile's left edge encodes side — cyan=meaning,
+   magenta=reading. Preattentive, no repeated text. In fixed-axis rounds the
+   tag lives in the lane header instead, and this stripe is suppressed. */
+.mt-board.is-axis-mix .mt-tile.mt-tile-v.mt-tile-side-mean {
+  box-shadow: inset 4px 0 0 var(--accent-cyan);
+}
+.mt-board.is-axis-mix .mt-tile.mt-tile-v.mt-tile-side-read {
+  box-shadow: inset 4px 0 0 var(--accent-magenta);
+}
+/* Keep stripe visible when selected — stack with the selection glow. */
+.mt-board.is-axis-mix .mt-tile.mt-tile-v.mt-tile-side-mean.is-selected {
+  box-shadow: inset 4px 0 0 var(--accent-cyan),
+              0 0 22px rgba(255,61,255,.6),
+              inset 0 0 0 1px var(--accent-magenta);
+}
+.mt-board.is-axis-mix .mt-tile.mt-tile-v.mt-tile-side-read.is-selected {
+  box-shadow: inset 4px 0 0 var(--accent-magenta),
+              0 0 22px rgba(255,61,255,.6),
+              inset 0 0 0 1px var(--accent-magenta);
+}
+
+/* Corner brackets — the tile's permanent frame, not a selection-only ornament.
+   They carry the idle frame so the main tile border can sit on a dim line;
+   on state changes they recolor (cyan/magenta for selection, lime for unseen
+   kanji, danger for mismatch). */
 .mt-tile-edge {
   position: absolute;
-  width: 8px; height: 8px;
-  border: 1px solid currentColor;
-  opacity: .25;
+  width: 10px; height: 10px;
+  border: 1px solid var(--line-bright);
+  opacity: 1;
+  pointer-events: none;
+  transition: border-color var(--dur-fast) var(--ease-snap);
 }
 .mt-tile-edge-tl { top: 2px; left: 2px; border-right: 0; border-bottom: 0; }
 .mt-tile-edge-tr { top: 2px; right: 2px; border-left: 0; border-bottom: 0; }
 .mt-tile-edge-bl { bottom: 2px; left: 2px; border-right: 0; border-top: 0; }
 .mt-tile-edge-br { bottom: 2px; right: 2px; border-left: 0; border-top: 0; }
-.mt-tile.is-selected .mt-tile-edge { opacity: 1; color: currentColor; }
-
-/* Center rail */
-.mt-rail {
-  position: relative;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  min-width: 80px;
-}
-.mt-rail-spine {
-  position: absolute;
-  top: 50px; bottom: 50px;
-  left: 50%; width: 2px; transform: translateX(-50%);
-  background: linear-gradient(180deg, transparent, var(--line-dim) 10%, var(--line-dim) 90%, transparent);
-}
-.mt-rail-cursor {
-  position: relative;
-  width: 100%; height: 24px;
-  display: flex; align-items: center;
-}
-.mt-rail-cursor[data-side="k"] { justify-content: flex-start; }
-.mt-rail-cursor[data-side="v"] { justify-content: flex-end; }
-.mt-rail-cursor-dot {
-  width: 100%; height: 2px;
-  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
-  box-shadow: 0 0 8px rgba(255,61,255,.6);
-  animation: mt-rail-pulse .8s ease-in-out infinite;
-}
-@keyframes mt-rail-pulse {
-  0%,100% { opacity: 1; }
-  50% { opacity: .4; }
-}
-.mt-rail-combo {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex; flex-direction: column; align-items: center;
-  gap: 2px;
-  pointer-events: none;
-}
-.mt-rail-combo-x {
-  font-family: var(--font-mono); font-weight: 700;
-  font-size: 32px; line-height: 1;
-  color: var(--accent-magenta);
-  text-shadow: 0 0 12px rgba(255,61,255,.7);
-  animation: mt-combo-bump .3s var(--ease-snap);
-}
-.mt-rail-combo-lbl {
-  font-family: var(--font-mono); font-size: 9px;
-  letter-spacing: .2em;
-  color: var(--accent-magenta);
-}
-.mt-board.is-combo-hot .mt-rail-combo-x {
-  font-size: 40px;
-  color: var(--accent-amber);
-  text-shadow: 0 0 16px rgba(245,165,36,.8);
-  animation: mt-combo-hot 1s ease-in-out infinite;
-}
-@keyframes mt-combo-bump {
-  0% { transform: scale(.5); opacity: 0; }
-  60% { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(1); }
-}
-@keyframes mt-combo-hot {
-  0%,100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-}
+.mt-tile.mt-tile-k.is-selected .mt-tile-edge { border-color: var(--accent-cyan); }
+.mt-tile.mt-tile-v.is-selected .mt-tile-edge { border-color: var(--accent-magenta); }
+.mt-tile.is-unseen-frame .mt-tile-edge { border-color: var(--accent-lime); }
+.mt-tile.is-shake .mt-tile-edge { border-color: var(--danger); }
+.mt-tile.is-resolved .mt-tile-edge { border-color: var(--accent-cyan); }
 
 /* Penalty floater */
 .mt-penalty-fx {
@@ -751,7 +828,6 @@
 .variant-calm .mt-pre-start { box-shadow: none; text-shadow: none; background: var(--bg-1); color: var(--accent-magenta); border-width: 1px; }
 .variant-calm .mt-end-ribbon { box-shadow: none; }
 .variant-calm .mt-end-hero-val { text-shadow: none; }
-.variant-calm .mt-rail-combo-x { text-shadow: none; }
 .variant-calm .mt-pre-start .arrow { animation: none; }
 
 .variant-game .mt-tile-k-glyph { font-size: 64px; text-shadow: 0 0 18px rgba(255,255,255,.08); }
@@ -759,15 +835,24 @@
 
 /* ================= Responsive ================= */
 @media (max-width: 560px) {
-  .mt-board { grid-template-columns: 1fr 50px 1fr; gap: 6px; }
+  .mt-board {
+    column-gap: var(--sp-3);
+    row-gap: 6px;
+    grid-template-rows: auto repeat(6, minmax(48px, 1fr));
+  }
+  .mt-board::before { top: 42px; }
   .mt-tile-k-glyph { font-size: 40px; }
   .mt-tile-v-text { font-size: 14px; }
-  .mt-tile { min-height: 44px; padding: 6px; }
+  .mt-tile { padding: 6px; }
   .mt-lane-head { padding: 6px 8px; }
-  .mt-lane-tiles { padding: 6px; gap: 6px; }
+  .mt-lane-head-tag { font-size: 9px; }
   .mt-top-clock { font-size: 18px; }
-  .mt-top-bar { width: 110px; }
-  .mt-top-clock-wrap { min-width: 110px; }
-  .mt-pill-score { min-width: 56px; font-size: 12px; }
-  .mt-rail-combo-x { font-size: 22px; }
+  .mt-top-bar { max-width: 180px; }
+  .mt-top-clock-wrap { margin: 0 var(--sp-2); }
+  .mt-hud-cell { padding: 4px 7px; font-size: 12px; }
+  .mt-hud-cell-lbl { font-size: 8px; margin-right: 3px; }
+  .mt-hud-mult { min-width: 38px; }
+  .mt-hud-combo { min-width: 32px; }
+  .mt-hud-score { min-width: 52px; }
+  .mt-tile-edge { width: 8px; height: 8px; }
 }
