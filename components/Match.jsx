@@ -98,18 +98,23 @@ function buildRound(sourcePool, n, axis, seenSet, roundId) {
   return pairs;
 }
 
-// Topbar — clock + score + penalty pulse
-const MTTopbar = ({ timeLeft, total, score, multiplier, penaltyTick, onQuit }) => {
+// Topbar — one instrument cluster: abort · timer · mult/combo/score readout.
+// The `▸ MATCH` label that used to live between abort and timer is dropped
+// in-game: the player just came from the MATCH pre-screen, so repeating the
+// mode name is visual noise. Multiplier, combo and score share a single
+// bordered module so they read as one readout rather than three floaters.
+const MTTopbar = ({ timeLeft, total, score, multiplier, combo, penaltyTick, onQuit }) => {
   const sec = Math.max(0, timeLeft / 1000);
   const ss = Math.floor(sec).toString().padStart(2,'0');
   const ms = Math.floor((sec % 1) * 10);
   const pct = Math.max(0, Math.min(1, timeLeft / total));
   const danger = timeLeft < 10000;
+  const hotMult = multiplier > 1;
+  const hotCombo = combo >= 5;
   return (
     <header className={`run-top mt-top${penaltyTick ? ' is-penalty' : ''}${danger ? ' is-danger' : ''}`}>
       <div className="run-top-l">
         <button className="run-quit" onClick={onQuit}>‹ abort</button>
-        <span className="run-lbl mt-lbl">▸ MATCH</span>
       </div>
       <div className="mt-top-clock-wrap">
         <div className="mt-top-clock">
@@ -123,8 +128,11 @@ const MTTopbar = ({ timeLeft, total, score, multiplier, penaltyTick, onQuit }) =
         </div>
       </div>
       <div className="mt-top-r">
-        <span className={`mt-pill mt-pill-mult${multiplier > 1 ? ' is-hot' : ''}`}>×{multiplier.toFixed(1)}</span>
-        <span className="mt-pill mt-pill-score">{score.toString().padStart(4,'0')}</span>
+        <div className={`mt-hud-cluster${hotMult ? ' is-hot' : ''}${hotCombo ? ' is-combo-hot' : ''}`}>
+          <span className="mt-hud-cell mt-hud-mult">×{multiplier.toFixed(1)}</span>
+          <span className="mt-hud-cell mt-hud-combo"><span className="mt-hud-cell-lbl">C</span>{combo}</span>
+          <span className="mt-hud-cell mt-hud-score">{score.toString().padStart(4,'0')}</span>
+        </div>
       </div>
     </header>
   );
@@ -437,6 +445,7 @@ const MatchApp = ({ cards }) => {
           total={tweaks.duration * 1000}
           score={score}
           multiplier={multiplier}
+          combo={combo}
           penaltyTick={penaltyTick}
           onQuit={quit}
         />
@@ -450,7 +459,7 @@ const MatchApp = ({ cards }) => {
               resolved={resolved}
               selected={selected}
               shake={shake}
-              combo={combo}
+              axis={tweaks.axis}
               onPick={tryMatch}
               seenSet={seenSetRef.current}
             />
