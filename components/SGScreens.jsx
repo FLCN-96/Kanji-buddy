@@ -5,8 +5,9 @@ const SGPre = ({ pb, cellCount, difficulty, onStart }) => {
     <div className="sg-pre" data-screen-label="sg-pre">
       <div className="sg-pre-head">
         <div className="sg-pre-eyebrow">▸ STREAK GUARD · TRIAGE</div>
-        <div className="sg-pre-title">{cellCount} CARDS LEAKING</div>
+        <PreTitle cls="sg-pre" text={`${cellCount} CARDS LEAKING`} />
         <div className="sg-pre-sub">rescue them before their decay window expires</div>
+        <PreTicker cls="sg-pre" text="› TRIAGE ALERT &nbsp; › DECAY IN PROGRESS &nbsp; › RESCUE WINDOW: CLOSING &nbsp; › STREAK INTEGRITY: CRITICAL &nbsp; › EMERGENCY PROTOCOL: ACTIVE &nbsp; › GRID: ARMED &nbsp;&nbsp;" />
       </div>
 
       <div className="sg-pre-diagram" aria-hidden>
@@ -68,6 +69,7 @@ const SGPre = ({ pb, cellCount, difficulty, onStart }) => {
         )}
       </div>
 
+      <PreArm cls="sg-pre" readyLabel="▸ TRIAGE // READY" lockedLabel="◌ TRIAGE // LOCKED" />
       <button className="sg-pre-start" onClick={onStart}>
         <span>▸ ENGAGE TRIAGE</span>
         <span className="arrow">◉</span>
