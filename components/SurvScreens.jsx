@@ -5,8 +5,9 @@ const SVPre = ({ pb, onStart, promptMode }) => {
     <div className="sv-pre" data-screen-label="sv-pre">
       <div className="sv-pre-head">
         <div className="sv-pre-eyebrow">// TRACE · PRE-FLIGHT</div>
-        <div className="sv-pre-title">ONE LIFE · GO DEEP</div>
+        <PreTitle cls="sv-pre" text="ONE LIFE · GO DEEP" />
         <div className="sv-pre-sub">descend the system · one trace, no second pass</div>
+        <PreTicker cls="sv-pre" text="› TRACE ACTIVE &nbsp; › ONE LIFE AUTHORIZED &nbsp; › DESCENT PROTOCOL: ENGAGED &nbsp; › FIREWALL HARDEN AT L-010 &nbsp; › SECTOR BREACH: POSSIBLE &nbsp; › SIGNAL: NOMINAL &nbsp;&nbsp;" />
       </div>
 
       <div className="sv-pre-rules">
@@ -53,6 +54,7 @@ const SVPre = ({ pb, onStart, promptMode }) => {
         </div>
       )}
 
+      <PreArm cls="sv-pre" readyLabel="▸ LINE // LIVE" lockedLabel="◌ LINE // COLD" />
       <button className="sv-pre-start" onClick={onStart}>
         <span>JACK IN</span>
         <span className="arrow">▸</span>

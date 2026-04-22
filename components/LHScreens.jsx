@@ -1,36 +1,16 @@
 // LeechHunt — Pre, Dossier, End screens
 
-const SCRAMBLE_CHARS = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ▓▒░█';
+// SCRAMBLE_CHARS and useDecrypt come from TAScreens.jsx (loaded first in LeechHunt.html)
 const useScramble = (seed, len) => {
   const [tick, setTick] = React.useState(0);
   React.useEffect(() => {
     const t = setInterval(() => setTick(x => x + 1), 110);
     return () => clearInterval(t);
   }, []);
-  // Deterministic-ish per-row offset so rows scramble out of sync.
   const off = (seed * 7) % SCRAMBLE_CHARS.length;
   let out = '';
   for (let i = 0; i < len; i++) {
     out += SCRAMBLE_CHARS[(off + tick * (i+1) * 3 + i * 11) % SCRAMBLE_CHARS.length];
-  }
-  return out;
-};
-// Decrypts `final` left-to-right over `durMs`. Locked characters are real;
-// unlocked characters cycle through SCRAMBLE_CHARS at the scramble cadence.
-const useDecrypt = (final, durMs = 900) => {
-  const [tick, setTick] = React.useState(0);
-  const [t0] = React.useState(() => Date.now());
-  React.useEffect(() => {
-    const id = setInterval(() => setTick(x => x + 1), 70);
-    const stop = setTimeout(() => clearInterval(id), durMs + 100);
-    return () => { clearInterval(id); clearTimeout(stop); };
-  }, [final, durMs]);
-  const elapsed = Date.now() - t0;
-  const lockUpTo = Math.min(final.length, Math.floor((elapsed / durMs) * final.length));
-  let out = '';
-  for (let i = 0; i < final.length; i++) {
-    if (i < lockUpTo || final[i] === ' ') out += final[i];
-    else out += SCRAMBLE_CHARS[(tick * (i+1) * 5 + i * 13) % SCRAMBLE_CHARS.length];
   }
   return out;
 };

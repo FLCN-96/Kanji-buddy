@@ -1,12 +1,55 @@
 // TimeAttack — Pre / Ready / End screens
 
+const SCRAMBLE_CHARS = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ▓▒░█';
+const useDecrypt = (final, durMs = 900) => {
+  const [tick, setTick] = React.useState(0);
+  const [t0] = React.useState(() => Date.now());
+  React.useEffect(() => {
+    const id = setInterval(() => setTick(x => x + 1), 70);
+    const stop = setTimeout(() => clearInterval(id), durMs + 100);
+    return () => { clearInterval(id); clearTimeout(stop); };
+  }, [final, durMs]);
+  const elapsed = Date.now() - t0;
+  const lockUpTo = Math.min(final.length, Math.floor((elapsed / durMs) * final.length));
+  let out = '';
+  for (let i = 0; i < final.length; i++) {
+    if (i < lockUpTo || final[i] === ' ') out += final[i];
+    else out += SCRAMBLE_CHARS[(tick * (i+1) * 5 + i * 13) % SCRAMBLE_CHARS.length];
+  }
+  return out;
+};
+
+// Generic pre-game components shared across all modes (cls = e.g. "ta-pre")
+const PreTitle = ({ cls, text }) => {
+  const out = useDecrypt(text, 900);
+  return <div className={`${cls}-title`}>{out}</div>;
+};
+const PreTicker = ({ cls, text }) => (
+  <div className={`${cls}-ticker`} aria-hidden>
+    <span className={`${cls}-ticker-track`}>{text}</span>
+  </div>
+);
+const PreArm = ({ cls, readyLabel, lockedLabel }) => {
+  const [ready, setReady] = React.useState(false);
+  React.useEffect(() => {
+    const t = setTimeout(() => setReady(true), 600);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div className={`${cls}-arm-lbl`} data-state={ready ? 'ready' : 'locked'}>
+      {ready ? readyLabel : lockedLabel}
+    </div>
+  );
+};
+
 const TAPre = ({ duration, onDuration, onStart, pb }) => {
   const DURS = [30, 60, 120];
   return (
     <div className="ta-pre" data-screen-label="ta-pre">
       <div className="ta-pre-head">
         <div className="ta-pre-eyebrow">▸ TIME ATTACK · PRE-FLIGHT</div>
-        <div className="ta-pre-title">RECOGNIZE · PICK · REPEAT</div>
+        <PreTitle cls="ta-pre" text="RECOGNIZE · PICK · REPEAT" />
+        <PreTicker cls="ta-pre" text="› CLOCK ARMED &nbsp; › SPEED THRESHOLD: 1.0s &nbsp; › MISS PENALTY: −3s &nbsp; › COMBO WINDOW: ACTIVE &nbsp; › REFLEX PROTOCOL: ENABLED &nbsp; › SESSION: INITIALIZED &nbsp;&nbsp;" />
       </div>
 
       <div className="ta-pre-rules">
@@ -58,6 +101,7 @@ const TAPre = ({ duration, onDuration, onStart, pb }) => {
         </div>
       )}
 
+      <PreArm cls="ta-pre" readyLabel="▸ CLOCK // ARMED" lockedLabel="◌ CLOCK // COLD" />
       <button className="ta-pre-start" onClick={onStart}>
         <span>▸ START</span>
         <span className="arrow">▸</span>
