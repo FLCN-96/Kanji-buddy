@@ -21,8 +21,9 @@ const MTPre = ({ pb, tweaks, onStart, onAxis }) => {
     <div className="mt-pre" data-screen-label="mt-pre">
       <div className="mt-pre-head">
         <div className="mt-pre-eyebrow">▸ MATCH · LANE SPRINT</div>
-        <div className="mt-pre-title">PAIR {tweaks.boardSize} · {tweaks.duration}s</div>
+        <PreTitle cls="mt-pre" text={`PAIR ${tweaks.boardSize} · ${tweaks.duration}s`} />
         <div className="mt-pre-sub">connect kanji to its meaning or reading. clear the set, next {tweaks.boardSize} deal in together.</div>
+        <PreTicker cls="mt-pre" text="› LANE SPRINT INITIALIZED &nbsp; › PAIR MATCHING: ONLINE &nbsp; › SPEED BONUS: ARMED &nbsp; › COMBO MULTIPLIER: ACTIVE &nbsp; › MATCH AXIS: SET &nbsp; › ENGAGE WHEN READY &nbsp;&nbsp;" />
       </div>
 
       {/* Demo lane diagram */}
@@ -98,6 +99,7 @@ const MTPre = ({ pb, tweaks, onStart, onAxis }) => {
         )}
       </div>
 
+      <PreArm cls="mt-pre" readyLabel="▸ SPRINT // ARMED" lockedLabel="◌ SPRINT // LOCKED" />
       <button className="mt-pre-start" onClick={onStart}>
         <span>▸ ENGAGE</span>
         <span className="arrow">◉</span>
