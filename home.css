@@ -1345,8 +1345,38 @@ body[data-hero="off"] .kb-hero { display: none; }
   width: 52px; height: 40px;
   right: 8px; top: 8px;
 }
+/* Sparkline is absolute at top:8–48px; sub text starts at ~62px — no overlap,
+   so no right padding needed. Allow wrapping so long sluglines never ellipsis. */
 .kb-progress.is-forecast .kb-progress-sub {
-  padding-right: 58px;
+  padding-right: 0;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+/* Slide container — React remounts it via key={frame} so the enter
+   animation replays on every frame transition. */
+.kb-forecast-slide {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.kb-forecast-slide .kb-progress-val {
+  animation: kb-forecast-val-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.kb-forecast-slide .kb-progress-sub {
+  animation: kb-forecast-sub-in 0.3s 0.09s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes kb-forecast-val-in {
+  0%   { opacity: 0; transform: translateY(12px); filter: brightness(1); }
+  22%  { opacity: 1; transform: translateY(0);    filter: brightness(2.2); }
+  50%  { filter: brightness(1); }
+  100% { opacity: 1; transform: translateY(0);    filter: brightness(1); }
+}
+@keyframes kb-forecast-sub-in {
+  0%   { opacity: 0; transform: translateX(-8px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kb-forecast-slide .kb-progress-val,
+  .kb-forecast-slide .kb-progress-sub { animation: none; }
 }
 .kb-forecast-spark {
   display: block;
