@@ -422,11 +422,13 @@ const ProgressPanel = ({ cards, states }) => {
         <ForecastSpark byDay={byDay} />
       </div>
       <div className="kb-progress-lbl">▸ FORECAST</div>
-      <div className="kb-progress-val">
-        {head}
-        {headUnit && <span className="unit">{headUnit}</span>}
+      <div className="kb-forecast-slide" key={frame}>
+        <div className="kb-progress-val">
+          {head}
+          {headUnit && <span className="unit">{headUnit}</span>}
+        </div>
+        <div className="kb-progress-sub">{sub}</div>
       </div>
-      <div className="kb-progress-sub">{sub}</div>
       {frameCount > 1 && (
         <div className="kb-progress-dots" aria-hidden="true">
           {Array.from({ length: frameCount }).map((_, i) => (
