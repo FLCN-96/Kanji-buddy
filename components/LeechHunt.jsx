@@ -170,13 +170,13 @@ function dealStage(leech, stageIdx, pool) {
 const LHTopbar = ({ purged, total, misses, missCap, onQuit }) => (
   <header className="run-top lh-top">
     <div className="run-top-l">
-      <button className="run-quit" onClick={onQuit}>‹ abort</button>
-      <span className="run-lbl lh-lbl">▸ LEECH HUNT</span>
+      <button className="run-quit" onClick={onQuit}>‹ ABORT</button>
+      <span className="run-lbl lh-lbl">▸ HUNT // 狩猟</span>
     </div>
     <div className="lh-top-r">
       <span className="lh-pill lh-pill-purged">⊘ {purged}/{total}</span>
       <span className={`lh-pill lh-pill-miss${misses >= missCap ? ' is-danger' : misses >= missCap-1 ? ' is-warn' : ''}`}>
-        × {misses}/{missCap === 99 ? '∞' : missCap}
+        × {misses}/{missCap === 99 ? '∞' : missCap} BLEED
       </span>
     </div>
   </header>
@@ -463,8 +463,8 @@ const LeechHuntApp = ({ cards }) => {
 
       <ConfirmModal
         open={confirmQuit}
-        title="ABORT MISSION?"
-        body="Leeches remain at large · run won't save."
+        title="ABORT CONTRACT?"
+        body="Marks remain at large · progress lost."
         confirmLabel="ABORT"
         cancelLabel="STAY"
         onConfirm={goHome}
