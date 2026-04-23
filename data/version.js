@@ -30,6 +30,9 @@
 (function() {
   // Rewritten by .github/workflows/main.yml on each deploy.
   const SERVED_SHA = 'dev';
+  // Display version, e.g. "1.0". Computed in CI from the VERSION file
+  // (major.base_minor) plus commits since VERSION was last touched.
+  const SERVED_VERSION = 'dev';
 
   const VERSION_URL    = './version.json';
   const POLL_MS        = 5 * 60 * 1000;   // passive poll interval
@@ -356,6 +359,7 @@
 
   window.KBVersion = {
     get served() { return SERVED_SHA; },
+    get version() { return SERVED_VERSION; },
     check,
     refresh: performRefresh,
   };
