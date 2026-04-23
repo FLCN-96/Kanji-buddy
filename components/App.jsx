@@ -17,7 +17,13 @@ const TWEAK_DEFAULTS = {
 // generic. Keep phrases < ~40 chars so they fit the topbar on narrow
 // viewports without eating the live clock.
 
-const WM_TITLE = 'kanji-buddy';
+// Watermark title carries the deploy version once stamped — when
+// running locally or against a stale handshake, falls back to plain
+// "kanji-buddy" so dev never sees "kanji-buddy-vdev".
+const WM_TITLE = (() => {
+  const v = window.KBVersion && window.KBVersion.version;
+  return v && v !== 'dev' ? `kanji-buddy-v${v}` : 'kanji-buddy';
+})();
 
 const pickGreeting = (name, streak, lastSessionIso) => {
   const n = (name || 'operator').toLowerCase();

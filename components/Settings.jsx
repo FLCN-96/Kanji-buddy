@@ -19,6 +19,11 @@ const applyBodyDataset = (tw) => {
   document.body.dataset.romaji = tw.romaji;
 };
 
+const KB_TITLE = (() => {
+  const v = window.KBVersion && window.KBVersion.version;
+  return v && v !== 'dev' ? `kanji-buddy-v${v}` : 'kanji-buddy';
+})();
+
 const SettingsTopbar = ({ displayName }) => {
   const [time, setTime] = React.useState(() => new Date());
   React.useEffect(() => {
@@ -28,7 +33,7 @@ const SettingsTopbar = ({ displayName }) => {
   const hhmm = time.toTimeString().slice(0,5).replace(':','');
   return (
     <header className="kb-top">
-      <div className="kb-wm">kanji-buddy</div>
+      <div className="kb-wm">{KB_TITLE}</div>
       <div className="kb-top-right">
         <span style={{color:'var(--fg-2)'}}>{displayName || '—'}</span>
         <span>{hhmm}</span>
@@ -323,7 +328,7 @@ const Settings = () => {
         <div className="kb-set-head">
           <a href="Home.html" className="kb-set-back">◂ home</a>
           <span className="kb-set-title">▸ SETTINGS // operator config</span>
-          <span className="kb-set-ver">v0.3.1</span>
+          <span className="kb-set-ver">v{(window.KBVersion && window.KBVersion.version) || 'dev'}</span>
         </div>
 
         <section className="kb-set-section">

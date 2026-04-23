@@ -22,20 +22,45 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Need full history so `git log -1 -- VERSION` and
+          # `git rev-list --count` can see prior commits — the default
+          # depth-1 clone would always report OFFSET=0.
+          fetch-depth: 0
 
       - name: Stamp deploy version
         run: |
           BUILT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          printf '{"sha":"%s","built":"%s"}\n' "${GITHUB_SHA}" "${BUILT}" > version.json
-          # Rewrite the SERVED_SHA sentinel in data/version.js so every
-          # deployed build carries the exact SHA it was cut from. The
-          # handshake compares this against a network-only fetch of
-          # version.json — if they disagree, the client is stale.
+
+          # Compute display version: MAJOR.BASE_MINOR comes from the
+          # checked-in VERSION file (hand-bumped only when something
+          # feels like a real release); the auto-incrementing patch is
+          # the number of commits since VERSION was last touched. So
+          # editing VERSION resets the counter and every push that
+          # leaves it alone silently bumps the minor.
+          VERSION_BASE="$(tr -d '[:space:]' < VERSION)"
+          MAJOR="${VERSION_BASE%%.*}"
+          BASE_MINOR="${VERSION_BASE##*.}"
+          LAST_VER_COMMIT="$(git log -1 --format=%H -- VERSION)"
+          OFFSET="$(git rev-list --count "${LAST_VER_COMMIT}..HEAD")"
+          VERSION_STR="${MAJOR}.$((BASE_MINOR + OFFSET))"
+          echo "Stamping version: ${VERSION_STR} (sha ${GITHUB_SHA})"
+
+          printf '{"sha":"%s","version":"%s","built":"%s"}\n' \
+            "${GITHUB_SHA}" "${VERSION_STR}" "${BUILT}" > version.json
+
+          # Rewrite the SERVED_* sentinels in data/version.js so every
+          # deployed build carries the exact SHA + display version it
+          # was cut from. The handshake compares SHA against a
+          # network-only fetch of version.json; SERVED_VERSION is what
+          # the topbar / settings footer render.
           sed -i "s|const SERVED_SHA = 'dev';|const SERVED_SHA = '${GITHUB_SHA}';|" data/version.js
-          # Fail loudly if the sed above silently no-ops (e.g. the
+          sed -i "s|const SERVED_VERSION = 'dev';|const SERVED_VERSION = '${VERSION_STR}';|" data/version.js
+          # Fail loudly if either sed above silently no-ops (e.g. the
           # sentinel gets renamed in the source but the workflow
           # doesn't), so we don't ship a build with a broken handshake.
           grep -q "const SERVED_SHA = '${GITHUB_SHA}';" data/version.js
+          grep -q "const SERVED_VERSION = '${VERSION_STR}';" data/version.js
 
       - uses: actions/configure-pages@v5
 
