@@ -3,6 +3,7 @@
 const TWEAK_DEFAULTS = {
   scanlines: 'off',
   hero: 'on',
+  romaji: 'off',
 };
 
 const readTweaks = () => {
@@ -15,6 +16,7 @@ const readTweaks = () => {
 const applyBodyDataset = (tw) => {
   document.body.dataset.scanlines = tw.scanlines;
   document.body.dataset.hero = tw.hero;
+  document.body.dataset.romaji = tw.romaji;
 };
 
 const SettingsTopbar = ({ displayName }) => {
@@ -351,6 +353,8 @@ const Settings = () => {
             options={[{id:'off',label:'off'},{id:'on',label:'on'}]} />
           <OptRow label="HERO CARD" value={tweaks.hero} onSet={setKey('hero')}
             options={[{id:'on',label:'on'},{id:'off',label:'off'}]} />
+          <OptRow label="ROMAJI · DAILY RUN" value={tweaks.romaji} onSet={setKey('romaji')}
+            options={[{id:'off',label:'off'},{id:'on',label:'on'}]} />
         </section>
 
         <div className="kb-set-foot">
