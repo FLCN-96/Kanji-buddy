@@ -17,12 +17,12 @@ const TWEAK_DEFAULTS = {
 // generic. Keep phrases < ~40 chars so they fit the topbar on narrow
 // viewports without eating the live clock.
 
-// Watermark title carries the deploy version once stamped — when
-// running locally or against a stale handshake, falls back to plain
-// "kanji-buddy" so dev never sees "kanji-buddy-vdev".
-const WM_TITLE = (() => {
+const WM_TITLE = 'kanji-buddy';
+// Version chip rendered alongside the watermark once the greeting
+// finishes. Dev / unstamped builds get nothing rather than "vdev".
+const KB_VERSION_LABEL = (() => {
   const v = window.KBVersion && window.KBVersion.version;
-  return v && v !== 'dev' ? `kanji-buddy-v${v}` : 'kanji-buddy';
+  return v && v !== 'dev' ? `v${v}` : '';
 })();
 
 const pickGreeting = (name, streak, lastSessionIso) => {
@@ -259,20 +259,20 @@ const StreakChip = ({ user }) => {
 };
 
 const Topbar = ({ displayName, user }) => {
-  const [time, setTime] = React.useState(() => new Date());
-  const [wm, typing]    = useGreeting(user);
-  React.useEffect(() => {
-    const t = setInterval(() => setTime(new Date()), 10000);
-    return () => clearInterval(t);
-  }, []);
-  const hhmm = time.toTimeString().slice(0,5).replace(':','');
+  const [wm, typing] = useGreeting(user);
   return (
     <header className={`kb-top${typing ? ' is-greeting' : ''}`}>
-      <div className={`kb-wm${typing ? ' is-typing' : ''}`}>{wm}</div>
+      <div className="kb-wm-group">
+        <div className={`kb-wm${typing ? ' is-typing' : ''}`}>{wm}</div>
+        {KB_VERSION_LABEL && (
+          <span className={`kb-wm-ver${typing ? ' is-hidden' : ''}`} aria-label={`build ${KB_VERSION_LABEL}`}>
+            {KB_VERSION_LABEL}
+          </span>
+        )}
+      </div>
       <div className="kb-top-right" aria-hidden={typing ? 'true' : undefined}>
         <StreakChip user={user} />
         <span style={{color:'var(--fg-2)'}}>{displayName || '—'}</span>
-        <span>{hhmm}</span>
         <a href="Settings.html" className="kb-top-cog" aria-label="settings">⚙</a>
       </div>
     </header>
