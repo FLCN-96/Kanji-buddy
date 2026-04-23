@@ -383,8 +383,24 @@ body[data-hero="off"] .kb-hero { display: none; }
   box-shadow: 0 0 8px var(--accent-cyan);
 }
 .kb-hero-meta { display: flex; flex-direction: column; gap: var(--sp-3); min-width: 0; }
-.kb-hero-reading { font-family: var(--font-jp-sans); font-size: 16px; color: var(--accent-magenta); }
-.kb-hero-reading .on { color: var(--fg-1); font-size: 11px; letter-spacing: .08em; margin-right: 8px; }
+.kb-hero-reading {
+  font-family: var(--font-jp-sans); font-size: 16px; color: var(--accent-magenta);
+  display: flex; align-items: baseline; gap: 8px;
+}
+.kb-hero-reading .on { color: var(--fg-1); font-size: 11px; letter-spacing: .08em; }
+/* Romaji sub-text — opt-in via Settings → body[data-romaji="on"]. Same
+   stacked treatment as Run readings, scoped to the hero card. */
+.kb-hero-reading .r-stack { display: inline-flex; flex-direction: column; line-height: 1.05; }
+.kb-hero-reading .r-romaji { display: none; }
+body[data-romaji="on"] .kb-hero-reading .r-romaji {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-2);
+  letter-spacing: .04em;
+  margin-top: 2px;
+  text-transform: lowercase;
+}
 .kb-hero-mean { font-size: 13px; color: var(--fg-1); }
 .kb-hero-tag { font-size: 10px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; }
 
