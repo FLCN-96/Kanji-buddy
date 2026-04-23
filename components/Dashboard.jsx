@@ -1,5 +1,10 @@
 // Hero + Stats components
 
+const heroRomaji = (s) => {
+  if (!window.Romaji || !s || s === '—') return '';
+  return window.Romaji.toRomaji(s);
+};
+
 const Hero = ({ kanji }) => {
   // `kanji` comes from cards.json: { k, mainOn, mainKun, mean, jlpt, strokes, ... }
   if (!kanji) {
@@ -31,10 +36,18 @@ const Hero = ({ kanji }) => {
       <div className="kb-hero-body">
         <div className="kb-hero-meta">
           <div className="kb-hero-reading">
-            <span className="on">ON</span>{on}
+            <span className="on">ON</span>
+            <span className="r-stack">
+              <span>{on}</span>
+              <span className="r-romaji">{heroRomaji(on)}</span>
+            </span>
           </div>
           <div className="kb-hero-reading">
-            <span className="on">KUN</span>{kun}
+            <span className="on">KUN</span>
+            <span className="r-stack">
+              <span>{kun}</span>
+              <span className="r-romaji">{heroRomaji(kun)}</span>
+            </span>
           </div>
           {mean && <div className="kb-hero-mean">{mean}</div>}
           <div className="kb-hero-tag">{tag}</div>
