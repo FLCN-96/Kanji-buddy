@@ -7,6 +7,8 @@ const VERDICTS = [
   { id: 'easy', key: '4', label: 'EASY', int: 'next 4d',   cls: 'easy' },
 ];
 
+const romaji = (s) => (window.Romaji ? window.Romaji.toRomaji(s) : '');
+
 const CardReadings = ({ card }) => {
   const kun = card.kun || [];
   const on = card.on || [];
@@ -15,14 +17,20 @@ const CardReadings = ({ card }) => {
       {on.map((r, i) => (
         <div key={'on'+i} className={`run-reading on${r.main ? ' main':''}`}>
           <span className="tag">ON</span>
-          <span className="r-text">{r.r}</span>
+          <span className="r-stack">
+            <span className="r-text">{r.r}</span>
+            <span className="r-romaji">{romaji(r.r)}</span>
+          </span>
           {r.gloss && <span className="gloss">· {r.gloss}</span>}
         </div>
       ))}
       {kun.map((r, i) => (
         <div key={'kun'+i} className={`run-reading${r.main ? ' main':''}`}>
           <span className="tag">KUN</span>
-          <span className="r-text">{r.r}</span>
+          <span className="r-stack">
+            <span className="r-text">{r.r}</span>
+            <span className="r-romaji">{romaji(r.r)}</span>
+          </span>
           {r.gloss && <span className="gloss">· {r.gloss}</span>}
         </div>
       ))}
@@ -40,6 +48,7 @@ const CardExamples = ({ card }) => {
           <div className="run-ex-word">
             <span>{e.w}</span>
             <span className="r">{e.r}</span>
+            <span className="r-romaji">{romaji(e.r)}</span>
           </div>
           <div className="run-ex-m">{e.m}</div>
         </div>

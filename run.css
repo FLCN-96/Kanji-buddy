@@ -205,6 +205,22 @@ body[data-scanlines="on"]::after {
 .run-reading .r-text { font-weight: 500; }
 .run-reading.main .r-text { color: var(--accent-magenta); font-weight: 700; }
 
+/* Romaji sub-text — opt-in via Settings → body[data-romaji="on"]. Stacks
+   under each kana so eye flow stays kana → romaji without disturbing the
+   horizontal tag · reading · gloss row. */
+.run-reading .r-stack { display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1.05; }
+.r-romaji { display: none; }
+body[data-romaji="on"] .r-romaji {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-2);
+  letter-spacing: .04em;
+  margin-top: 1px;
+  text-transform: lowercase;
+}
+body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta); opacity: .75; }
+
 .run-mean {
   font-family: var(--font-mono);
   font-size: 15px;

@@ -7,6 +7,7 @@
 const TWEAK_DEFAULTS = {
   scanlines: 'off',
   hero: 'on',
+  romaji: 'off',
 };
 
 // ───── Watermark typewriter greeting ─────────────────────────────────
@@ -334,6 +335,7 @@ const App = ({ cards }) => {
   React.useEffect(() => {
     document.body.dataset.scanlines = tweaks.scanlines;
     document.body.dataset.hero = tweaks.hero;
+    document.body.dataset.romaji = tweaks.romaji;
   }, [tweaks]);
 
   const state = deriveState(deck);

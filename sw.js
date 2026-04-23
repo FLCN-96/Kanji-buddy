@@ -40,6 +40,7 @@ const LOCAL_ASSETS = [
   './data/daily.js',
   './data/srs.js',
   './data/rank.js',
+  './data/romaji.js',
   './data/version.js',
   './components/App.jsx',
   './components/ConfirmModal.jsx',
