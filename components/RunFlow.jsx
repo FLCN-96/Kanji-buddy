@@ -19,10 +19,10 @@ const secondsUntilMidnightLocal = () => {
 // Mirrors RunCard.jsx VERDICTS for the pre-run legend. `int` already lives
 // on the runtime button; `desc` is start-screen-only explainer copy.
 const VERDICT_KEYS = [
-  { id: 'miss', key: '1', label: 'MISS', desc: "didn't know · SRS resets",    int: 'again <1m', cls: 'miss' },
-  { id: 'hard', key: '2', label: 'HARD', desc: 'correct, rough · ease drops', int: 'next 6m',   cls: 'hard' },
-  { id: 'ok',   key: '3', label: 'OK',   desc: 'solid recall',                int: 'next 1d',   cls: 'ok'   },
-  { id: 'easy', key: '4', label: 'EASY', desc: 'instant · ease up',           int: 'next 4d',   cls: 'easy' },
+  { id: 'miss', key: '1', label: 'MISS', desc: "didn't know · relearn in 6h",     int: 'lapse',        cls: 'miss' },
+  { id: 'hard', key: '2', label: 'HARD', desc: 'correct, rough · slower growth',  int: 'next × 1.2',   cls: 'hard' },
+  { id: 'ok',   key: '3', label: 'OK',   desc: 'solid recall · steady growth',    int: 'next × ease',  cls: 'ok'   },
+  { id: 'easy', key: '4', label: 'EASY', desc: 'instant · accelerates the card',  int: 'next × 1.3+',  cls: 'easy' },
 ];
 
 // composition: { new, due, leech, total } from the weighted deck selector.
@@ -250,4 +250,35 @@ const EndRun = ({ results, cards, duration, onHome, user, xpGained, isOverclock 
   );
 };
 
-Object.assign(window, { PreRun, EndRun });
+// UndoChip — floats in the bottom-left during the 3-second window after
+// a verdict. Ticks down visually so the user sees the undo disappearing.
+// Verdict label is colour-coded so it's obvious which grade just landed.
+const UndoChip = ({ verdict, onUndo, onExpire }) => {
+  const [pct, setPct] = React.useState(100);
+  const startRef = React.useRef(Date.now());
+  React.useEffect(() => {
+    startRef.current = Date.now();
+    let raf;
+    const tick = () => {
+      const elapsed = Date.now() - startRef.current;
+      const remain = Math.max(0, 1 - elapsed / 3000);
+      setPct(Math.round(remain * 100));
+      if (remain > 0) raf = requestAnimationFrame(tick);
+      else onExpire && onExpire();
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return (
+    <button className={`run-undo-chip verdict-${verdict}`} onClick={onUndo} aria-label="undo last verdict">
+      <span className="run-undo-chip-icon" aria-hidden>↶</span>
+      <span className="run-undo-chip-body">
+        <span className="run-undo-chip-lbl">UNDO · <b>{verdict.toUpperCase()}</b></span>
+        <span className="run-undo-chip-hint">tap · U · ⌫</span>
+      </span>
+      <span className="run-undo-chip-bar" style={{ transform: `scaleX(${pct/100})` }} aria-hidden />
+    </button>
+  );
+};
+
+Object.assign(window, { PreRun, EndRun, UndoChip });

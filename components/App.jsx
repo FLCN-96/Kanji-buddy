@@ -315,8 +315,8 @@ const App = ({ cards }) => {
   React.useEffect(() => {
     if (!window.DB || !window.Daily || !cards || !cards.length) return;
     window.DB.open()
-      .then(() => window.DB.getAllCardStates())
-      .then(states => {
+      .then(() => Promise.all([window.DB.getUser(), window.DB.getAllCardStates()]))
+      .then(([u, states]) => {
         setCardStates(states);
         const todayStr = new Date().toDateString();
         const reviewed = states.filter(s =>
@@ -326,13 +326,15 @@ const App = ({ cards }) => {
 
         // Gate: once today's quota is met, queue is clear until next midnight —
         // prevents the ~2000-card "new" pool from endlessly refilling the panel.
-        const dailyDone = reviewed >= window.Daily.DECK_SIZE;
-        const picks = dailyDone ? [] : window.Daily.selectDailyDeck(cards, states);
+        const deckSize = window.Daily.resolveDeckSize(u);
+        const dailyDone = reviewed >= deckSize;
+        const picks = dailyDone ? [] : window.Daily.selectDailyDeck(cards, states, deckSize);
         setDeck({
           new:   picks.filter(c => c._bucket === 'new').length,
           due:   picks.filter(c => c._bucket === 'due').length,
           leech: picks.filter(c => c._bucket === 'leech').length,
           total: picks.length,
+          size:  deckSize,
         });
       })
       .catch(() => {});
@@ -416,6 +418,8 @@ const App = ({ cards }) => {
             <DuePanel state={state} deck={deck} reviewedToday={reviewedToday} />
             <ProgressPanel cards={cards} states={cardStates} />
           </div>
+
+          <LeechPanel cards={cards} states={cardStates} />
 
           <XpBar xp={user?.total_xp ?? 0} />
 

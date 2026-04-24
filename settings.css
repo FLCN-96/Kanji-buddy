@@ -84,6 +84,13 @@
   font-weight: 600;
   box-shadow: 0 0 8px rgba(34,211,238,.3);
 }
+.kb-set-hint {
+  font-size: 10px;
+  color: var(--fg-2);
+  letter-spacing: .04em;
+  line-height: 1.5;
+  padding: 2px 0 4px;
+}
 
 .kb-set-name { display: flex; gap: 6px; flex: 1; min-width: 220px; justify-content: flex-end; }
 .kb-set-input {

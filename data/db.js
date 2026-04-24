@@ -128,6 +128,32 @@ const DB = {
     return rw('card_states', 'readwrite', s => s.put(state));
   },
 
+  // Top-N cards sorted by lapse count — feeds the Home leech panel.
+  // Threshold mirrors Daily.LEECH_LAPSES (default 3) so what's called a
+  // leech on Home matches the buckets in daily-deck selection.
+  getLeeches(limit = 3, threshold = 3) {
+    return DB.getAllCardStates().then(states =>
+      (states || [])
+        .filter(s => (s.lapses || 0) >= threshold)
+        .sort((a, b) => (b.lapses || 0) - (a.lapses || 0))
+        .slice(0, limit)
+    );
+  },
+
+  // ── settings (operator preferences, stored on user.settings) ──────
+
+  getSettings() {
+    return DB.getUser().then(user => (user && user.settings) || {});
+  },
+
+  updateSettings(patch) {
+    return DB.getUser().then(user => {
+      if (!user) return null;
+      const nextSettings = { ...(user.settings || {}), ...patch };
+      return DB.updateUser({ settings: nextSettings });
+    });
+  },
+
   // ── sessions ──────────────────────────────────────────────────────
 
   saveSession(session) {

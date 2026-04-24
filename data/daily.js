@@ -38,9 +38,25 @@
 
   const LEECH_LAPSES = 3;
   const DECK_SIZE   = 5;
-  const NEW_BUDGET   = 2;
-  const DUE_BUDGET   = 2;
-  const LEECH_BUDGET = 1;
+  const DECK_SIZES  = [3, 5, 7, 10];
+
+  // Proportional budget split — NEW 40%, DUE 40%, LEECH 20% (with a floor of
+  // 1 each). Cascade-fill below absorbs any shortfall when a bucket is empty.
+  function defaultBudgets(size) {
+    const s = size || DECK_SIZE;
+    const n = Math.max(1, Math.round(s * 0.4));
+    const d = Math.max(1, Math.round(s * 0.4));
+    const l = Math.max(1, s - n - d);
+    return { new: n, due: d, leech: l };
+  }
+
+  // Resolve the user's configured deck size (persisted in user.settings.deckSize).
+  // Falls back to the system default when not set or out of range.
+  function resolveDeckSize(user) {
+    const raw = user && user.settings && user.settings.deckSize;
+    const n = parseInt(raw, 10);
+    return DECK_SIZES.includes(n) ? n : DECK_SIZE;
+  }
 
   function selectDailyDeck(cards, cardStates, size = DECK_SIZE, now = new Date()) {
     if (!cards || !cards.length) return [];
@@ -68,10 +84,11 @@
     newCards.sort((a, b) => a.idx - b.idx);
 
     // initial budgets
+    const b = defaultBudgets(size);
     let budgets = {
-      new:   Math.min(NEW_BUDGET,   newCards.length),
-      due:   Math.min(DUE_BUDGET,   dueStates.length),
-      leech: Math.min(LEECH_BUDGET, leechStates.length),
+      new:   Math.min(b.new,   newCards.length),
+      due:   Math.min(b.due,   dueStates.length),
+      leech: Math.min(b.leech, leechStates.length),
     };
 
     // cascade remaining capacity: leech → due → new
@@ -191,7 +208,9 @@
     hotChallengeId,
     HOT_MULTIPLIER: 3,
     selectDailyDeck,
+    resolveDeckSize,
     DECK_SIZE,
+    DECK_SIZES,
     LEECH_LAPSES,
     nearUserPool,
     seenIdxSet,

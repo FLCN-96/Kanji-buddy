@@ -1,10 +1,10 @@
 // Daily Run: card + verdict + flow
 
 const VERDICTS = [
-  { id: 'miss', key: '1', label: 'MISS', int: 'again <1m', cls: 'miss' },
-  { id: 'hard', key: '2', label: 'HARD', int: 'next 6m',   cls: 'hard' },
-  { id: 'ok',   key: '3', label: 'OK',   int: 'next 1d',   cls: 'ok' },
-  { id: 'easy', key: '4', label: 'EASY', int: 'next 4d',   cls: 'easy' },
+  { id: 'miss', key: '1', label: 'MISS', int: 'lapse',  cls: 'miss' },
+  { id: 'hard', key: '2', label: 'HARD', int: '×1.2',   cls: 'hard' },
+  { id: 'ok',   key: '3', label: 'OK',   int: '×ease',  cls: 'ok' },
+  { id: 'easy', key: '4', label: 'EASY', int: '×1.3+',  cls: 'easy' },
 ];
 
 const romaji = (s) => (window.Romaji ? window.Romaji.toRomaji(s) : '');

@@ -367,6 +367,78 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
   100% { transform: scale(1); }
 }
 
+/* ================= Undo chip (post-verdict rollback) =================
+   Floats bottom-left for a 3-second window after each verdict. Click,
+   press U, or Backspace to roll the last verdict back. The bar at the
+   foot of the chip depletes alongside the timer. Verdict-tone classes
+   colour the chip so the user sees which grade is about to be erased. */
+.run-undo-chip {
+  position: fixed;
+  left: 12px; bottom: calc(16px + env(safe-area-inset-bottom));
+  background: var(--bg-1);
+  border: 1px solid var(--line-bright);
+  padding: 8px 12px 10px;
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono);
+  color: var(--fg-0);
+  cursor: pointer;
+  z-index: 11;
+  animation: undo-in 180ms var(--ease-snap);
+  box-shadow: 0 0 14px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.03);
+  transition: transform var(--dur-fast) var(--ease-snap),
+              box-shadow var(--dur-fast) var(--ease-snap),
+              border-color var(--dur-fast) var(--ease-snap);
+  overflow: hidden;
+}
+.run-undo-chip:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 18px rgba(34,211,238,.35), inset 0 0 0 1px rgba(34,211,238,.2);
+}
+.run-undo-chip:active { transform: translateY(0); }
+.run-undo-chip-icon {
+  font-size: 18px; line-height: 1; color: var(--accent-cyan);
+  text-shadow: 0 0 6px rgba(34,211,238,.55);
+}
+.run-undo-chip-body {
+  display: inline-flex; flex-direction: column; align-items: flex-start;
+  gap: 2px; line-height: 1.1;
+}
+.run-undo-chip-lbl {
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--fg-1);
+}
+.run-undo-chip-lbl b { color: var(--fg-0); font-weight: 700; letter-spacing: .1em; }
+.run-undo-chip-hint {
+  font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--fg-2);
+}
+.run-undo-chip-bar {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: var(--accent-cyan);
+  transform-origin: left center;
+  transition: transform 80ms linear;
+  box-shadow: 0 0 6px rgba(34,211,238,.55);
+}
+.run-undo-chip.verdict-miss  { border-color: var(--danger); }
+.run-undo-chip.verdict-miss  .run-undo-chip-lbl b { color: var(--danger); }
+.run-undo-chip.verdict-hard  { border-color: var(--accent-amber); }
+.run-undo-chip.verdict-hard  .run-undo-chip-lbl b { color: var(--accent-amber); }
+.run-undo-chip.verdict-ok    { border-color: var(--accent-cyan-dim); }
+.run-undo-chip.verdict-easy  { border-color: var(--accent-cyan); }
+.run-undo-chip.verdict-easy  .run-undo-chip-lbl b { color: var(--accent-cyan); text-shadow: 0 0 6px rgba(34,211,238,.55); }
+@keyframes undo-in {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 420px) {
+  .run-undo-chip { left: 8px; bottom: calc(10px + env(safe-area-inset-bottom)); padding: 6px 10px 8px; }
+  .run-undo-chip-icon { font-size: 16px; }
+  .run-undo-chip-lbl { font-size: 10px; }
+  .run-undo-chip-hint { font-size: 8.5px; }
+}
+
 /* ================= Verdict bar ================= */
 .run-verdict {
   display: grid;
