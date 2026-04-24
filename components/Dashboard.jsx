@@ -98,7 +98,7 @@ const Countdown = ({ state }) => {
   );
 };
 
-const DECK_MAX = (typeof window !== 'undefined' && window.Daily?.DECK_SIZE) || 5;
+const DECK_DEFAULT = (typeof window !== 'undefined' && window.Daily?.DECK_SIZE) || 5;
 
 const composeSub = (deck) => {
   const parts = [];
@@ -108,15 +108,15 @@ const composeSub = (deck) => {
   return parts.join(' · ');
 };
 
-// Build the queue cells: one slot per planned card today (DECK_MAX). Cells
+// Build the queue cells: one slot per planned card today (deckMax). Cells
 // already reviewed render as filled-cyan ("done"); the rest carry their
 // bucket colour (new=cyan-dim, due=amber, leech=magenta) in the order the
 // Run flow plays them. So the bar fills left→right as the user progresses.
-const buildDueCells = (deck, reviewedToday) => {
+const buildDueCells = (deck, reviewedToday, deckMax) => {
   const cells = [];
-  const done = Math.min(DECK_MAX, reviewedToday);
+  const done = Math.min(deckMax, reviewedToday);
   for (let i = 0; i < done; i++) cells.push('done');
-  let remaining = DECK_MAX - done;
+  let remaining = deckMax - done;
   const push = (bucket, n) => {
     const k = Math.min(n, remaining);
     for (let i = 0; i < k; i++) cells.push(bucket);
@@ -125,16 +125,16 @@ const buildDueCells = (deck, reviewedToday) => {
   push('new',   deck.new);
   push('due',   deck.due);
   push('leech', deck.leech);
-  // Defensive: if the deck composition is short of remaining slots (shouldn't
-  // happen with cascade-fill but guards against transient mid-load states),
-  // pad with neutral so the bar still renders 5 cells.
-  while (cells.length < DECK_MAX) cells.push('pending');
+  // Defensive: pad with neutral if composition is short of the deck size
+  // (shouldn't happen with cascade-fill, but guards transient mid-load states).
+  while (cells.length < deckMax) cells.push('pending');
   return cells;
 };
 
 // DuePanel owns one question: "what's queued today and what's in it?"
 // The midnight timer lives in <Countdown> right below — don't duplicate it here.
 const DuePanel = ({ state, deck, reviewedToday = 0 }) => {
+  const deckMax = (deck && deck.size) || DECK_DEFAULT;
   if (state === 'loading' || !deck) {
     return (
       <div className="kb-due" data-screen-label="due-panel">
@@ -145,7 +145,7 @@ const DuePanel = ({ state, deck, reviewedToday = 0 }) => {
         <div className="kb-due-count dim">—<span className="unit">queued today</span></div>
         <div className="kb-due-sub">loading…</div>
         <div className="kb-due-seg">
-          {Array.from({length: DECK_MAX}).map((_, i) => <div key={i} className="kb-due-seg-s" />)}
+          {Array.from({length: deckMax}).map((_, i) => <div key={i} className="kb-due-seg-s" />)}
         </div>
       </div>
     );
@@ -155,17 +155,16 @@ const DuePanel = ({ state, deck, reviewedToday = 0 }) => {
   const isClear = total === 0;
   const cls = isClear ? 'dim' : 'cyan';
   const sub = isClear ? '✓ all caught up' : composeSub(deck);
-  // When the daily is cleared, show all 5 cells filled — the satisfying
-  // "all done" look. Otherwise, render the in-progress mix.
+  // Cleared state: fill every slot — the satisfying "all done" look.
   const cells = isClear
-    ? Array(DECK_MAX).fill('done')
-    : buildDueCells(deck, reviewedToday);
+    ? Array(deckMax).fill('done')
+    : buildDueCells(deck, reviewedToday, deckMax);
 
   return (
     <div className="kb-due" data-screen-label="due-panel">
       <div className="kb-due-head">
         <span className="kb-due-lbl">▸ DAILY QUEUE</span>
-        <span className="kb-due-lbl">{isClear ? 'cleared' : `${Math.min(DECK_MAX, reviewedToday)} / ${DECK_MAX}`}</span>
+        <span className="kb-due-lbl">{isClear ? 'cleared' : `${Math.min(deckMax, reviewedToday)} / ${deckMax}`}</span>
       </div>
       <div className={`kb-due-count ${cls}`}>
         {total}<span className="unit">queued today</span>
@@ -175,6 +174,89 @@ const DuePanel = ({ state, deck, reviewedToday = 0 }) => {
         {cells.map((bucket, i) => (
           <div key={i} className={`kb-due-seg-s is-${bucket}`} />
         ))}
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+// LeechPanel — top-3 cards by lapse count, plus the aggregate
+// count of everything at/above the leech threshold. Answers
+// "which kanji keep biting me?" without making the user launch
+// LeechHunt. If no cards qualify, the panel shows a clean-state
+// ack so it doesn't just disappear (hiding an empty pane makes
+// the layout jump every time it populates).
+// ─────────────────────────────────────────────────────────────
+const LEECH_THRESHOLD_DEFAULT = (typeof window !== 'undefined' && window.Daily?.LEECH_LAPSES) || 3;
+
+const LeechPanel = ({ cards, states }) => {
+  const { top, total } = React.useMemo(() => {
+    if (!cards || !cards.length || !Array.isArray(states)) {
+      return { top: null, total: 0 };
+    }
+    const byIdx = new Map(cards.map(c => [c.idx, c]));
+    const ranked = (states || [])
+      .filter(s => (s.lapses || 0) >= LEECH_THRESHOLD_DEFAULT)
+      .sort((a, b) => (b.lapses || 0) - (a.lapses || 0));
+    const topRows = ranked
+      .slice(0, 3)
+      .map(s => ({ state: s, card: byIdx.get(s.idx) }))
+      .filter(x => x.card);
+    return { top: topRows, total: ranked.length };
+  }, [cards, states]);
+
+  if (top === null) {
+    return (
+      <div className="kb-leech" data-screen-label="leech-panel">
+        <div className="kb-leech-head">
+          <span className="kb-leech-lbl">▸ LEECHES</span>
+          <span className="kb-leech-meta is-dim">loading…</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (total === 0) {
+    return (
+      <div className="kb-leech is-clean" data-screen-label="leech-panel">
+        <div className="kb-leech-head">
+          <span className="kb-leech-lbl">▸ LEECHES</span>
+          <span className="kb-leech-meta">none · tight deck</span>
+        </div>
+        <div className="kb-leech-empty">✓ no card has slipped past the threshold yet</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="kb-leech" data-screen-label="leech-panel">
+      <div className="kb-leech-head">
+        <span className="kb-leech-lbl">▸ LEECHES</span>
+        <span className="kb-leech-meta">
+          <b>{total}</b> flagged · top {top.length}
+        </span>
+      </div>
+      <div className="kb-leech-list">
+        {top.map(({ card, state }) => {
+          const first = (card.mean || '').split(',')[0].trim();
+          const interval = state.interval_days || 0;
+          const nextLbl = interval > 0
+            ? `${interval}d`
+            : state.last_reviewed ? 'relearn' : '—';
+          return (
+            <div key={card.idx} className="kb-leech-row" title={card.mean || ''}>
+              <span className="kb-leech-k">{card.k}</span>
+              <span className="kb-leech-body">
+                <span className="kb-leech-m">{first || '—'}</span>
+                <span className="kb-leech-stats">
+                  <span className="kb-leech-lap">×{state.lapses || 0} lapses</span>
+                  <span className="kb-leech-sep">·</span>
+                  <span className="kb-leech-int">{nextLbl}</span>
+                </span>
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -567,4 +649,4 @@ const XpBar = ({ xp = 0 }) => {
   );
 };
 
-Object.assign(window, { Hero, Countdown, DuePanel, ProgressPanel, LadderBar, XpBar, formatCountdown, secondsUntilMidnight });
+Object.assign(window, { Hero, Countdown, DuePanel, LeechPanel, ProgressPanel, LadderBar, XpBar, formatCountdown, secondsUntilMidnight });

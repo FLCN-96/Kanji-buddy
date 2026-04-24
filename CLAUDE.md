@@ -46,17 +46,25 @@ If you need to add a store or index, bump `DB_VERSION` and extend the `onupgrade
 
 ### Daily deck (`data/daily.js`)
 
-`Daily.selectDailyDeck(cards, cardStates)` builds the **5-card** Run deck with budgets `2 new + 2 due + 1 leech`, with cascade-fill if any bucket is short. A card is a "leech" at `lapses ≥ 3`. Cards are returned augmented with `_bucket` (`'new' | 'due' | 'leech'`) and `_state` (the existing card_state, or null for new). New cards always sort first so the intro/learn phase precedes the quiz.
+`Daily.selectDailyDeck(cards, cardStates, size)` builds the Run deck. Size defaults to `Daily.DECK_SIZE` (5) but is configurable per operator via `user.settings.deckSize` — valid values in `Daily.DECK_SIZES` (`[3, 5, 7, 10]`), resolved through `Daily.resolveDeckSize(user)`. Budgets split ~40% new + 40% due + 20% leech (floor 1 each), with cascade-fill if any bucket is short. A card is a "leech" at `lapses ≥ 3`. Cards are returned augmented with `_bucket` (`'new' | 'due' | 'leech'`) and `_state` (the existing card_state, or null for new). New cards always sort first so the intro/learn phase precedes the quiz.
 
-Home gates the panel as **clear** once `reviewed-today >= Daily.DECK_SIZE`, even if the SRS backlog is non-zero — otherwise the ~2000-card "new" pool would refill the panel forever.
+Home gates the panel as **clear** once `reviewed-today >= resolveDeckSize(user)`, even if the SRS backlog is non-zero — otherwise the ~2000-card "new" pool would refill the panel forever.
 
 `Daily.daySeed()` and `Daily.hotChallengeId()` are deterministic per local day. The "hot" challenge gets a `Daily.HOT_MULTIPLIER` (3×) XP bonus — challenge modes apply this themselves at end-of-session.
 
 ### SRS (`data/srs.js`)
 
-Standard SM-2. Verdict → quality: `miss=1, hard=3, ok=4, easy=5`. Lapse path (`q<3`) resets `interval_days=0`, `reviews=0`, increments `lapses`, and reschedules `+6h` for same-day relearn. Pass path uses fixed graduation (1d, 6d) for the first two reviews, then `interval × ease`. Easy adds a 1.3× bonus. Ease floor 1.3. Intervals ≥ 4d are fuzzed by ±~15% (min ±1d) to spread same-day cohorts across the calendar — the 1d graduation step is left alone.
+SM-2-derived. Verdict → quality: `miss=1, hard=3, ok=4, easy=5`. Key deviations from textbook SM-2:
 
-Run is the only consumer; challenge modes do not touch card_states.
+- **Hard uses a fixed `×1.2` growth factor** instead of `prev × ease`, so it's actually slower than OK. Classic SM-2 treats hard and ok identically post-graduation, making the button cosmetic.
+- **Miss drops ease linearly by 0.20** rather than SM-2's quadratic drop (~0.54 on a single miss). A single slip should not halve a card's growth rate.
+- **Mature-card lapse recovery**: on lapse of a card with `interval_days ≥ 21`, the pre-lapse interval is stashed into `lapsed_from_interval`. The first pass after the lapse recovers to `round(lapsed_from_interval × 0.25)` instead of flat-resetting to 1d graduation. Preserves earned progress on stable cards without ignoring the slip.
+
+Lapse path (`q<3`) resets `interval_days=0`, `reviews=0`, increments `lapses`, reschedules `+6h` for same-day relearn, and may set `lapsed_from_interval`. Pass path uses fixed graduation (1d, 6d) for the first two reviews (or the mature-recovery interval on first post-lapse pass), then the growth rules above. Easy adds a 1.3× bonus. Ease floor 1.3. Intervals ≥ 4d are fuzzed by ±~15% (min ±1d). The 1d graduation step is never fuzzed.
+
+`Srs.preview(state, verdict)` returns the prospective next state without writing it (used by UI to label verdict buttons); `Srs.labelInterval(days)` formats an interval as `6h / 1d / 5d / 2mo / 1y`.
+
+Run is the only consumer; challenge modes do not touch card_states. RunApp snapshots each verdict's pre-state into an undo buffer for 3 s so the user can roll back a fat-finger (`U` / `Backspace` / click the chip). The snapshot is cleared on next verdict, on expiry, and **on transition to the end phase** — once the session is saved and XP granted, undo must not roll it back.
 
 ### Rank ladder (`data/rank.js`)
 

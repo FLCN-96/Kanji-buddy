@@ -278,11 +278,15 @@ const HardResetSwitch = () => {
   );
 };
 
+const DECK_SIZES = (typeof window !== 'undefined' && window.Daily?.DECK_SIZES) || [3, 5, 7, 10];
+const DECK_SIZE_DEFAULT = (typeof window !== 'undefined' && window.Daily?.DECK_SIZE) || 5;
+
 const Settings = () => {
   const [tweaks, setTweaks] = React.useState(readTweaks);
   const [user, setUser] = React.useState(null);
   const [nameDraft, setNameDraft] = React.useState('');
   const [savedFlash, setSavedFlash] = React.useState(false);
+  const [deckSize, setDeckSizeState] = React.useState(DECK_SIZE_DEFAULT);
 
   React.useEffect(() => {
     if (!window.DB) return;
@@ -291,9 +295,17 @@ const Settings = () => {
       .then(u => {
         setUser(u);
         setNameDraft(u?.display_name || '');
+        setDeckSizeState(window.Daily ? window.Daily.resolveDeckSize(u) : DECK_SIZE_DEFAULT);
       })
       .catch(() => {});
   }, []);
+
+  const setDeckSize = (n) => {
+    setDeckSizeState(n);
+    if (window.DB && user) {
+      window.DB.updateSettings({ deckSize: n }).catch(() => {});
+    }
+  };
 
   React.useEffect(() => {
     applyBodyDataset(tweaks);
@@ -349,6 +361,19 @@ const Settings = () => {
                 disabled={!nameDraft.trim() || nameDraft === user?.display_name}
               >{savedFlash ? '✓ saved' : 'save'}</button>
             </div>
+          </div>
+        </section>
+
+        <section className="kb-set-section">
+          <div className="kb-set-section-head">▸ RUN</div>
+          <OptRow
+            label="DAILY DECK SIZE"
+            value={deckSize}
+            onSet={setDeckSize}
+            options={DECK_SIZES.map(n => ({ id: n, label: String(n) }))}
+          />
+          <div className="kb-set-hint">
+            cards per daily queue · budgets split ~40% new · 40% review · 20% leech · takes effect on next home refresh
           </div>
         </section>
 

@@ -71,6 +71,11 @@ const RunApp = ({ cards }) => {
   const [xpGained, setXpGained] = React.useState(0);
   const [confirmQuit, setConfirmQuit] = React.useState(false);
   const [isOverclock, setIsOverclock] = React.useState(false);
+  // Undo snapshot: holds the pre-verdict card_state + prior phase/combo so
+  // the next three seconds can roll back a fat-finger verdict. Cleared on
+  // the next verdict, on expiry, or on undo.
+  const [undoState, setUndoState] = React.useState(null);
+  const undoTimerRef = React.useRef(null);
 
   // Build the weighted deck once, after DB + cards are ready.
   React.useEffect(() => {
@@ -93,8 +98,9 @@ const RunApp = ({ cards }) => {
         const reviewedToday = (states || []).filter(s =>
           s.last_reviewed && new Date(s.last_reviewed).toDateString() === todayStr
         ).length;
-        setIsOverclock(reviewedToday >= (window.Daily.DECK_SIZE || 5));
-        const selected = window.Daily.selectDailyDeck(cards, states);
+        const deckSize = window.Daily.resolveDeckSize(u);
+        setIsOverclock(reviewedToday >= deckSize);
+        const selected = window.Daily.selectDailyDeck(cards, states, deckSize);
         const composed = {
           new:   selected.filter(c => c._bucket === 'new').length,
           due:   selected.filter(c => c._bucket === 'due').length,
@@ -107,7 +113,7 @@ const RunApp = ({ cards }) => {
         setPhase('pre');
       } catch (e) {
         // Fallback: first-N slice so the UI still works without DB.
-        const fallback = cards.slice(0, window.Daily?.DECK_SIZE || 5)
+        const fallback = cards.slice(0, (window.Daily && window.Daily.DECK_SIZE) || 5)
           .map(c => ({ ...c, _bucket: 'new' }));
         setDeck(fallback);
         setNewCards(fallback);
@@ -132,7 +138,10 @@ const RunApp = ({ cards }) => {
 
   // save session + XP when quiz ends
   React.useEffect(() => {
-    if (phase !== 'end' || !window.DB || !startedAt) return;
+    if (phase !== 'end') return;
+    // Session is final — don't let a stale undo chip roll back committed XP.
+    clearUndo();
+    if (!window.DB || !startedAt) return;
     const c = { miss:0, hard:0, ok:0, easy:0 };
     results.forEach(r => { if (c[r] != null) c[r]++; });
     const total = results.length;
@@ -190,15 +199,43 @@ const RunApp = ({ cards }) => {
 
   const reveal = () => setRevealed(true);
 
+  // Drop any pending undo snapshot — called when it expires, when the user
+  // hits undo, or when a new verdict replaces it.
+  const clearUndo = () => {
+    if (undoTimerRef.current) {
+      clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+    setUndoState(null);
+  };
+
   const verdict = (v) => {
     if (!revealed) return;
+    clearUndo();
     const nextResults = [...results, v];
     setResults(nextResults);
 
     const card = quizOrder[quizIdx];
+    const priorCombo = combo;
+    const priorQuizIdx = quizIdx;
     if (window.DB && window.Srs && card) {
       window.DB.getCardState(card.idx).then(existing => {
         const next = window.Srs.schedule(existing, v);
+        // Stash the pre-verdict state so undo can restore it. Store null for
+        // "never-reviewed" cards so undo deletes the state rather than writes
+        // a zeroed record (which would make the card falsely "reviewed").
+        setUndoState({
+          idx: card.idx,
+          prior: existing || null,
+          priorCombo,
+          priorQuizIdx,
+          resultsLen: nextResults.length,
+          verdict: v,
+        });
+        // 3-second window — long enough to catch a fat-finger, short enough
+        // to avoid lingering after the next card is read.
+        if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+        undoTimerRef.current = setTimeout(() => setUndoState(null), 3000);
         return window.DB.upsertCardState({ idx: card.idx, ...next });
       }).catch(() => {});
     }
@@ -228,6 +265,44 @@ const RunApp = ({ cards }) => {
     }, v === 'miss' ? 360 : 260);
   };
 
+  // Undo the most recent verdict — reverts card_states (or deletes the
+  // record if the card was never reviewed before), pops the results tally,
+  // and rewinds to the reviewed-card screen so the user can re-grade. If
+  // the end-of-quiz transition has already fired, re-enter the quiz phase.
+  const undoLast = () => {
+    const snap = undoState;
+    if (!snap) return;
+    clearUndo();
+    if (window.DB) {
+      const restore = snap.prior
+        ? window.DB.upsertCardState(snap.prior)
+        : window.DB.open().then(db => new Promise((resolve) => {
+            try {
+              const t = db.transaction('card_states', 'readwrite');
+              t.objectStore('card_states').delete(snap.idx);
+              t.oncomplete = () => resolve();
+              t.onerror = () => resolve();
+            } catch(e) { resolve(); }
+          }));
+      restore.catch(() => {});
+    }
+    setResults(r => r.slice(0, Math.max(0, snap.resultsLen - 1)));
+    setCombo(snap.priorCombo || 0);
+    setFlash(null);
+    setRevealed(true);
+    setQuizIdx(snap.priorQuizIdx);
+    // If the verdict had already closed out the quiz, jump back into it.
+    if (phase === 'end') {
+      setPhase('quiz');
+      setCardStartedAt(Date.now());
+    }
+  };
+
+  // Tidy up the undo timer if the component unmounts.
+  React.useEffect(() => () => {
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+  }, []);
+
   const goHome = () => { window.location.href = 'Home.html'; };
   const quit = () => {
     if (phase === 'quiz' || phase === 'intro') { setConfirmQuit(true); return; }
@@ -247,9 +322,15 @@ const RunApp = ({ cards }) => {
         else if (e.key === '2') { if (revealed) verdict('hard'); }
         else if (e.key === '3') { if (revealed) verdict('ok'); }
         else if (e.key === '4') { if (revealed) verdict('easy'); }
+        else if (e.key === 'u' || e.key === 'U' || e.key === 'Backspace') {
+          if (undoState) { e.preventDefault(); undoLast(); }
+        }
         else if (e.key === 'Escape') { quit(); }
       } else if (phase === 'end') {
-        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); goHome(); }
+        if (e.key === 'u' || e.key === 'U' || e.key === 'Backspace') {
+          if (undoState) { e.preventDefault(); undoLast(); }
+        }
+        else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); goHome(); }
       }
     };
     window.addEventListener('keydown', onKey);
@@ -332,6 +413,13 @@ const RunApp = ({ cards }) => {
         )}
       </main>
       {phase === 'quiz' && <ComboChip combo={combo} pulse={comboPulse} />}
+      {undoState && (
+        <UndoChip
+          verdict={undoState.verdict}
+          onUndo={undoLast}
+          onExpire={() => setUndoState(null)}
+        />
+      )}
 
       <ConfirmModal
         open={confirmQuit}
