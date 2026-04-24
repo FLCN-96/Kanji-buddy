@@ -781,6 +781,18 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 .variant-calm .run-end-acc { text-shadow: none; }
 .variant-calm .run-combo { box-shadow: none; }
 
+/* density-aware hero glyph — cards with many readings + examples shrink
+   the kanji so the whole revealed body fits without a scrollbar. Bucket
+   is computed in RunCard.jsx from (on + kun + min(ex,3)). */
+.run-card[data-density="dense"] .run-kanji,
+.run-card[data-density="dense"] .run-kanji-ghost { font-size: 124px; }
+.run-card[data-density="packed"] .run-kanji,
+.run-card[data-density="packed"] .run-kanji-ghost { font-size: 96px; }
+.variant-game .run-card[data-density="dense"] .run-kanji,
+.variant-game .run-card[data-density="dense"] .run-kanji-ghost { font-size: 180px; }
+.variant-game .run-card[data-density="packed"] .run-kanji,
+.variant-game .run-card[data-density="packed"] .run-kanji-ghost { font-size: 148px; }
+
 /* small screens — base kanji is 148px (was the compact value before density
    lock); only narrow the buttons on phones so the 1-4 keys read big */
 @media (max-width: 420px) {

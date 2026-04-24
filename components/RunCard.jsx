@@ -9,6 +9,19 @@ const VERDICTS = [
 
 const romaji = (s) => (window.Romaji ? window.Romaji.toRomaji(s) : '');
 
+// Cards cap at 6 on+kun readings and 3 examples (sliced below), so the
+// revealed body can stack up to 9 rows under the hero kanji. On mid/short
+// viewports that forces vertical scroll — instead we shrink the glyph in
+// two tiers so everything fits without a scrollbar.
+const cardDensity = (card) => {
+  if (!card) return 'normal';
+  const rows = (card.on || []).length + (card.kun || []).length
+    + Math.min((card.ex || []).length, 3);
+  if (rows >= 8) return 'packed';
+  if (rows >= 6) return 'dense';
+  return 'normal';
+};
+
 const CardReadings = ({ card }) => {
   const kun = card.kun || [];
   const on = card.on || [];
@@ -71,6 +84,7 @@ const Card = ({ card, revealed, onReveal, latency, flash }) => {
     <div
       className={`run-card${revealed ? ' revealed' : ' is-tap'}${flash ? ` run-flash ${flash}`:''}`}
       data-screen-label="run-card"
+      data-density={cardDensity(card)}
       onClick={handleCardClick}
       onKeyDown={handleKey}
       role={clickable ? 'button' : undefined}
@@ -108,7 +122,7 @@ const Card = ({ card, revealed, onReveal, latency, flash }) => {
 const IntroCard = ({ card, index, total, onNext }) => {
   if (!card) return null;
   return (
-    <div className="run-card revealed run-intro" data-screen-label="run-intro">
+    <div className="run-card revealed run-intro" data-screen-label="run-intro" data-density={cardDensity(card)}>
       <div className="run-card-strip run-intro-strip">
         <span>▸ LEARN · <b>NEW</b></span>
         <span className="run-card-strip-r">
