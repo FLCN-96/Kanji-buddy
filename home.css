@@ -72,11 +72,20 @@ body[data-scanlines="on"]::after {
   font-family: var(--font-mono); font-size: 10px; font-weight: 500;
   color: var(--fg-2); letter-spacing: .14em; text-transform: uppercase;
   padding: 1px 6px; border: 1px solid var(--line-dim);
+  background: transparent;
   white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   opacity: 1; transform: translateX(0);
   transition: opacity 280ms var(--ease-snap) 140ms,
-              transform 280ms var(--ease-snap) 140ms;
+              transform 280ms var(--ease-snap) 140ms,
+              color var(--dur-fast) var(--ease-snap),
+              border-color var(--dur-fast) var(--ease-snap);
 }
+@media (hover: hover) {
+  .kb-wm-ver:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); }
+}
+.kb-wm-ver:focus-visible { outline: none; color: var(--accent-cyan); border-color: var(--accent-cyan); }
 .kb-wm-ver.is-hidden {
   opacity: 0; transform: translateX(-4px);
   transition-delay: 0ms;
@@ -135,12 +144,20 @@ body[data-scanlines="on"]::after {
   text-transform: uppercase;
   overflow: visible;     /* sparks need to escape the pill */
   white-space: nowrap;
-  cursor: default;
+  /* Now a real <button> — reset native styling and surface a tap affordance.
+     History popover (B4) opens on click. */
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition: color var(--dur-fast) var(--ease-snap),
               border-color var(--dur-fast) var(--ease-snap),
               text-shadow var(--dur-fast) var(--ease-snap),
-              box-shadow var(--dur-base) var(--ease-snap);
+              box-shadow var(--dur-base) var(--ease-snap),
+              transform var(--dur-fast) var(--ease-snap);
 }
+.kb-streak-chip:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent-cyan); }
+.kb-streak-chip:active { transform: scale(.96); }
 .kb-streak-chip-icon {
   font-family: var(--font-jp-serif);
   font-size: 13px;
@@ -393,7 +410,11 @@ body[data-hero="off"] .kb-hero { display: none; }
   content: attr(data-k);
   position: absolute; inset: 0;
   color: var(--accent-magenta);
-  opacity: .35; transform: translate(3px, 2px);
+  opacity: .35;
+  /* C4: parallax — the wrap sets --p-x / --p-y on hover and we shift the
+     ghost in the opposite direction so the glyph and shadow pull apart. */
+  transform: translate(calc(3px + var(--p-x, 0px) * -1), calc(2px + var(--p-y, 0px) * -1));
+  transition: transform 220ms var(--ease-snap);
   z-index: -1; pointer-events: none;
 }
 .kb-hero-kanji::after {
@@ -1070,6 +1091,12 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   box-shadow: 0 0 10px rgba(34,211,238,.5);
   position: relative;
   overflow: hidden;
+  /* C2: animate width changes — fills in from 0→pct on mount and slides
+     when XP increments. Bezier matches the snap easing used elsewhere. */
+  transition: width 720ms cubic-bezier(.2, .8, .2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .variant-xp-fill { transition: none; }
 }
 .variant-xp-fill::after {
   content: ''; position: absolute; inset: 0;
@@ -1668,4 +1695,629 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   .kb-leech-k { font-size: 22px; }
   .kb-leech-m { font-size: 11px; }
   .kb-leech-stats { font-size: 9.5px; gap: 4px; }
+}
+
+/* =========================================================
+   STREAK CELEBRATIONS — one-shot bursts on Home mount.
+   Triggered by App.jsx after consuming the corresponding
+   window.Streak flag from localStorage. Auto-clear after
+   their longest animation duration so a remount doesn't
+   repeat them and they can stack with steady-state styling.
+   ========================================================= */
+
+/* A1 — ember puff on continued streak (small upward smoke). */
+.kb-streak-puff {
+  position: absolute;
+  left: 50%; top: 0;
+  width: 18px; height: 18px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(255,200,120,.85) 0%,
+    rgba(255,120,30,.5) 35%,
+    rgba(255,120,30,0) 70%);
+  pointer-events: none;
+  opacity: 0;
+  animation: kb-streak-puff 1100ms cubic-bezier(.2,.8,.2,1) forwards;
+  z-index: 5;
+}
+@keyframes kb-streak-puff {
+  0%   { transform: translate(-50%, 0) scale(.4);  opacity: 0; }
+  18%  { transform: translate(-50%, -10px) scale(1.4); opacity: 1; }
+  70%  { transform: translate(-50%, -28px) scale(2.2); opacity: .35; }
+  100% { transform: translate(-50%, -42px) scale(2.8); opacity: 0; }
+}
+
+/* A2 — broken streak: red dust + horizontal shake on first paint. */
+.kb-streak-chip.is-shake {
+  animation: kb-streak-shake 720ms cubic-bezier(.36,.07,.19,.97) both;
+}
+@keyframes kb-streak-shake {
+  0%  { transform: translateX(0); }
+  10% { transform: translateX(-5px); box-shadow: 0 0 14px rgba(255,92,106,.7); }
+  20% { transform: translateX(5px); }
+  30% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  50% { transform: translateX(-3px); }
+  60% { transform: translateX(3px); box-shadow: 0 0 18px rgba(255,92,106,.55); }
+  70% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+  90% { transform: translateX(-1px); }
+  100% { transform: translateX(0); box-shadow: 0 0 4px rgba(255,92,106,.3); }
+}
+
+/* A4 — best-streak twinkle: a magenta starburst at the top-right corner. */
+.kb-streak-best-twinkle {
+  position: absolute;
+  top: -6px; right: -8px;
+  font-size: 14px;
+  color: var(--accent-magenta);
+  text-shadow: 0 0 8px rgba(255,61,255,.9), 0 0 16px rgba(255,61,255,.5);
+  pointer-events: none;
+  opacity: 0;
+  animation: kb-streak-best-tw 2.4s cubic-bezier(.2,.8,.2,1) 1;
+  z-index: 5;
+}
+@keyframes kb-streak-best-tw {
+  0%   { opacity: 0; transform: scale(.3) rotate(-20deg); }
+  20%  { opacity: 1; transform: scale(1.4) rotate(20deg); }
+  60%  { opacity: 1; transform: scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: scale(1.2) rotate(40deg); }
+}
+
+/* A6 — cold state passive nudge: gentle border pulse so the user
+   notices that today's session hasn't been logged yet. */
+.kb-streak-chip.is-cold {
+  animation: kb-streak-cold-pulse 5.4s ease-in-out infinite;
+}
+@keyframes kb-streak-cold-pulse {
+  0%, 88%, 100% { box-shadow: 0 0 0 rgba(160,180,210,0); border-color: var(--line-bright); }
+  92% { box-shadow: 0 0 8px rgba(34,211,238,.45); border-color: var(--accent-cyan); }
+  96% { box-shadow: 0 0 4px rgba(34,211,238,.25); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-streak-puff,
+  .kb-streak-best-twinkle { display: none; }
+  .kb-streak-chip.is-shake { animation: none; }
+  .kb-streak-chip.is-cold  { animation: none; }
+}
+
+/* A3 — StreakMilestoneModal extras (most styling reused from .ku-modal). */
+.ku-streak .ku-streak-glyph {
+  font-family: var(--font-jp-serif); font-weight: 700;
+  font-size: 56px; color: var(--accent-amber);
+  text-shadow: 0 0 18px rgba(245,165,36,.7), 0 0 32px rgba(255,120,30,.45);
+}
+.ku-streak .ku-streak-plaque {
+  background: linear-gradient(180deg, rgba(245,165,36,.08), transparent 70%);
+}
+
+/* =========================================================
+   PANE WRAP — makes a Dashboard pane tappable for its detail
+   popover. C7: subtle hover affordance + active scale.
+   The wrap is a normal block so it participates in the
+   staggered-entrance cascade and has a real box for hover/
+   active styling. The inner pane already carries its own
+   border + background; the wrap just nudges the whole thing
+   on interaction so the affordance reads.
+   ========================================================= */
+.kb-pane-wrap {
+  display: flex; flex-direction: column;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--dur-fast) var(--ease-snap),
+              filter var(--dur-fast) var(--ease-snap);
+}
+.kb-pane-wrap > * {
+  flex: 1 1 auto;
+  transition: border-color var(--dur-fast) var(--ease-snap),
+              box-shadow var(--dur-fast) var(--ease-snap);
+}
+@media (hover: hover) {
+  .kb-pane-wrap:hover > * {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 8px rgba(34,211,238,.18);
+  }
+}
+.kb-pane-wrap:active { transform: scale(.992); }
+.kb-pane-wrap:focus-visible {
+  outline: none;
+}
+.kb-pane-wrap:focus-visible > * {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(34,211,238,.3);
+}
+
+/* =========================================================
+   STAGGERED HOME ENTRANCE — C1
+   Each child of .kb-main-staggered fades + lifts in with a
+   ~60 ms cascade. Keeps the first paint feeling alive.
+   ========================================================= */
+.kb-main-staggered > * {
+  animation: kb-pane-in 420ms cubic-bezier(.2,.8,.2,1) both;
+}
+.kb-main-staggered > *:nth-child(1) { animation-delay: 0ms; }
+.kb-main-staggered > *:nth-child(2) { animation-delay: 60ms; }
+.kb-main-staggered > *:nth-child(3) { animation-delay: 120ms; }
+.kb-main-staggered > *:nth-child(4) { animation-delay: 180ms; }
+.kb-main-staggered > *:nth-child(5) { animation-delay: 240ms; }
+.kb-main-staggered > *:nth-child(6) { animation-delay: 300ms; }
+.kb-main-staggered > *:nth-child(7) { animation-delay: 340ms; }
+.kb-main-staggered > *:nth-child(8) { animation-delay: 380ms; }
+.kb-main-staggered > *:nth-child(9) { animation-delay: 420ms; }
+.kb-main-staggered > *:nth-child(n+10) { animation-delay: 460ms; }
+@keyframes kb-pane-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kb-main-staggered > * { animation: none; }
+}
+
+/* =========================================================
+   FORECAST tone ribbon — C3
+   Animates width on mount whenever the tone changes (key={tone}
+   in JSX forces remount). The accent color tracks the panel's
+   tier-* class.
+   ========================================================= */
+.kb-progress-ribbon {
+  position: absolute;
+  left: 0; bottom: 0;
+  height: 2px;
+  width: 0;
+  pointer-events: none;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 8px rgba(34,211,238,.6);
+  animation: kb-progress-ribbon 720ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+.kb-progress.tier-amber .kb-progress-ribbon   { background: var(--accent-amber);   box-shadow: 0 0 8px rgba(245,165,36,.6); }
+.kb-progress.tier-magenta .kb-progress-ribbon { background: var(--accent-magenta); box-shadow: 0 0 8px rgba(255,61,255,.6); }
+@keyframes kb-progress-ribbon {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+.kb-progress { position: relative; }
+@media (prefers-reduced-motion: reduce) {
+  .kb-progress-ribbon { animation: none; width: 100%; }
+}
+
+/* =========================================================
+   RUN-PRIMARY ambient particles — C5
+   Three slow-drifting cyan dots inside the run button when
+   today is not yet done. Swap to magenta on overclock.
+   ========================================================= */
+.kb-run-primary:not(.is-disabled):not(.is-overachiever)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle 2px at 18% 70%, rgba(34,211,238,.55), transparent 60%),
+    radial-gradient(circle 1.5px at 62% 30%, rgba(34,211,238,.45), transparent 60%),
+    radial-gradient(circle 1px at 88% 60%, rgba(34,211,238,.4), transparent 60%);
+  opacity: 0;
+  animation: kb-rp-particles 5.4s ease-in-out infinite;
+  z-index: 0;
+}
+@keyframes kb-rp-particles {
+  0%, 100% { opacity: 0; transform: translateY(8px); }
+  20%      { opacity: .9; }
+  60%      { opacity: .6; transform: translateY(-12px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kb-run-primary:not(.is-disabled):not(.is-overachiever)::before { animation: none; opacity: 0; }
+}
+
+/* =========================================================
+   LADDER tier segments — tap affordance (B7)
+   ========================================================= */
+.kb-ladder-seg.is-tappable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+@media (hover: hover) {
+  .kb-ladder-seg.is-tappable:hover {
+    filter: brightness(1.18);
+    box-shadow: inset 0 0 0 1px currentColor;
+  }
+}
+.kb-ladder-seg.is-tappable:active { transform: scale(.985); }
+
+/* =========================================================
+   POPOVER SHELL — shared by every B-series modal + C8.
+   Sits above everything Home renders. ESC and scrim-click
+   dismiss; .kb-pop-x button is keyboard-friendly.
+   ========================================================= */
+.kb-pop-scrim {
+  position: fixed; inset: 0;
+  z-index: 180;
+  background: rgba(8,12,18,.78);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--sp-3);
+  animation: kb-pop-scrim-in 220ms ease-out;
+}
+@keyframes kb-pop-scrim-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.kb-pop {
+  position: relative;
+  width: 100%; max-width: 540px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: var(--bg-1);
+  border: 1px solid var(--accent-cyan);
+  box-shadow: 0 0 32px rgba(34,211,238,.25), inset 0 0 0 1px rgba(34,211,238,.15);
+  font-family: var(--font-mono);
+  color: var(--fg-0);
+  padding: var(--sp-4);
+  display: flex; flex-direction: column; gap: var(--sp-3);
+  animation: kb-pop-in 320ms cubic-bezier(.2,.8,.2,1);
+}
+@keyframes kb-pop-in {
+  from { opacity: 0; transform: translateY(12px) scale(.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.kb-pop-top {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; color: var(--accent-cyan);
+  letter-spacing: .14em; text-transform: uppercase;
+  border-bottom: 1px solid var(--line-dim);
+  padding-bottom: var(--sp-2);
+}
+.kb-pop-x {
+  background: transparent; border: 1px solid var(--line-dim);
+  color: var(--fg-2); cursor: pointer;
+  width: 24px; height: 22px;
+  font-family: var(--font-mono); font-size: 11px;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: color var(--dur-fast) var(--ease-snap), border-color var(--dur-fast) var(--ease-snap);
+}
+@media (hover: hover) {
+  .kb-pop-x:hover { color: var(--danger); border-color: var(--danger); }
+}
+.kb-pop-ack {
+  background: var(--accent-cyan); color: var(--bg-0); border: none;
+  padding: 10px var(--sp-3);
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+  cursor: pointer;
+  transition: filter var(--dur-fast) var(--ease-snap);
+}
+@media (hover: hover) {
+  .kb-pop-ack:hover { filter: brightness(1.1); box-shadow: 0 0 16px rgba(34,211,238,.4); }
+}
+
+/* shared stats grid */
+.kb-pop-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+}
+.kb-pop-stats > div {
+  border: 1px solid var(--line-dim);
+  background: var(--bg-2);
+  padding: var(--sp-2);
+  display: flex; flex-direction: column; align-items: center;
+  gap: 2px;
+}
+.kb-pop-stats > div span {
+  font-size: 22px; font-weight: 700; color: var(--accent-cyan);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 8px rgba(34,211,238,.4);
+}
+.kb-pop-stats > div em {
+  font-style: normal; font-size: 9px; color: var(--fg-2);
+  letter-spacing: .14em; text-transform: uppercase;
+  text-align: center;
+}
+.kb-pop-empty {
+  padding: var(--sp-3); text-align: center;
+  font-size: 12px; color: var(--fg-2); letter-spacing: .04em;
+  border: 1px dashed var(--line-dim);
+}
+.kb-pop-legend {
+  display: flex; justify-content: center; gap: var(--sp-3);
+  font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-2);
+}
+.kb-pop-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.kb-pop-swatch {
+  display: inline-block; width: 10px; height: 10px;
+  background: var(--bg-2); border: 1px solid var(--line-dim);
+}
+.kb-pop-swatch.is-empty { background: var(--bg-2); }
+.kb-pop-swatch.is-cool  { background: rgba(34,211,238,.35); border-color: var(--accent-cyan); }
+.kb-pop-swatch.is-warm  { background: rgba(245,165,36,.5);  border-color: var(--accent-amber); }
+.kb-pop-swatch.is-hot   { background: var(--accent-magenta); border-color: var(--accent-magenta); box-shadow: 0 0 4px rgba(255,61,255,.6); }
+.kb-pop-swatch.is-off   { background: var(--bg-0); }
+.kb-pop-swatch.is-on    { background: rgba(34,211,238,.55); border-color: var(--accent-cyan); }
+
+/* B1 — forecast 30-day heatmap */
+.kb-pop-heatmap {
+  display: grid; grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+  padding: var(--sp-2); border: 1px solid var(--line-dim); background: var(--bg-2);
+}
+.kb-pop-heatmap-cell {
+  position: relative;
+  aspect-ratio: 1;
+  background: var(--bg-0);
+  border: 1px solid var(--line-dim);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  padding: 2px 0;
+  overflow: hidden;
+  font-family: var(--font-mono);
+}
+.kb-pop-heatmap-day {
+  position: absolute; top: 2px; left: 4px;
+  font-size: 8px; color: var(--fg-3); letter-spacing: .04em;
+  z-index: 1;
+}
+.kb-pop-heatmap-bar {
+  width: 100%;
+  background: var(--bg-2);
+  transition: height var(--dur-fast) var(--ease-snap);
+}
+.kb-pop-heatmap-cell.is-cool .kb-pop-heatmap-bar { background: rgba(34,211,238,.35); }
+.kb-pop-heatmap-cell.is-warm .kb-pop-heatmap-bar { background: rgba(245,165,36,.5); }
+.kb-pop-heatmap-cell.is-hot  .kb-pop-heatmap-bar { background: var(--accent-magenta); box-shadow: inset 0 0 8px rgba(255,61,255,.5); }
+.kb-pop-heatmap-cell.is-empty .kb-pop-heatmap-bar { background: var(--bg-2); height: 4px !important; }
+.kb-pop-heatmap-cell.is-peak  { border-color: var(--accent-magenta); box-shadow: 0 0 8px rgba(255,61,255,.5); }
+
+/* B2 — deck breakdown */
+.kb-pop-deck-groups { display: flex; flex-direction: column; gap: var(--sp-2); }
+.kb-pop-deck-group {
+  border: 1px solid var(--line-dim);
+  background: var(--bg-2);
+  padding: var(--sp-2);
+}
+.kb-pop-deck-group.tone-cyan    { border-left: 3px solid var(--accent-cyan); }
+.kb-pop-deck-group.tone-amber   { border-left: 3px solid var(--accent-amber); }
+.kb-pop-deck-group.tone-magenta { border-left: 3px solid var(--accent-magenta); }
+.kb-pop-deck-grouphead {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-2);
+  margin-bottom: 6px;
+}
+.kb-pop-deck-group.tone-cyan    .kb-pop-deck-grouphead { color: var(--accent-cyan); }
+.kb-pop-deck-group.tone-amber   .kb-pop-deck-grouphead { color: var(--accent-amber); }
+.kb-pop-deck-group.tone-magenta .kb-pop-deck-grouphead { color: var(--accent-magenta); }
+.kb-pop-deck-cards { display: flex; flex-wrap: wrap; gap: 6px; }
+.kb-pop-deck-k {
+  font-family: var(--font-jp-serif); font-weight: 700;
+  font-size: 28px; line-height: 1;
+  color: var(--fg-0);
+  padding: 4px 8px;
+  background: var(--bg-0);
+  border: 1px solid var(--line-dim);
+  cursor: help;
+}
+
+/* B3 — Rank ladder modal (RankLadderModal owns its own className). */
+.kb-pop-rank { max-width: 600px; }
+.kb-pop-summary {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  background: var(--bg-2); border: 1px solid var(--line-dim);
+}
+.kb-pop-summary > div { display: flex; flex-direction: column; gap: 2px; }
+.kb-pop-summary-lbl { font-size: 9px; color: var(--fg-2); letter-spacing: .14em; text-transform: uppercase; }
+.kb-pop-summary-val { font-size: 13px; font-weight: 700; color: var(--accent-cyan); }
+.kb-pop-progress {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.kb-pop-progress-bar {
+  height: 8px; background: var(--bg-2); border: 1px solid var(--line-dim);
+  position: relative; overflow: hidden;
+}
+.kb-pop-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
+  box-shadow: 0 0 10px rgba(34,211,238,.5);
+  transition: width 720ms cubic-bezier(.2,.8,.2,1);
+}
+.kb-pop-progress-meta {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--fg-2); letter-spacing: .1em; text-transform: uppercase;
+}
+.kb-pop-ladder {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 360px; overflow-y: auto;
+  border: 1px solid var(--line-dim);
+}
+.kb-pop-ladder-row {
+  display: grid;
+  grid-template-columns: 28px 30px 1fr auto auto;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px var(--sp-2);
+  background: var(--bg-2);
+  font-size: 11px;
+  color: var(--fg-2);
+  border-left: 2px solid transparent;
+  opacity: .55;
+  transition: background var(--dur-fast) var(--ease-snap);
+}
+.kb-pop-ladder-row.is-reached { opacity: 1; color: var(--fg-1); }
+.kb-pop-ladder-row.is-current {
+  background: var(--bg-0);
+  border-left-color: var(--accent-cyan);
+  box-shadow: inset 0 0 12px rgba(34,211,238,.18);
+  color: var(--fg-0);
+}
+.kb-pop-ladder-glyph {
+  font-family: var(--font-jp-serif); font-size: 18px; line-height: 1;
+  text-align: center;
+}
+.kb-pop-ladder-row.tier-cyan      .kb-pop-ladder-glyph { color: var(--accent-cyan); }
+.kb-pop-ladder-row.tier-magenta   .kb-pop-ladder-glyph { color: var(--accent-magenta); }
+.kb-pop-ladder-row.tier-amber     .kb-pop-ladder-glyph { color: var(--accent-amber); }
+.kb-pop-ladder-row.tier-transcend .kb-pop-ladder-glyph { color: #fefce8; text-shadow: 0 0 8px rgba(254,252,232,.5); }
+.kb-pop-ladder-rom { font-weight: 700; color: var(--fg-1); font-size: 12px; }
+.kb-pop-ladder-name { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.kb-pop-ladder-name b { font-weight: 700; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+.kb-pop-ladder-name em { font-style: normal; font-size: 9px; color: var(--fg-3); letter-spacing: .04em; }
+.kb-pop-ladder-thr { font-size: 10px; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.kb-pop-ladder-thr .unit { margin-left: 3px; font-size: 8px; opacity: .7; }
+.kb-pop-ladder-cursor { font-size: 9px; color: var(--accent-cyan); letter-spacing: .14em; text-transform: uppercase; }
+
+/* B4 — streak history calendar */
+.kb-pop-cal {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  padding: var(--sp-2); border: 1px solid var(--line-dim); background: var(--bg-2);
+}
+.kb-pop-cal-cell {
+  aspect-ratio: 1;
+  background: var(--bg-0);
+  border: 1px solid var(--line-dim);
+  cursor: help;
+}
+.kb-pop-cal-cell.is-on  { background: rgba(34,211,238,.55); border-color: var(--accent-cyan); }
+.kb-pop-cal-cell.is-hot { background: var(--accent-magenta); border-color: var(--accent-magenta); box-shadow: 0 0 6px rgba(255,61,255,.6); }
+
+/* B5 — full leech list */
+.kb-pop-leech-list {
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 50vh; overflow-y: auto;
+}
+.kb-pop-leech-row {
+  display: grid; grid-template-columns: auto 1fr;
+  gap: var(--sp-2); align-items: center;
+  padding: 6px var(--sp-2);
+  background: var(--bg-2);
+  border: 1px solid var(--line-dim);
+  border-left: 2px solid var(--accent-magenta);
+}
+.kb-pop-leech-k {
+  font-family: var(--font-jp-serif); font-weight: 700;
+  font-size: 28px; line-height: 1;
+  color: var(--fg-0);
+  min-width: 1.2em; text-align: center;
+  text-shadow: 0 0 8px rgba(255,61,255,.25);
+}
+.kb-pop-leech-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kb-pop-leech-m { font-size: 12px; color: var(--fg-1); }
+.kb-pop-leech-tags {
+  display: inline-flex; gap: 6px; flex-wrap: wrap;
+  font-size: 10px; color: var(--fg-2); letter-spacing: .08em; text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.kb-pop-leech-sep { color: var(--fg-3); }
+
+/* B6 — hero detail (stroke order + readings + examples) */
+.kb-pop-hero-top {
+  display: grid; grid-template-columns: auto 1fr;
+  gap: var(--sp-3); align-items: center;
+}
+.kb-pop-hero-glyph {
+  font-family: var(--font-jp-serif); font-weight: 700;
+  font-size: 88px; line-height: 1;
+  color: var(--fg-0);
+  text-shadow: 0 0 18px rgba(34,211,238,.35);
+}
+.kb-pop-hero-meta { display: flex; flex-direction: column; gap: 6px; }
+.kb-pop-hero-mean { font-size: 14px; color: var(--fg-1); }
+.kb-pop-hero-tag { font-size: 10px; color: var(--fg-2); letter-spacing: .14em; text-transform: uppercase; }
+.kb-pop-hero-svg {
+  display: flex; justify-content: center;
+  padding: var(--sp-3); background: var(--bg-2); border: 1px solid var(--line-dim);
+}
+.kb-pop-hero-svg svg { width: 180px; height: 180px; max-width: 100%; }
+.kb-pop-hero-svg svg * { stroke: var(--accent-cyan); fill: none; }
+.kb-pop-hero-readings { display: flex; flex-direction: column; gap: 4px; }
+.kb-pop-hero-r {
+  display: inline-flex; gap: 8px; align-items: baseline;
+  font-family: var(--font-jp-sans); font-size: 14px;
+  color: var(--fg-1);
+}
+.kb-pop-hero-r .tag {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--fg-2); padding: 2px 6px; border: 1px solid var(--line-dim);
+}
+.kb-pop-hero-r em {
+  font-style: normal; font-family: var(--font-mono); font-size: 10px;
+  color: var(--fg-2); text-transform: lowercase; letter-spacing: .04em;
+}
+.kb-pop-hero-r .gloss { font-family: var(--font-mono); font-size: 10px; color: var(--fg-2); }
+.kb-pop-hero-ex {
+  display: flex; flex-direction: column; gap: 4px;
+  border-top: 1px dashed var(--line-dim); padding-top: var(--sp-2);
+}
+.kb-pop-hero-exhead { font-size: 9px; color: var(--fg-2); letter-spacing: .14em; text-transform: uppercase; }
+.kb-pop-hero-exrow {
+  display: grid; grid-template-columns: auto auto 1fr;
+  gap: var(--sp-2); align-items: baseline;
+  font-size: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line-dim);
+}
+.kb-pop-hero-exrow:last-child { border-bottom: 0; }
+.kb-pop-hero-exrow .w { font-family: var(--font-jp-sans); font-weight: 700; color: var(--fg-0); }
+.kb-pop-hero-exrow .r { font-size: 10px; color: var(--accent-magenta); }
+.kb-pop-hero-exrow .m { color: var(--fg-1); font-size: 11px; }
+
+/* B7 — ladder tier breakdown */
+.kb-pop-tier { max-width: 600px; }
+.kb-pop-tier-section { display: flex; flex-direction: column; gap: 6px; }
+.kb-pop-tier-head {
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-2);
+}
+.kb-pop-tier-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  gap: 4px;
+  padding: var(--sp-2); background: var(--bg-2); border: 1px solid var(--line-dim);
+  max-height: 240px; overflow-y: auto;
+}
+.kb-pop-tier-grid.is-dim { opacity: .6; }
+.kb-pop-tier-k {
+  font-family: var(--font-jp-serif); font-weight: 700;
+  font-size: 22px; line-height: 1;
+  text-align: center;
+  padding: 6px 0;
+  background: var(--bg-0);
+  border: 1px solid var(--line-dim);
+  cursor: help;
+  color: var(--fg-0);
+}
+.kb-pop-tier.tier-cyan    .kb-pop-tier-grid:not(.is-dim) .kb-pop-tier-k { border-color: rgba(34,211,238,.45); }
+.kb-pop-tier.tier-amber   .kb-pop-tier-grid:not(.is-dim) .kb-pop-tier-k { border-color: rgba(245,165,36,.45); }
+.kb-pop-tier.tier-magenta .kb-pop-tier-grid:not(.is-dim) .kb-pop-tier-k { border-color: rgba(255,61,255,.45); }
+.kb-pop-tier.tier-extra   .kb-pop-tier-grid:not(.is-dim) .kb-pop-tier-k { border-color: var(--line-bright); }
+
+/* C8 — changelog popover */
+.kb-pop-changelog-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  max-height: 50vh; overflow-y: auto;
+}
+.kb-pop-changelog-list > li {
+  background: var(--bg-2);
+  border: 1px solid var(--line-dim);
+  border-left: 2px solid var(--accent-cyan);
+  padding: var(--sp-2);
+}
+.kb-pop-changelog-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 6px;
+}
+.kb-pop-changelog-head b { color: var(--fg-0); font-size: 12px; letter-spacing: .04em; }
+.kb-pop-changelog-head em {
+  font-style: normal; color: var(--fg-2); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+}
+.kb-pop-changelog-list ul {
+  margin: 0; padding-left: 18px;
+  font-size: 11px; color: var(--fg-1); line-height: 1.5;
+}
+.kb-pop-changelog-list ul li { margin: 2px 0; }
+
+/* small screens — reduce paddings + heatmap density */
+@media (max-width: 420px) {
+  .kb-pop { padding: var(--sp-3); }
+  .kb-pop-stats > div span { font-size: 18px; }
+  .kb-pop-heatmap { grid-template-columns: repeat(7, 1fr); }
+  .kb-pop-hero-glyph { font-size: 72px; }
+  .kb-pop-hero-svg svg { width: 140px; height: 140px; }
+  .kb-pop-ladder-row { grid-template-columns: 24px 26px 1fr auto; }
+  .kb-pop-ladder-cursor { display: none; }
 }

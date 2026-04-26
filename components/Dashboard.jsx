@@ -5,8 +5,44 @@ const heroRomaji = (s) => {
   return window.Romaji.toRomaji(s);
 };
 
+// C4: a subtle parallax push on the magenta ghost shadow that follows the
+// cursor over the hero. Sets CSS custom properties --p-x / --p-y on the
+// wrap; home.css uses them to nudge the ::before ghost in the opposite
+// direction so the glyph and shadow pull apart slightly. Disabled on
+// touch devices and when reduced-motion is on.
+const useHeroParallax = () => {
+  const wrapRef = React.useRef(null);
+  React.useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    if (window.matchMedia && window.matchMedia('(hover: none)').matches) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const onMove = (e) => {
+      const r = wrap.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width  - 0.5;
+      const py = (e.clientY - r.top)  / r.height - 0.5;
+      const dx = Math.max(-4, Math.min(4, px * 8));
+      const dy = Math.max(-4, Math.min(4, py * 8));
+      wrap.style.setProperty('--p-x', `${dx}px`);
+      wrap.style.setProperty('--p-y', `${dy}px`);
+    };
+    const onLeave = () => {
+      wrap.style.setProperty('--p-x', '0px');
+      wrap.style.setProperty('--p-y', '0px');
+    };
+    wrap.addEventListener('mousemove', onMove);
+    wrap.addEventListener('mouseleave', onLeave);
+    return () => {
+      wrap.removeEventListener('mousemove', onMove);
+      wrap.removeEventListener('mouseleave', onLeave);
+    };
+  }, []);
+  return { wrapRef };
+};
+
 const Hero = ({ kanji }) => {
   // `kanji` comes from cards.json: { k, mainOn, mainKun, mean, jlpt, strokes, ... }
+  const { wrapRef } = useHeroParallax();
   if (!kanji) {
     return (
       <section className="kb-hero" data-screen-label="hero-kanji">
@@ -28,7 +64,7 @@ const Hero = ({ kanji }) => {
   const strokeLbl = kanji.strokes ? `${kanji.strokes} ${kanji.strokes === 1 ? 'stroke' : 'strokes'}` : '';
   const tag = [jlptLbl, strokeLbl].filter(Boolean).join(' · ');
   return (
-    <section className="kb-hero" data-screen-label="hero-kanji">
+    <section className="kb-hero" data-screen-label="hero-kanji" ref={wrapRef}>
       <div className="kb-hero-strip">
         <span>▸ KANJI // today</span>
         <span className="mag">「{kun}」</span>
@@ -524,6 +560,9 @@ const ProgressPanel = ({ cards, states }) => {
         </div>
         <div className="kb-progress-sub">{sub}</div>
       </div>
+      {/* C3: tone ribbon — animates width on tier change so the tone shift
+          is felt, not just colored. */}
+      <div className={`kb-progress-ribbon tier-${tone}`} aria-hidden="true" key={`r-${tone}`} />
       {frameCount > 1 && (
         <div className="kb-progress-dots" aria-hidden="true">
           {Array.from({ length: frameCount }).map((_, i) => (
@@ -544,7 +583,7 @@ const ProgressPanel = ({ cards, states }) => {
 // appear as a final "+" segment when any exist, so the 163
 // extras aren't silently dropped.
 // ─────────────────────────────────────────────────────────────
-const LadderBar = ({ cards, states }) => {
+const LadderBar = ({ cards, states, onTierTap }) => {
   const { tiers, total, done, extras } = React.useMemo(
     () => computeTierProgress(cards, states),
     [cards, states]
@@ -594,12 +633,23 @@ const LadderBar = ({ cards, states }) => {
         {segments.map(t => {
           const pct = t.total > 0 ? Math.min(100, Math.round((t.done / t.total) * 100)) : 0;
           const full = pct >= 100 && t.total > 0;
+          // Pull the original tier object (carries jlpt for filtering) when
+          // available; the "+" extras segment is detected by label.
+          const original = tiers.find(x => x.label === t.label) || t;
+          const handleClick = (e) => {
+            if (!onTierTap) return;
+            e.stopPropagation();
+            onTierTap({ ...t, jlpt: original.jlpt, label: t.label, color: t.color });
+          };
           return (
             <div
               key={t.label}
-              className={`kb-ladder-seg tier-${t.color}${full ? ' is-full' : ''}`}
+              className={`kb-ladder-seg tier-${t.color}${full ? ' is-full' : ''}${onTierTap ? ' is-tappable' : ''}`}
               style={{ flexGrow: t.total, flexShrink: 0, flexBasis: 0 }}
-              title={`${t.label} · ${t.done.toLocaleString()} / ${t.total.toLocaleString()} (${pct}%)`}
+              title={`${t.label} · ${t.done.toLocaleString()} / ${t.total.toLocaleString()} (${pct}%) · tap for breakdown`}
+              onClick={handleClick}
+              role={onTierTap ? 'button' : undefined}
+              tabIndex={onTierTap ? 0 : undefined}
             >
               <div className="kb-ladder-seg-fill" style={{ width: `${pct}%` }} />
             </div>
@@ -628,6 +678,18 @@ const XpBar = ({ xp = 0 }) => {
   const { cur, next, into, window: span, pct } = R
     ? R.getRankProgress(xp)
     : { cur: { label: 'RANK —', color: 'cyan', glyph: '·', threshold: 0 }, next: null, into: 0, window: 1, pct: 0 };
+  // C2: fill animates from 0 → pct on first paint so recent gains are felt
+  // visually. Subsequent xp bumps animate via CSS width transition baked
+  // into .variant-xp-fill.
+  const [shown, setShown] = React.useState(0);
+  React.useEffect(() => {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setShown(pct);
+      return;
+    }
+    const id = requestAnimationFrame(() => setShown(pct));
+    return () => cancelAnimationFrame(id);
+  }, [pct]);
   return (
     <div className={`variant-xp tier-${cur.color}`} data-screen-label="xp-bar">
       <div className="variant-xp-head">
@@ -639,7 +701,7 @@ const XpBar = ({ xp = 0 }) => {
         </span>
         <span style={{color:'var(--accent-cyan)'}}>LIFETIME · {xp.toLocaleString()} XP</span>
       </div>
-      <div className="variant-xp-bar"><div className="variant-xp-fill" style={{width:`${pct}%`}} /></div>
+      <div className="variant-xp-bar"><div className="variant-xp-fill" style={{width:`${shown}%`}} /></div>
       <div className="variant-xp-meta">
         {next
           ? <><span>next: <b>{next.label}</b></span><span>{into.toLocaleString()} / {span.toLocaleString()} XP</span></>
@@ -649,4 +711,4 @@ const XpBar = ({ xp = 0 }) => {
   );
 };
 
-Object.assign(window, { Hero, Countdown, DuePanel, LeechPanel, ProgressPanel, LadderBar, XpBar, formatCountdown, secondsUntilMidnight });
+Object.assign(window, { Hero, Countdown, DuePanel, LeechPanel, ProgressPanel, LadderBar, XpBar, formatCountdown, secondsUntilMidnight, computeForecast });

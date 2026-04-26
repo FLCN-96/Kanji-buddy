@@ -1,0 +1,25 @@
+{
+  "_doc": "Hand-edited per release. Tap the version chip on Home to open. Newest first; trim to ~10 entries.",
+  "entries": [
+    {
+      "v": "current",
+      "date": "2026-04-25",
+      "title": "Streak celebrations + tap-for-detail panes",
+      "notes": [
+        "Streak ember puff on continue, dust shake on break, magenta twinkle on personal best",
+        "Milestone modal at 7 / 10 / 30 / 50 / 100 / 200 / 365 / 500 / 1000 days",
+        "Tap any home pane for detail popover (forecast 30-day, deck breakdown, rank ladder, streak history, full leech list, kanji stroke order, ladder tier breakdown)",
+        "XP bar fills in on mount, panes stagger-cascade in",
+        "Greeting pool expanded; tap version chip for changelog"
+      ]
+    },
+    {
+      "v": "previous",
+      "date": "2026-04-23",
+      "title": "Run polish",
+      "notes": [
+        "Run cards with many readings/examples shrink the kanji instead of scrolling"
+      ]
+    }
+  ]
+}

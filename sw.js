@@ -2,7 +2,7 @@
 // land on next visit without forcing cache-version bumps. Cache-first
 // for heavy/stable assets (cards.json, icons, manifest, fonts).
 
-const CACHE = 'kb-v21';
+const CACHE = 'kb-v22';
 const CDN_CACHE = 'kb-cdn-v2';
 const NAV_FALLBACK = './Home.html';
 
@@ -35,18 +35,23 @@ const LOCAL_ASSETS = [
   './icons/icon-512.png',
   './icons/icon-512-maskable.png',
   './data/cards.json',
+  './data/changelog.json',
   './data/db.js',
   './data/load-cards.js',
   './data/daily.js',
   './data/srs.js',
   './data/rank.js',
+  './data/streak.js',
   './data/romaji.js',
   './data/version.js',
   './components/App.jsx',
   './components/ConfirmModal.jsx',
   './components/Dashboard.jsx',
   './components/Modes.jsx',
+  './components/Popovers.jsx',
+  './components/RankLadderModal.jsx',
   './components/RankUp.jsx',
+  './components/StreakMilestoneModal.jsx',
   './components/Settings.jsx',
   './components/RunApp.jsx',
   './components/RunCard.jsx',
