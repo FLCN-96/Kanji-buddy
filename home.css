@@ -217,7 +217,9 @@ body[data-scanlines="on"]::after {
 
 /* Milestone shimmer (7d+): a slow ember sweep across the pill, scoped
    to ::before so it doesn't fight the breathing box-shadow on the
-   main element. Same GPU-cheap translate3d technique run-primary uses. */
+   main element. background-position sweeps the shine stripe rather than
+   transform so the element stays at inset:0 and never overflows the banner
+   (the parent needs overflow:visible for sparks to escape). */
 .kb-streak-chip.is-hot.is-milestone::before {
   content: '';
   position: absolute;
@@ -230,7 +232,7 @@ body[data-scanlines="on"]::after {
     rgba(255,200,120,.25) 55%,
     transparent 100%
   );
-  transform: translate3d(-110%, 0, 0);
+  background-size: 300% 100%;
   pointer-events: none;
   animation: kb-streak-shimmer 3.6s ease-in-out infinite;
   mix-blend-mode: screen;
@@ -294,9 +296,9 @@ body[data-scanlines="on"]::after {
   65%      { transform: translateY(.7px) scale(.98);  opacity: 1; }
 }
 @keyframes kb-streak-shimmer {
-  0%   { transform: translate3d(-110%, 0, 0); }
-  55%  { transform: translate3d(210%, 0, 0); }
-  100% { transform: translate3d(210%, 0, 0); }
+  0%   { background-position-x: 100%; }
+  55%  { background-position-x: 0%; }
+  100% { background-position-x: 0%; }
 }
 
 /* Sparks — mounted by StreakChip for the hot variant. Each span gets
