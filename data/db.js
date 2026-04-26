@@ -240,10 +240,28 @@ const DB = {
       const lastDate  = user.last_session_date ? new Date(user.last_session_date).toDateString() : null;
       const yesterday = new Date(Date.now() - 86400000).toDateString();
 
+      const prevStreak     = user.current_streak || 0;
+      const bestPrior      = user.best_streak || 0;
+      const prevLastDate   = user.last_session_date || null;
+
       let { current_streak, best_streak } = user;
       if (lastDate === today) return user; // already counted today
       current_streak = lastDate === yesterday ? current_streak + 1 : 1;
       best_streak    = Math.max(best_streak, current_streak);
+
+      // Flag one-shot Home celebration events (continued / broken / best /
+      // milestone). Same pattern as Rank.flagPromotion — Home consumes on
+      // next mount via window.Streak.consumeXxx().
+      if (window.Streak && typeof window.Streak.flagEvents === 'function') {
+        try {
+          window.Streak.flagEvents({
+            prevStreak,
+            newStreak: current_streak,
+            prevLastDate,
+            bestPriorStreak: bestPrior,
+          });
+        } catch(e) {}
+      }
 
       return DB.updateUser({
         current_streak,
@@ -251,6 +269,35 @@ const DB = {
         last_session_date: new Date().toISOString()
       });
     });
+  },
+
+  // Per-day session presence over the last n days — feeds the streak chip
+  // popover heatmap (B4). Returns array of { date: 'YYYY-MM-DD', count }
+  // ordered oldest → newest, length n. Days without sessions are zero-count.
+  getSessionsByDay(n = 30) {
+    return openDB().then(db => new Promise((resolve, reject) => {
+      const req = db.transaction('sessions', 'readonly').objectStore('sessions').getAll();
+      req.onerror = (e) => reject(e.target.error);
+      req.onsuccess = (e) => {
+        const sessions = e.target.result || [];
+        const counts = new Map();
+        for (const s of sessions) {
+          if (!s || !s.date) continue;
+          const d = new Date(s.date);
+          if (isNaN(d.getTime())) continue;
+          const key = d.toISOString().slice(0, 10);
+          counts.set(key, (counts.get(key) || 0) + 1);
+        }
+        const out = [];
+        const today = new Date(); today.setHours(0,0,0,0);
+        for (let i = n - 1; i >= 0; i--) {
+          const day = new Date(today.getTime() - i * 86400000);
+          const key = day.toISOString().slice(0, 10);
+          out.push({ date: key, count: counts.get(key) || 0 });
+        }
+        resolve(out);
+      };
+    }));
   },
 };
 

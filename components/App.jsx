@@ -35,6 +35,9 @@ const pickGreeting = (name, streak, lastSessionIso) => {
   const onStreak    = (streak || 0) >= 2 && last && last >= yesterday;
   const freshBoot   = !last;
   const brokeChain  = !freshBoot && (!last || last < yesterday);
+  // Just-crossed-a-tier flavor: one-day-after a milestone (the chip's still
+  // hot from the modal). Fires only for hot+near-milestone counts.
+  const milestoneish = onStreak && [7, 8, 10, 11, 30, 31, 50, 51, 100, 101, 365, 366].includes(streak);
 
   const praise = [
     `welcome back, ${n}. streak live.`,
@@ -42,6 +45,15 @@ const pickGreeting = (name, streak, lastSessionIso) => {
     `daily driver ${n} reporting in.`,
     `${n}. ${streak} days unbroken.`,
     `${n}. kernel primed. stack ${streak}.`,
+    `${n}. discipline: stable. carry on.`,
+    `${n}. ${streak}-day uptime. respect.`,
+    `${n}. the chain holds.`,
+    `signal lock confirmed, ${n}.`,
+    `${n}. compounding interest, day ${streak}.`,
+    `${n}. routine compiled. shipping.`,
+    `operator ${n}. still in the seat.`,
+    `${n}. no detected drift.`,
+    `${n}. heartbeat nominal.`,
   ];
   const harsh = [
     `${n}. streak zeroed. again.`,
@@ -50,12 +62,32 @@ const pickGreeting = (name, streak, lastSessionIso) => {
     `decay detected on operator ${n}.`,
     `oh. you came back, ${n}.`,
     `${n}. chain broken. rebuild.`,
+    `${n}. retention decay non-trivial.`,
+    `${n}. resuming from cold cache.`,
+    `${n}. you owe the deck an apology.`,
+    `${n}. the leeches multiplied without you.`,
+    `${n}. recovery protocol: review heavy.`,
+    `${n}. attendance: spotty.`,
+    `welcome back, stranger ${n}.`,
+    `${n}. days since last session: too many.`,
   ];
   const firstBoot = [
     `${n} online. first cycle.`,
     `handshake accepted, ${n}.`,
     `new operator ${n}. welcome to the grid.`,
     `${n}. boot sequence complete.`,
+    `${n}. registering operator profile.`,
+    `${n}. day zero. let's go.`,
+    `${n}. the deck has been waiting.`,
+  ];
+  const milestone = [
+    `${n}. milestone holding.`,
+    `${n}. ${streak}-day badge active.`,
+    `${n}. tier cleared. encore.`,
+    `${n}. you've earned the glow.`,
+    `${n}. veterans only past this point.`,
+    `${n}. 継続は力なり。`,
+    `${n}. ${streak}d club: founding member.`,
   ];
   const silly = [
     `booting ${n}.exe ...`,
@@ -69,12 +101,24 @@ const pickGreeting = (name, streak, lastSessionIso) => {
     `${n}. hydrate before kanji.`,
     `${n}. brain gym is open.`,
     `${n}. 忘れないで。`,
+    `${n}. stretching the hippocampus.`,
+    `${n}. press any key to summon kanji.`,
+    `${n}. radical acceptance enabled.`,
+    `${n}. kanji.exe has stopped procrastinating.`,
+    `${n}. neon synapses warming up.`,
+    `${n}. one more readthrough won't hurt.`,
+    `${n}. friendly reminder: 漢字 are friends.`,
+    `${n}. ghost in the dictionary.`,
+    `${n}. caching memories…`,
+    `${n}. ink not yet dry.`,
+    `${n}. today's brand of confidence: artisanal.`,
   ];
 
   const pool = [...silly];
-  if (freshBoot)  pool.push(...firstBoot, ...firstBoot, ...firstBoot); // weight heavily on first boot
-  if (onStreak)   pool.push(...praise, ...praise);
-  if (brokeChain) pool.push(...harsh, ...harsh);
+  if (freshBoot)    pool.push(...firstBoot, ...firstBoot, ...firstBoot); // weight heavily on first boot
+  if (onStreak)     pool.push(...praise, ...praise);
+  if (milestoneish) pool.push(...milestone, ...milestone, ...milestone);
+  if (brokeChain)   pool.push(...harsh, ...harsh);
   return pool[Math.floor(Math.random() * pool.length)];
 };
 
@@ -201,8 +245,51 @@ const computeStreakState = (user) => {
   return { state: 'broken', days };
 };
 
-const StreakChip = ({ user }) => {
+// Animates the chip count from `from` → `to` over ~600 ms. Used after a
+// continued-streak flag fires so the user sees the number tick up rather
+// than silently jump on first paint.
+const useCountUp = (from, to, ms = 600) => {
+  const [val, setVal] = React.useState(from);
+  React.useEffect(() => {
+    if (from === to) { setVal(to); return; }
+    const start = performance.now();
+    let raf;
+    const step = (now) => {
+      const t = Math.min(1, (now - start) / ms);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setVal(Math.round(from + (to - from) * eased));
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [from, to, ms]);
+  return val;
+};
+
+const StreakChip = ({ user, burst, onTap }) => {
   const { state, days } = computeStreakState(user);
+
+  // A5: tick-up only when a continued flag was consumed AND we have a prior
+  // count to roll from. Otherwise render the static count.
+  const continuedFrom = burst?.continued?.prevStreak;
+  const animateFrom = (typeof continuedFrom === 'number' && continuedFrom < days) ? continuedFrom : days;
+  const shown = useCountUp(animateFrom, days, 700);
+
+  // One-shot burst classes — auto-clear after their longest animation duration
+  // so re-mounts don't re-fire them and so they can stack with steady-state
+  // styling (is-hot etc.).
+  const [oneShot, setOneShot] = React.useState({ continued: false, broken: false, best: false });
+  React.useEffect(() => {
+    if (!burst) return;
+    setOneShot({
+      continued: !!burst.continued,
+      broken:    !!burst.broken,
+      best:      !!burst.best,
+    });
+    const t = setTimeout(() => setOneShot({ continued: false, broken: false, best: false }), 4200);
+    return () => clearTimeout(t);
+  }, [burst]);
+
   if (state === 'fresh') {
     return (
       <span className="kb-streak-chip is-fresh" title="no streak yet · finish today's daily run to start one">
@@ -217,9 +304,9 @@ const StreakChip = ({ user }) => {
   // sweep so early streaks feel earned when it eventually kicks in.
   const milestone = state === 'hot' && days >= 7;
   const meta = {
-    hot:    { icon: '火', cls: 'is-hot',    title: `${days}-day streak · counted for today` },
-    cold:   { icon: '·',  cls: 'is-cold',   title: `${days}-day streak · do today's run before midnight to keep it` },
-    broken: { icon: '✕',  cls: 'is-broken', title: `${days}-day streak broken · next session resets to 1` },
+    hot:    { icon: '火', cls: 'is-hot',    title: `${days}-day streak · counted for today · tap for history` },
+    cold:   { icon: '·',  cls: 'is-cold',   title: `${days}-day streak · do today's run before midnight to keep it · tap for history` },
+    broken: { icon: '✕',  cls: 'is-broken', title: `${days}-day streak broken · next session resets to 1 · tap for history` },
   }[state];
   // Spark count tiers by streak length so the pill gets visibly busier
   // as the run gets longer. Staggered delays so they don't fire in sync.
@@ -236,15 +323,22 @@ const StreakChip = ({ user }) => {
     ];
     sparks = days >= 3 ? [...base, ...extra] : base;
   }
+  const burstCls = [
+    oneShot.continued ? 'is-puff'   : '',
+    oneShot.broken    ? 'is-shake'  : '',
+    oneShot.best      ? 'is-best'   : '',
+  ].filter(Boolean).join(' ');
   return (
-    <span
-      className={`kb-streak-chip ${meta.cls}${milestone ? ' is-milestone' : ''}`}
+    <button
+      type="button"
+      className={`kb-streak-chip ${meta.cls}${milestone ? ' is-milestone' : ''}${burstCls ? ' ' + burstCls : ''}`}
       title={meta.title}
+      onClick={onTap}
     >
       <span className="kb-streak-chip-icon" aria-hidden>{meta.icon}</span>
       <span className="kb-streak-chip-lbl">streak</span>
       <span className="kb-streak-chip-num">
-        {days}<span className="kb-streak-chip-unit">d</span>
+        {shown}<span className="kb-streak-chip-unit">d</span>
       </span>
       {sparks.map((s, i) => (
         <span
@@ -254,24 +348,36 @@ const StreakChip = ({ user }) => {
           aria-hidden
         />
       ))}
-    </span>
+      {oneShot.best && (
+        <span className="kb-streak-best-twinkle" aria-hidden>✦</span>
+      )}
+      {oneShot.continued && (
+        <span className="kb-streak-puff" aria-hidden />
+      )}
+    </button>
   );
 };
 
-const Topbar = ({ displayName, user }) => {
+const Topbar = ({ displayName, user, burst, onStreakTap, onVersionTap }) => {
   const [wm, typing] = useGreeting(user);
   return (
     <header className={`kb-top${typing ? ' is-greeting' : ''}`}>
       <div className="kb-wm-group">
         <div className={`kb-wm${typing ? ' is-typing' : ''}`}>{wm}</div>
         {KB_VERSION_LABEL && (
-          <span className={`kb-wm-ver${typing ? ' is-hidden' : ''}`} aria-label={`build ${KB_VERSION_LABEL}`}>
+          <button
+            type="button"
+            className={`kb-wm-ver${typing ? ' is-hidden' : ''}`}
+            aria-label={`build ${KB_VERSION_LABEL} · changelog`}
+            title="tap for changelog"
+            onClick={onVersionTap}
+          >
             {KB_VERSION_LABEL}
-          </span>
+          </button>
         )}
       </div>
       <div className="kb-top-right" aria-hidden={typing ? 'true' : undefined}>
-        <StreakChip user={user} />
+        <StreakChip user={user} burst={burst} onTap={onStreakTap} />
         <span style={{color:'var(--fg-2)'}}>{displayName || '—'}</span>
         <a href="Settings.html" className="kb-top-cog" aria-label="settings">⚙</a>
       </div>
@@ -284,14 +390,34 @@ const App = ({ cards }) => {
   const [user, setUser] = React.useState(null);
   const [userLoaded, setUserLoaded] = React.useState(false);
   const [deck, setDeck] = React.useState(null);       // {new, due, leech, total} — today's Run preview
+  const [picks, setPicks] = React.useState([]);       // actual cards selected — feeds DeckBreakdownPopover
   const [reviewedToday, setReviewedToday] = React.useState(0); // intraday progress for the queue bar
   const [cardStates, setCardStates] = React.useState(null); // full card_states for ProgressPanel tier math
   const [promotion, setPromotion] = React.useState(null);
+  // One-shot streak event payloads consumed once on mount. The chip uses
+  // these to render A1 (puff), A2 (shake), A4 (twinkle) effects; the
+  // milestone payload triggers StreakMilestoneModal.
+  const [streakBurst, setStreakBurst] = React.useState({ continued: null, broken: null, best: null });
+  const [streakMilestone, setStreakMilestone] = React.useState(null);
+  // Tap-for-detail popover state. Single string indicating which is open;
+  // null = none. Keep it lifted so opening one closes the others.
+  const [openPop, setOpenPop] = React.useState(null);
+  // Optional payload for popovers that need it (e.g. ladder tier).
+  const [popPayload, setPopPayload] = React.useState(null);
 
   React.useEffect(() => {
-    if (!window.Rank) return;
-    const p = window.Rank.consumePromotion();
-    if (p) setPromotion(p);
+    if (window.Rank) {
+      const p = window.Rank.consumePromotion();
+      if (p) setPromotion(p);
+    }
+    if (window.Streak) {
+      const cont = window.Streak.consumeContinued();
+      const brok = window.Streak.consumeBroken();
+      const best = window.Streak.consumeBest();
+      const milestone = window.Streak.consumeMilestone();
+      if (cont || brok || best) setStreakBurst({ continued: cont, broken: brok, best: best });
+      if (milestone) setStreakMilestone(milestone);
+    }
   }, []);
 
   React.useEffect(() => {
@@ -328,12 +454,13 @@ const App = ({ cards }) => {
         // prevents the ~2000-card "new" pool from endlessly refilling the panel.
         const deckSize = window.Daily.resolveDeckSize(u);
         const dailyDone = reviewed >= deckSize;
-        const picks = dailyDone ? [] : window.Daily.selectDailyDeck(cards, states, deckSize);
+        const todaysPicks = dailyDone ? [] : window.Daily.selectDailyDeck(cards, states, deckSize);
+        setPicks(todaysPicks);
         setDeck({
-          new:   picks.filter(c => c._bucket === 'new').length,
-          due:   picks.filter(c => c._bucket === 'due').length,
-          leech: picks.filter(c => c._bucket === 'leech').length,
-          total: picks.length,
+          new:   todaysPicks.filter(c => c._bucket === 'new').length,
+          due:   todaysPicks.filter(c => c._bucket === 'due').length,
+          leech: todaysPicks.filter(c => c._bucket === 'leech').length,
+          total: todaysPicks.length,
           size:  deckSize,
         });
       })
@@ -392,6 +519,12 @@ const App = ({ cards }) => {
   };
 
   const variantClass = 'kb-shell variant-game';
+  const openPanePop = (kind, payload = null) => { setPopPayload(payload); setOpenPop(kind); };
+  const closePop = () => { setOpenPop(null); setPopPayload(null); };
+  const forecastByDay = React.useMemo(
+    () => (window.computeForecast ? window.computeForecast(cardStates || [], new Date()).byDay : new Map()),
+    [cardStates]
+  );
 
   return (
     <>
@@ -406,22 +539,73 @@ const App = ({ cards }) => {
           onClose={() => setPromotion(null)}
         />
       )}
-      <div className={variantClass}>
-        <Topbar displayName={user?.display_name} user={user} />
+      {streakMilestone && window.StreakMilestoneModal && (
+        <StreakMilestoneModal
+          milestone={streakMilestone.milestone}
+          days={user?.current_streak ?? streakMilestone.milestone.n}
+          bestStreak={user?.best_streak ?? 0}
+          onClose={() => setStreakMilestone(null)}
+        />
+      )}
+      {openPop === 'changelog' && window.ChangelogPopover && (
+        <ChangelogPopover onClose={closePop} />
+      )}
+      {openPop === 'streak-history' && window.StreakHistoryPopover && (
+        <StreakHistoryPopover user={user} onClose={closePop} />
+      )}
+      {openPop === 'rank-ladder' && window.RankLadderModal && (
+        <RankLadderModal totalXp={user?.total_xp ?? 0} onClose={closePop} />
+      )}
+      {openPop === 'forecast' && window.ForecastDetailPopover && (
+        <ForecastDetailPopover byDay={forecastByDay} onClose={closePop} />
+      )}
+      {openPop === 'deck' && window.DeckBreakdownPopover && (
+        <DeckBreakdownPopover deck={deck} picks={picks} onClose={closePop} />
+      )}
+      {openPop === 'leech' && window.LeechListPopover && (
+        <LeechListPopover cards={cards} states={cardStates} onClose={closePop} />
+      )}
+      {openPop === 'hero' && window.HeroDetailPopover && (
+        <HeroDetailPopover card={todayKanji} onClose={closePop} />
+      )}
+      {openPop === 'ladder-tier' && window.LadderTierPopover && (
+        <LadderTierPopover tier={popPayload} cards={cards} states={cardStates} onClose={closePop} />
+      )}
 
-        <main className="kb-main" data-screen-label="home">
-          {tweaks.hero === 'on' && <Hero kanji={todayKanji} />}
+      <div className={variantClass}>
+        <Topbar
+          displayName={user?.display_name}
+          user={user}
+          burst={streakBurst}
+          onStreakTap={() => openPanePop('streak-history')}
+          onVersionTap={() => openPanePop('changelog')}
+        />
+
+        <main className="kb-main kb-main-staggered" data-screen-label="home">
+          {tweaks.hero === 'on' && (
+            <div className="kb-pane-wrap" onClick={() => openPanePop('hero')} title="tap for stroke order + full examples">
+              <Hero kanji={todayKanji} />
+            </div>
+          )}
 
           <Countdown state={state} />
 
           <div className="kb-stats-row">
-            <DuePanel state={state} deck={deck} reviewedToday={reviewedToday} />
-            <ProgressPanel cards={cards} states={cardStates} />
+            <div className="kb-pane-wrap" onClick={() => openPanePop('deck')} title="tap to see what's in today's deck">
+              <DuePanel state={state} deck={deck} reviewedToday={reviewedToday} />
+            </div>
+            <div className="kb-pane-wrap" onClick={() => openPanePop('forecast')} title="tap for the 30-day forecast">
+              <ProgressPanel cards={cards} states={cardStates} />
+            </div>
           </div>
 
-          <LeechPanel cards={cards} states={cardStates} />
+          <div className="kb-pane-wrap" onClick={() => openPanePop('leech')} title="tap for the full leech list">
+            <LeechPanel cards={cards} states={cardStates} />
+          </div>
 
-          <XpBar xp={user?.total_xp ?? 0} />
+          <div className="kb-pane-wrap" onClick={() => openPanePop('rank-ladder')} title="tap for the full rank ladder">
+            <XpBar xp={user?.total_xp ?? 0} />
+          </div>
 
           <div className="kb-section-head">
             <span className="kb-section-title">Primary run</span>
@@ -439,7 +623,7 @@ const App = ({ cards }) => {
             <span className="kb-section-title">Jōyō ladder</span>
             <span className="kb-section-r">N5 → N1</span>
           </div>
-          <LadderBar cards={cards} states={cardStates} />
+          <LadderBar cards={cards} states={cardStates} onTierTap={(tier) => openPanePop('ladder-tier', tier)} />
 
           <div style={{height: 8}} />
         </main>
