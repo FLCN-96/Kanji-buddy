@@ -116,6 +116,7 @@ const TimeAttackApp = ({ cards }) => {
   });
   const [beatPb, setBeatPb] = React.useState(false);
   const [xpGained, setXpGained] = React.useState(0);
+  const [hotTier, setHotTier] = React.useState(null);
   const [confirmQuit, setConfirmQuit] = React.useState(false);
   const questionStart = React.useRef(null);
   const lockedRef = React.useRef(false);
@@ -140,14 +141,18 @@ const TimeAttackApp = ({ cards }) => {
   React.useEffect(() => {
     if (phase !== 'end' || !window.DB) return;
     if (hits + misses === 0) return; // didn't actually play
-    const isHot = window.Daily && window.Daily.hotChallengeId() === 'time';
+    // Snapshot the hot tier *before* claiming so the end screen can show
+    // exactly what was applied. After grantXp resolves we burn the gold.
+    const tierAtSave = window.Daily ? window.Daily.hotTier('time') : null;
+    const mult       = window.Daily ? window.Daily.hotMultiplier('time') : 1;
     const cleanBonus = misses === 0 ? TA_XP_CLEAN : 0;
     const pbBonus    = beatPb ? TA_XP_PB : 0;
     const base = Math.max(0,
       hits * TA_XP_HIT + misses * TA_XP_MISS + taComboTier(maxCombo) + cleanBonus + pbBonus
     );
-    const earned = Math.round(base * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+    const earned = Math.round(base * mult);
     setXpGained(earned);
+    setHotTier(tierAtSave);
     window.DB.saveScore({
       mode: 'time_attack',
       score,
@@ -164,6 +169,7 @@ const TimeAttackApp = ({ cards }) => {
       xp_earned: earned,
     })
       .then(() => window.DB.grantXp(earned))
+      .then(() => { if (tierAtSave && window.Daily) window.Daily.claimHot('time'); })
       .then(() => window.DB.recordSessionStreak())
       .catch(() => {});
   }, [phase]);
@@ -295,6 +301,7 @@ const TimeAttackApp = ({ cards }) => {
     setScore(0); setHits(0); setMisses(0); setCombo(0); setMaxCombo(0);
     setHistory([]); setUsedIdx(new Set()); setBeatPb(false); setQuestion(null);
     setXpGained(0);
+    setHotTier(null);
     setPhase('ready');
   };
   const goHome = () => { window.location.href = 'Home.html'; };
@@ -366,6 +373,7 @@ const TimeAttackApp = ({ cards }) => {
               prevPb={prevPb}
               beatPb={beatPb}
               xpGained={xpGained}
+              hotTier={hotTier}
               history={history}
               timedOut={clockMs <= 0}
               onAgain={restart}

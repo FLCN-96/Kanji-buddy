@@ -82,7 +82,7 @@ const SGPre = ({ pb, cellCount, difficulty, onStart }) => {
   );
 };
 
-const SGEnd = ({ deck, saved, leaked, total, beatPb, pb, xpGained, onAgain, onHome }) => {
+const SGEnd = ({ deck, saved, leaked, total, beatPb, pb, xpGained, hotTier, onAgain, onHome }) => {
   const savedCards = deck.filter(c => c.status === 'saved');
   const leakedCards = deck.filter(c => c.status === 'leaked');
   const rate = total > 0 ? Math.round((saved/total)*100) : 0;
@@ -94,9 +94,11 @@ const SGEnd = ({ deck, saved, leaked, total, beatPb, pb, xpGained, onAgain, onHo
   const xpSaved = saved * 8;
   const xpPerfect = rate === 100 && total > 0 ? 20 : 0;
   const xpPb = beatPb ? 20 : 0;
-  const isHot = window.Daily && window.Daily.hotChallengeId() === 'streak';
+  const hotMult = hotTier === 'gold' ? (window.Daily?.HOT_GOLD || 3)
+                : hotTier === 'silver' ? (window.Daily?.HOT_SILVER || 1.5)
+                : 1;
   const xpRaw = xpBase + xpSaved + xpPerfect + xpPb;
-  const xpHot = isHot ? Math.round(xpRaw * (window.Daily.HOT_MULTIPLIER - 1)) : 0;
+  const xpHot = hotTier ? Math.round(xpRaw * (hotMult - 1)) : 0;
   const xpTotal = xpGained ?? (xpRaw + xpHot);
 
   return (
@@ -169,7 +171,7 @@ const SGEnd = ({ deck, saved, leaked, total, beatPb, pb, xpGained, onAgain, onHo
           <div className="sg-end-xp-row"><span>saved · {saved}×8</span><b>+{xpSaved}</b></div>
           {xpPerfect > 0 && <div className="sg-end-xp-row is-pb"><span>perfect rescue</span><b>+{xpPerfect}</b></div>}
           {xpPb > 0 && <div className="sg-end-xp-row is-pb"><span>new record</span><b>+{xpPb}</b></div>}
-          {isHot && <div className="sg-end-xp-row is-pb"><span>hot daily · ×{window.Daily.HOT_MULTIPLIER}</span><b>+{xpHot}</b></div>}
+          {hotTier && <div className={`sg-end-xp-row is-pb is-hot is-${hotTier}`}><span>hot daily {hotTier} · ×{hotMult}</span><b>+{xpHot}</b></div>}
           <div className="sg-end-xp-row sg-streak"><span>daily streak</span><b>▲ +1</b></div>
         </div>
       </div>

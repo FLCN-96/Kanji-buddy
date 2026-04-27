@@ -67,14 +67,16 @@ const SVPre = ({ pb, onStart, promptMode }) => {
   );
 };
 
-const SVEnd = ({ depth, tier, beatPb, prevPb, killer, history, xpGained, onAgain, onHome }) => {
+const SVEnd = ({ depth, tier, beatPb, prevPb, killer, history, xpGained, hotTier, onAgain, onHome }) => {
   // Breakdown mirrors Survival.jsx grant formula exactly.
   const xpBase = depth > 0 ? 40 : 0;
   const xpDepth = depth * 3;
   const xpPb = beatPb ? 30 : 0;
-  const isHot = window.Daily && window.Daily.hotChallengeId() === 'survival';
+  const hotMult = hotTier === 'gold' ? (window.Daily?.HOT_GOLD || 3)
+                : hotTier === 'silver' ? (window.Daily?.HOT_SILVER || 1.5)
+                : 1;
   const xpRaw = xpBase + xpDepth + xpPb;
-  const xpHot = isHot ? Math.round(xpRaw * (window.Daily.HOT_MULTIPLIER - 1)) : 0;
+  const xpHot = hotTier ? Math.round(xpRaw * (hotMult - 1)) : 0;
   const xpTotal = xpGained ?? (xpRaw + xpHot);
   const [showXp, setShowXp] = React.useState(false);
 
@@ -156,7 +158,7 @@ const SVEnd = ({ depth, tier, beatPb, prevPb, killer, history, xpGained, onAgain
             <div className="sv-end-xp-row"><span>base packet</span><b>+{xpBase}</b></div>
             <div className="sv-end-xp-row"><span>layer · {depth}×3</span><b>+{xpDepth}</b></div>
             {xpPb > 0 && <div className="sv-end-xp-row is-pb"><span>new record bonus</span><b>+{xpPb}</b></div>}
-            {isHot && <div className="sv-end-xp-row is-pb"><span>hot daily · ×{window.Daily.HOT_MULTIPLIER}</span><b>+{xpHot}</b></div>}
+            {hotTier && <div className={`sv-end-xp-row is-pb is-hot is-${hotTier}`}><span>hot daily {hotTier} · ×{hotMult}</span><b>+{xpHot}</b></div>}
             <div className="sv-end-xp-row sv-streak"><span>daily streak</span><b>▲ +1</b></div>
           </div>
         )}

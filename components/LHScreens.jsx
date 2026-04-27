@@ -236,7 +236,7 @@ const LHDossier = ({ roster, onEngage, purged, misses, missCap }) => {
   );
 };
 
-const LHEnd = ({ roster, purged, weakened, survived, result, beatPb, pb, misses, xpGained, onAgain, onHome }) => {
+const LHEnd = ({ roster, purged, weakened, survived, result, beatPb, pb, misses, xpGained, hotTier, onAgain, onHome }) => {
   const total = roster.length;
   const rate = total > 0 ? Math.round((purged/total)*100) : 0;
   const ribbon = result === 'fail' ? 'CONTRACT VOID'
@@ -255,9 +255,11 @@ const LHEnd = ({ roster, purged, weakened, survived, result, beatPb, pb, misses,
   const xpPurge = purged * 10;
   const xpComplete = result === 'complete' ? 20 : 0;
   const xpPb = beatPb ? 20 : 0;
-  const isHot = window.Daily && window.Daily.hotChallengeId() === 'leech';
+  const hotMult = hotTier === 'gold' ? (window.Daily?.HOT_GOLD || 3)
+                : hotTier === 'silver' ? (window.Daily?.HOT_SILVER || 1.5)
+                : 1;
   const xpRaw = xpBase + xpPurge + xpComplete + xpPb;
-  const xpHot = isHot ? Math.round(xpRaw * (window.Daily.HOT_MULTIPLIER - 1)) : 0;
+  const xpHot = hotTier ? Math.round(xpRaw * (hotMult - 1)) : 0;
   const xpTotal = xpGained ?? (xpRaw + xpHot);
 
   return (
@@ -348,7 +350,7 @@ const LHEnd = ({ roster, purged, weakened, survived, result, beatPb, pb, misses,
           <div className="lh-end-xp-row"><span>purged · {purged}×10</span><b>+{xpPurge}</b></div>
           {xpComplete > 0 && <div className="lh-end-xp-row is-pb"><span>full hunt complete</span><b>+{xpComplete}</b></div>}
           {xpPb > 0 && <div className="lh-end-xp-row is-pb"><span>new record</span><b>+{xpPb}</b></div>}
-          {isHot && <div className="lh-end-xp-row is-pb"><span>hot daily · ×{window.Daily.HOT_MULTIPLIER}</span><b>+{xpHot}</b></div>}
+          {hotTier && <div className={`lh-end-xp-row is-pb is-hot is-${hotTier}`}><span>hot daily {hotTier} · ×{hotMult}</span><b>+{xpHot}</b></div>}
           <div className="lh-end-xp-row lh-streak"><span>daily streak</span><b>▲ +1</b></div>
         </div>
       </div>

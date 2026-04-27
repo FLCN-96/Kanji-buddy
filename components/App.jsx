@@ -482,6 +482,25 @@ const App = ({ cards }) => {
     return cards[seed % cards.length];
   }, [cards, seed]);
   const hotChallengeId = React.useMemo(() => window.Daily.hotChallengeId(), []);
+  // Hot tier flips from gold → silver after the first hot run completes.
+  // We re-read on visibilitychange so a user returning from a challenge sees
+  // the downgrade immediately without a hard refresh.
+  const [hotTier, setHotTier] = React.useState(() =>
+    window.Daily ? window.Daily.hotTier(hotChallengeId) : null
+  );
+  React.useEffect(() => {
+    const refresh = () => {
+      if (!window.Daily) return;
+      setHotTier(window.Daily.hotTier(hotChallengeId));
+    };
+    refresh();
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('focus', refresh);
+    return () => {
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('focus', refresh);
+    };
+  }, [hotChallengeId]);
 
   const onRun = () => {
     const btn = document.querySelector('.kb-run-primary');
@@ -617,7 +636,7 @@ const App = ({ cards }) => {
             <span className="kb-section-title">Challenge modes</span>
             <span className="kb-section-r">alt / bonus xp</span>
           </div>
-          <ChallengeGrid onPick={onPick} hotId={hotChallengeId} dailyDone={state === 'clear'} />
+          <ChallengeGrid onPick={onPick} hotId={hotChallengeId} hotTier={hotTier} dailyDone={state === 'clear'} />
 
           <div className="kb-section-head">
             <span className="kb-section-title">Jōyō ladder</span>

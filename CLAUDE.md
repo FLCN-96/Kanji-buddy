@@ -50,7 +50,7 @@ If you need to add a store or index, bump `DB_VERSION` and extend the `onupgrade
 
 Home gates the panel as **clear** once `reviewed-today >= resolveDeckSize(user)`, even if the SRS backlog is non-zero — otherwise the ~2000-card "new" pool would refill the panel forever.
 
-`Daily.daySeed()` and `Daily.hotChallengeId()` are deterministic per local day. The "hot" challenge gets a `Daily.HOT_MULTIPLIER` (3×) XP bonus — challenge modes apply this themselves at end-of-session.
+`Daily.daySeed()` and `Daily.hotChallengeId()` are deterministic per local day. The "hot" challenge has a two-tier bonus: **gold** (`Daily.HOT_GOLD` = 3×) on the first run of the day, **silver** (`Daily.HOT_SILVER` = 1.5×) on every subsequent run. Modes capture the tier via `Daily.hotTier(modeId)` and the multiplier via `Daily.hotMultiplier(modeId)` *before* writing XP (so the end screen can show what was actually applied), then call `Daily.claimHot(modeId)` after `grantXp` resolves to flip gold → silver. Claim status is per local date in localStorage (`kb-hot-claimed:YYYY-MM-DD`). Home reads the tier on mount + on `visibilitychange`/`focus` so the spotlight tile updates after a hot run completes. `Daily.HOT_MULTIPLIER` is kept as a legacy alias for `HOT_GOLD`.
 
 ### SRS (`data/srs.js`)
 
@@ -68,9 +68,9 @@ Run is the only consumer; challenge modes do not touch card_states. RunApp snaps
 
 ### Rank ladder (`data/rank.js`)
 
-16 ranks (`Ⅰ NOVICE` → `ⅩⅥ IMMORTAL`), thresholds 0 → 80,000 XP. Four colour tiers: cyan / magenta / amber / transcend. `Rank.flagPromotion(prev, total)` writes a one-shot localStorage marker; `Rank.consumePromotion()` reads-and-clears it.
+30 ranks (`Ⅰ NOVICE` → `ⅩⅩⅩ K̷ANJI.exe`), thresholds 0 → 1,300,000 XP. Five colour tiers: **cyan** (1-7, apprenticeship), **magenta** (8-14, operator), **amber** (15-21, adept/master), **transcend** (22-25, mythic), **void** (26-30, hackery near-impossible). The void tier names carry intentional combining-mark distortion + chromatic-aberration text-shadow + a tiny jitter animation so they read as unstable — the visual treatment is centralised in `home.css` (`@keyframes kb-void-jitter`, plus `.tier-void` rules everywhere existing `.tier-*` rules live: `.kb-progress`, `.kb-progress-ring`, `.variant-xp`, `.ku-modal`, `.kb-pop-ladder-row`).
 
-Rank thresholds are deliberate — don't tweak them without thinking about how they interact with the per-mode XP balances (`RUN_XP`, `TA_XP_*`, etc., defined at the top of each mode's component).
+`Rank.flagPromotion(prev, total)` writes a one-shot localStorage marker; `Rank.consumePromotion()` reads-and-clears it. The thresholds are tuned so finishing N5 lands an operator around rank 7-9 (≈25% of the ladder), N4 → rank 12-14, N3 → rank 17-18 — top void ranks are measured in years of consistent play. Don't tweak them without thinking about how they interact with the per-mode XP balances (`RUN_XP`, `TA_XP_*`, etc., defined at the top of each mode's component) and the gold/silver hot multiplier above. When adding a new rank tier color, add styling for it in **every** `.tier-*` block in `home.css`.
 
 ### Cards (`data/cards.json`)
 
