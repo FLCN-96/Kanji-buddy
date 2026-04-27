@@ -11,7 +11,9 @@ const CHALLENGES = [
   { id: 'match',    glyph: '合', name: 'MATCH',         sub: '60s · pair kanji ↔ meaning', ascii: '[字]→[char]',  xp: 90  },
 ];
 
-const HOT_MULTIPLIER = 3;
+// HOT tile uses Daily.HOT_GOLD / HOT_SILVER directly for the badge math so the
+// numbers stay in lock-step with the multiplier system. The tile reads the
+// claim status off Daily.hotTier(id) — the parent passes hotTier in.
 
 const RunPrimary = ({ state, deck, onRun }) => {
   const loading      = state === 'loading';
@@ -72,8 +74,17 @@ const orderForHot = (list, hotId) => {
   return [hot, ...list.filter(c => c.id !== hotId)];
 };
 
-const ChallengeGrid = ({ onPick, hotId, dailyDone }) => {
+const ChallengeGrid = ({ onPick, hotId, dailyDone, hotTier }) => {
   const ordered = orderForHot(CHALLENGES, hotId);
+  // hotTier is 'gold' (first run today) | 'silver' (already claimed) | null.
+  // Falls back to gold so the tile renders sensibly if Home didn't pass one.
+  const tier = hotTier || 'gold';
+  const HOT_GOLD   = (window.Daily && window.Daily.HOT_GOLD)   || 3;
+  const HOT_SILVER = (window.Daily && window.Daily.HOT_SILVER) || 1.5;
+  const tierMult = tier === 'silver' ? HOT_SILVER : HOT_GOLD;
+  // Format silver multiplier as "1.5×" (no trailing zero) but still print
+  // gold as a clean integer.
+  const tierMultLabel = Number.isInteger(tierMult) ? `${tierMult}` : tierMult.toFixed(1);
   return (
     <div
       className={`kb-chal-grid${dailyDone ? ' is-done' : ''}`}
@@ -81,17 +92,18 @@ const ChallengeGrid = ({ onPick, hotId, dailyDone }) => {
     >
       {ordered.map(c => {
         const isHot = c.id === hotId;
-        const xp = isHot ? c.xp * HOT_MULTIPLIER : c.xp;
+        const xp = isHot ? Math.round(c.xp * tierMult) : c.xp;
+        const hotCls = isHot ? ` is-hot is-${tier}` : '';
         return (
-          <button key={c.id} className={`kb-chal${isHot ? ' is-hot' : ''}`} onClick={() => onPick && onPick(c.id)}>
+          <button key={c.id} className={`kb-chal${hotCls}`} onClick={() => onPick && onPick(c.id)}>
             <div className="kb-chal-glyph">{c.glyph}</div>
             <div className="kb-chal-meta">
               <div className="kb-chal-name">{c.name}</div>
               <div className="kb-chal-sub">{c.sub}</div>
             </div>
             <div className="kb-chal-ascii">{c.ascii}</div>
-            <span className={`kb-chal-xp${isHot ? ' is-hot' : ''}`}>
-              +{xp} XP{isHot ? ` · ${HOT_MULTIPLIER}×` : ''}
+            <span className={`kb-chal-xp${isHot ? ` is-hot is-${tier}` : ''}`}>
+              +{xp} XP{isHot ? ` · ${tierMultLabel}×` : ''}
             </span>
           </button>
         );
@@ -100,4 +112,4 @@ const ChallengeGrid = ({ onPick, hotId, dailyDone }) => {
   );
 };
 
-Object.assign(window, { RunPrimary, ChallengeGrid, CHALLENGES, HOT_MULTIPLIER });
+Object.assign(window, { RunPrimary, ChallengeGrid, CHALLENGES });

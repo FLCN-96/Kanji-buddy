@@ -205,6 +205,7 @@ const LeechHuntApp = ({ cards }) => {
   });
   const [beatPb, setBeatPb] = React.useState(false);
   const [xpGained, setXpGained] = React.useState(0);
+  const [hotTier, setHotTier] = React.useState(null);
   const [confirmQuit, setConfirmQuit] = React.useState(false);
   const lockRef = React.useRef(false);
   const finishedRef = React.useRef(false);
@@ -278,13 +279,15 @@ const LeechHuntApp = ({ cards }) => {
     setResult(res);
     setPhase('end');
     if (window.DB && roster.length > 0) {
-      const isHot = window.Daily && window.Daily.hotChallengeId() === 'leech';
+      const tierAtSave = window.Daily ? window.Daily.hotTier('leech') : null;
+      const mult       = window.Daily ? window.Daily.hotMultiplier('leech') : 1;
       // Per-leech pay + completion/PB bonuses to make full sweeps feel earned.
       const base = 30 + purged * 10;
       const completeBonus = res === 'complete' ? 20 : 0;
       const pbBonus = (purged > pb) ? 20 : 0;
-      const earned = Math.round((base + completeBonus + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+      const earned = Math.round((base + completeBonus + pbBonus) * mult);
       setXpGained(earned);
+      setHotTier(tierAtSave);
       window.DB.saveScore({ mode: 'leech_hunt', score: purged, result: res }).catch(() => {});
       window.DB.saveSession({
         mode: 'leech_hunt',
@@ -296,6 +299,7 @@ const LeechHuntApp = ({ cards }) => {
         xp_earned: earned,
       })
         .then(() => window.DB.grantXp(earned))
+        .then(() => { if (tierAtSave && window.Daily) window.Daily.claimHot('leech'); })
         .then(() => window.DB.recordSessionStreak())
         .catch(() => {});
     }
@@ -381,6 +385,7 @@ const LeechHuntApp = ({ cards }) => {
     setRoster([]); setActiveIdx(-1); setStageIdx(0); setStage(null);
     setFeedback(null); setMisses(0); setResult(null); setBeatPb(false); setPurgeFx(null);
     setXpGained(0);
+    setHotTier(null);
     finishedRef.current = false;
     lockRef.current = false;
     setPhase('ready');
@@ -446,6 +451,7 @@ const LeechHuntApp = ({ cards }) => {
               pb={pb}
               misses={misses}
               xpGained={xpGained}
+              hotTier={hotTier}
               onAgain={restart}
               onHome={() => window.location.href = 'Home.html'}
             />

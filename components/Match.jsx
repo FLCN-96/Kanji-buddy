@@ -169,6 +169,7 @@ const MatchApp = ({ cards }) => {
   });
   const [beatPb, setBeatPb] = React.useState(false);
   const [xpGained, setXpGained] = React.useState(0);
+  const [hotTier, setHotTier] = React.useState(null);
   const [confirmQuit, setConfirmQuit] = React.useState(false);
 
   const lastMatchAtRef = React.useRef(0);
@@ -231,6 +232,7 @@ const MatchApp = ({ cards }) => {
         setTimeLeft(tweaks.duration * 1000);
         setBeatPb(false);
         setXpGained(0);
+        setHotTier(null);
         startedAtRef.current = performance.now();
         lastMatchAtRef.current = performance.now();
         setPhase('play');
@@ -268,7 +270,8 @@ const MatchApp = ({ cards }) => {
     if (finishedRef.current) return;
     if (matches + misses === 0) return;
     finishedRef.current = true;
-    const isHot = window.Daily && window.Daily.hotChallengeId() === 'match';
+    const tierAtSave = window.Daily ? window.Daily.hotTier('match') : null;
+    const mult       = window.Daily ? window.Daily.hotMultiplier('match') : 1;
     const newBeatPb = score > pb;
     if (newBeatPb) {
       setBeatPb(true);
@@ -288,8 +291,9 @@ const MatchApp = ({ cards }) => {
       + (newBeatPb ? MT_XP_PB : 0)
     );
     const withMix = isMix ? Math.round(base * 1.5) : base;
-    const earned = Math.round(withMix * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+    const earned = Math.round(withMix * mult);
     setXpGained(earned);
+    setHotTier(tierAtSave);
     window.DB.saveScore({ mode: 'match', score, duration_s: tweaks.duration }).catch(() => {});
     window.DB.saveSession({
       mode: 'match',
@@ -301,6 +305,7 @@ const MatchApp = ({ cards }) => {
       xp_earned: earned,
     })
       .then(() => window.DB.grantXp(earned))
+      .then(() => { if (tierAtSave && window.Daily) window.Daily.claimHot('match'); })
       .then(() => window.DB.recordSessionStreak())
       .catch(() => {});
   }, [phase]);
@@ -476,6 +481,7 @@ const MatchApp = ({ cards }) => {
               duration={tweaks.duration}
               axis={tweaks.axis}
               xpGained={xpGained}
+              hotTier={hotTier}
               onAgain={restart}
               onHome={() => window.location.href = 'Home.html'}
             />

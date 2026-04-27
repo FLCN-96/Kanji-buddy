@@ -21,6 +21,57 @@
   }
 
   // ──────────────────────────────────────────────────────────────
+  // Hot-spotlight multiplier system.
+  //
+  // The daily HOT challenge gives a bonus on the first run of the day —
+  // GOLD (3×). Every subsequent run that day downgrades to SILVER (1.5×).
+  // We track the claim per local date in localStorage; the key is intentionally
+  // namespaced so ad-hoc clears don't nuke other progress.
+  //
+  // Mode pages must:
+  //   1. Capture the tier *before* writing XP via `Daily.hotTier(modeId)`
+  //      (so the end screen shows what was actually applied).
+  //   2. Apply `Daily.hotMultiplier(modeId)` to the base XP.
+  //   3. Call `Daily.claimHot(modeId)` after `grantXp` resolves so the next
+  //      run today flips to silver.
+  // ──────────────────────────────────────────────────────────────
+  const HOT_GOLD = 3;
+  const HOT_SILVER = 1.5;
+  const HOT_CLAIM_PREFIX = 'kb-hot-claimed:';
+
+  function localDateKey(d) {
+    const date = d || new Date();
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function isHotClaimed(d) {
+    try { return localStorage.getItem(HOT_CLAIM_PREFIX + localDateKey(d)) === '1'; }
+    catch (e) { return false; }
+  }
+
+  function claimHot(modeId, d) {
+    // Only claim if this mode is actually today's hot pick — guards against
+    // accidentally burning gold from a non-hot mode call site.
+    if (modeId && hotChallengeId(d) !== modeId) return;
+    try { localStorage.setItem(HOT_CLAIM_PREFIX + localDateKey(d), '1'); } catch (e) {}
+  }
+
+  function hotTier(modeId, d) {
+    if (hotChallengeId(d) !== modeId) return null;
+    return isHotClaimed(d) ? 'silver' : 'gold';
+  }
+
+  function hotMultiplier(modeId, d) {
+    const tier = hotTier(modeId, d);
+    if (tier === 'gold') return HOT_GOLD;
+    if (tier === 'silver') return HOT_SILVER;
+    return 1;
+  }
+
+  // ──────────────────────────────────────────────────────────────
   // Weighted deck selection for the Daily Run.
   //
   // Budget for a small deck (5 cards by default):
@@ -206,7 +257,15 @@
   window.Daily = {
     daySeed,
     hotChallengeId,
-    HOT_MULTIPLIER: 3,
+    HOT_GOLD,
+    HOT_SILVER,
+    // Legacy alias — pre-tiered code paths assumed a single 3× multiplier.
+    // Kept so any straggler reference still resolves to the gold value.
+    HOT_MULTIPLIER: HOT_GOLD,
+    isHotClaimed,
+    claimHot,
+    hotTier,
+    hotMultiplier,
     selectDailyDeck,
     resolveDeckSize,
     DECK_SIZE,

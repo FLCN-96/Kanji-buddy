@@ -112,7 +112,7 @@ const MTPre = ({ pb, tweaks, onStart, onAxis }) => {
   );
 };
 
-const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duration, axis, xpGained, onAgain, onHome }) => {
+const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duration, axis, xpGained, hotTier, onAgain, onHome }) => {
   const acc = matches + misses > 0 ? Math.round((matches / (matches + misses)) * 100) : 100;
   const apm = Math.round(matches / (duration / 60));
   const ribbon = score >= 3000 ? 'PERFECT FLOW'
@@ -137,11 +137,13 @@ const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duratio
   const xpClean = misses === 0 && matches > 0 ? MT_XP_CLEAN : 0;
   const xpPb    = beatPb ? MT_XP_PB : 0;
   const isMix = axis === 'mix';
-  const isHot = window.Daily && window.Daily.hotChallengeId() === 'match';
+  const hotMult = hotTier === 'gold' ? (window.Daily?.HOT_GOLD || 3)
+                : hotTier === 'silver' ? (window.Daily?.HOT_SILVER || 1.5)
+                : 1;
   const xpPreMix = Math.max(0, xpBase + xpHit + xpMiss + xpCombo + xpClean + xpPb);
   const xpMix = isMix ? Math.round(xpPreMix * 0.5) : 0;
   const xpRaw = xpPreMix + xpMix;
-  const xpHot = isHot ? Math.round(xpRaw * (window.Daily.HOT_MULTIPLIER - 1)) : 0;
+  const xpHot = hotTier ? Math.round(xpRaw * (hotMult - 1)) : 0;
   const xpTotal = xpGained ?? (xpRaw + xpHot);
 
   return (
@@ -228,7 +230,7 @@ const MTEnd = ({ score, matches, misses, bestCombo, history, beatPb, pb, duratio
           {xpClean > 0 && <div className="mt-end-xp-row is-pb"><span>clean sweep</span><b>+{xpClean}</b></div>}
           {xpPb > 0 && <div className="mt-end-xp-row is-pb"><span>new record</span><b>+{xpPb}</b></div>}
           {xpMix > 0 && <div className="mt-end-xp-row is-pb"><span>mix axis · ×1.5</span><b>+{xpMix}</b></div>}
-          {isHot && <div className="mt-end-xp-row is-pb"><span>hot daily · ×{window.Daily.HOT_MULTIPLIER}</span><b>+{xpHot}</b></div>}
+          {hotTier && <div className={`mt-end-xp-row is-pb is-hot is-${hotTier}`}><span>hot daily {hotTier} · ×{hotMult}</span><b>+{xpHot}</b></div>}
           <div className="mt-end-xp-row mt-streak"><span>daily streak</span><b>▲ +1</b></div>
         </div>
       </div>

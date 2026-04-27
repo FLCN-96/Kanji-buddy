@@ -222,7 +222,7 @@ const TAReady = ({ n, variant = 'dissolve' }) => {
   );
 };
 
-const TAEnd = ({ score, hits, misses, maxCombo, duration, tier, prevPb, beatPb, xpGained, history, timedOut, onAgain, onHome }) => {
+const TAEnd = ({ score, hits, misses, maxCombo, duration, tier, prevPb, beatPb, xpGained, hotTier, history, timedOut, onAgain, onHome }) => {
   const total = hits + misses;
   const acc = total === 0 ? 0 : Math.round(100 * hits / total);
   const avgMs = history.filter(h => h.ok).reduce((a,h) => a + h.ms, 0) / (hits || 1);
@@ -236,9 +236,13 @@ const TAEnd = ({ score, hits, misses, maxCombo, duration, tier, prevPb, beatPb, 
     maxCombo >= 5  ? 5  : 0;
   const xpClean = misses === 0 && total > 0 ? 25 : 0;
   const xpPb = beatPb ? 30 : 0;
-  const isHot = window.Daily && window.Daily.hotChallengeId() === 'time';
+  // hotTier was captured at save-time. Multiplier comes off the same source
+  // of truth so the breakdown agrees with whatever DB.grantXp got.
+  const hotMult = hotTier === 'gold' ? (window.Daily?.HOT_GOLD || 3)
+                : hotTier === 'silver' ? (window.Daily?.HOT_SILVER || 1.5)
+                : 1;
   const xpRaw = Math.max(0, xpHit + xpMissPenalty + xpCombo + xpClean + xpPb);
-  const xpHot = isHot ? Math.round(xpRaw * (window.Daily.HOT_MULTIPLIER - 1)) : 0;
+  const xpHot = hotTier ? Math.round(xpRaw * (hotMult - 1)) : 0;
   const xpTotal = xpGained ?? (xpRaw + xpHot);
   const missed = history.filter(h => !h.ok);
   const fastest = history.filter(h => h.ok).slice().sort((a,b) => a.ms - b.ms)[0];
@@ -319,7 +323,7 @@ const TAEnd = ({ score, hits, misses, maxCombo, duration, tier, prevPb, beatPb, 
           {xpCombo > 0 && <div className="ta-end-xp-row"><span>max combo · ×{maxCombo}</span><b>+{xpCombo}</b></div>}
           {xpClean > 0 && <div className="ta-end-xp-row is-pb"><span>clean sweep</span><b>+{xpClean}</b></div>}
           {xpPb > 0 && <div className="ta-end-xp-row is-pb"><span>new personal best</span><b>+{xpPb}</b></div>}
-          {isHot && <div className="ta-end-xp-row is-pb"><span>hot daily · ×{window.Daily.HOT_MULTIPLIER}</span><b>+{xpHot}</b></div>}
+          {hotTier && <div className={`ta-end-xp-row is-pb is-hot is-${hotTier}`}><span>hot daily {hotTier} · ×{hotMult}</span><b>+{xpHot}</b></div>}
           <div className="ta-end-xp-row ta-end-xp-streak"><span>daily streak</span><b>▲ +1</b></div>
         </div>
       </div>

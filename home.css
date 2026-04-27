@@ -547,6 +547,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-progress.tier-cyan    .kb-progress-val { color: var(--accent-cyan);    text-shadow: 0 0 10px rgba(34,211,238,0.4); }
 .kb-progress.tier-amber   .kb-progress-val { color: var(--accent-amber);   text-shadow: 0 0 10px rgba(245,165,36,0.4); }
 .kb-progress.tier-magenta .kb-progress-val { color: var(--accent-magenta); text-shadow: 0 0 10px rgba(255,61,255,0.4); }
+.kb-progress.tier-transcend .kb-progress-val { color: #fefce8; text-shadow: 0 0 8px rgba(254,252,232,.5), 0 0 18px rgba(245,165,36,.4); }
+.kb-progress.tier-void    .kb-progress-val { color: #d3e3ff; text-shadow: 1px 0 0 rgba(255,61,255,.55), -1px 0 0 rgba(34,211,238,.55); }
 .kb-progress-val .unit {
   font-size: 11px; color: var(--fg-2); font-weight: 400;
   letter-spacing: .12em; text-transform: uppercase; text-shadow: none;
@@ -572,6 +574,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-progress.tier-cyan    .kb-progress-dots span.is-on { background: var(--accent-cyan);    border-color: var(--accent-cyan);    box-shadow: 0 0 5px rgba(34,211,238,.6); }
 .kb-progress.tier-amber   .kb-progress-dots span.is-on { background: var(--accent-amber);   border-color: var(--accent-amber);   box-shadow: 0 0 5px rgba(245,165,36,.6); }
 .kb-progress.tier-magenta .kb-progress-dots span.is-on { background: var(--accent-magenta); border-color: var(--accent-magenta); box-shadow: 0 0 5px rgba(255,61,255,.6); }
+.kb-progress.tier-transcend .kb-progress-dots span.is-on { background: #fefce8; border-color: #fefce8; box-shadow: 0 0 5px rgba(254,252,232,.6); }
+.kb-progress.tier-void    .kb-progress-dots span.is-on { background: #d3e3ff; border-color: #d3e3ff; box-shadow: 0 0 4px rgba(255,61,255,.5), 0 0 4px rgba(34,211,238,.5); }
 
 .kb-progress-ring-wrap {
   position: absolute; right: 8px; top: 8px;
@@ -596,6 +600,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-progress-ring.tier-cyan    .kb-progress-ring-arc { stroke: var(--accent-cyan);    filter: drop-shadow(0 0 3px rgba(34,211,238,.7)); }
 .kb-progress-ring.tier-amber   .kb-progress-ring-arc { stroke: var(--accent-amber);   filter: drop-shadow(0 0 3px rgba(245,165,36,.7)); }
 .kb-progress-ring.tier-magenta .kb-progress-ring-arc { stroke: var(--accent-magenta); filter: drop-shadow(0 0 3px rgba(255,61,255,.7)); }
+.kb-progress-ring.tier-transcend .kb-progress-ring-arc { stroke: #fefce8; filter: drop-shadow(0 0 3px rgba(254,252,232,.7)); }
+.kb-progress-ring.tier-void    .kb-progress-ring-arc { stroke: #d3e3ff; filter: drop-shadow(1px 0 0 rgba(255,61,255,.55)) drop-shadow(-1px 0 0 rgba(34,211,238,.55)); }
 
 @media (prefers-reduced-motion: reduce) {
   .kb-progress-val,
@@ -935,11 +941,24 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   text-transform: uppercase; color: var(--fg-0);
 }
 .kb-chal-sub { font-size: 10px; color: var(--fg-2); letter-spacing: .04em; line-height: 1.4; }
-.kb-chal.is-hot {
+/* Two flavours of HOT tile:
+   • is-gold   — first daily run still unclaimed. Warm amber halo, full glimmer
+                 + corner twinkle. The standout dopamine state.
+   • is-silver — already claimed today. Cool steel/cyan halo, slower glimmer,
+                 no twinkle. Reads as "still bonus, but you've burned the big
+                 one" so the user sees a clear demotion without losing the
+                 tile's hot identity. */
+.kb-chal.is-hot.is-gold {
   border-color: var(--accent-amber);
   box-shadow: 0 0 0 1px var(--accent-amber), 0 0 14px rgba(245,165,36,.25);
 }
-.kb-chal.is-hot .kb-chal-glyph { color: var(--accent-amber); text-shadow: 0 0 10px rgba(245,165,36,.4); }
+.kb-chal.is-hot.is-gold .kb-chal-glyph { color: var(--accent-amber); text-shadow: 0 0 10px rgba(245,165,36,.4); }
+
+.kb-chal.is-hot.is-silver {
+  border-color: #c9d6e2;
+  box-shadow: 0 0 0 1px #c9d6e2, 0 0 10px rgba(201,214,226,.18);
+}
+.kb-chal.is-hot.is-silver .kb-chal-glyph { color: #c9d6e2; text-shadow: 0 0 8px rgba(201,214,226,.35); }
 
 /* Post-quota the hot tile is the only thing still worth chasing — it gets
    a sliding diagonal glimmer with a corner twinkle at the tail end. Gate
@@ -957,7 +976,9 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
    has overflow: hidden, so the wide strip is clipped to the tile. We drop
    mix-blend-mode entirely and bump the gradient alpha to compensate for
    the lost screen-blend brightness. */
-.kb-chal-grid.is-done .kb-chal.is-hot::before {
+/* GOLD glimmer — warm cream sweep, faster cadence (9s loop), with a bright
+   corner twinkle on the tail. */
+.kb-chal-grid.is-done .kb-chal.is-hot.is-gold::before {
   content: '';
   position: absolute;
   top: -30%;
@@ -979,7 +1000,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   animation: kb-hot-glimmer 9s cubic-bezier(.3,.7,.4,1) infinite;
   z-index: 1;
 }
-.kb-chal-grid.is-done .kb-chal.is-hot::after {
+.kb-chal-grid.is-done .kb-chal.is-hot.is-gold::after {
   content: '✦';
   position: absolute;
   top: 8px;
@@ -994,6 +1015,32 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   pointer-events: none;
   z-index: 2;
 }
+
+/* SILVER glimmer — cool steel sweep, slower cadence (14s vs 9s), narrower
+   strip, less opacity. No corner twinkle — that one belongs to gold. */
+.kb-chal-grid.is-done .kb-chal.is-hot.is-silver::before {
+  content: '';
+  position: absolute;
+  top: -30%;
+  bottom: -30%;
+  left: 0;
+  width: 22%;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(180,200,220,.10) 30%,
+    rgba(220,232,244,.32) 50%,
+    rgba(180,200,220,.10) 70%,
+    transparent 100%
+  );
+  transform: translate3d(-180%, 0, 0) rotate(25deg);
+  transform-origin: center;
+  will-change: transform;
+  animation: kb-hot-glimmer 14s cubic-bezier(.3,.7,.4,1) infinite;
+  z-index: 1;
+}
+
 .kb-chal-grid.is-done .kb-chal.is-hot .kb-chal-meta,
 .kb-chal-grid.is-done .kb-chal.is-hot .kb-chal-glyph,
 .kb-chal-grid.is-done .kb-chal.is-hot .kb-chal-ascii {
@@ -1035,11 +1082,17 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   background: var(--bg-0);
   font-weight: 500;
 }
-.kb-chal-xp.is-hot {
+.kb-chal-xp.is-hot.is-gold {
   color: var(--accent-amber);
   border-color: var(--accent-amber);
   box-shadow: 0 0 8px rgba(245,165,36,.35);
   text-shadow: 0 0 6px rgba(245,165,36,.5);
+}
+.kb-chal-xp.is-hot.is-silver {
+  color: #c9d6e2;
+  border-color: #c9d6e2;
+  box-shadow: 0 0 6px rgba(201,214,226,.28);
+  text-shadow: 0 0 4px rgba(201,214,226,.4);
 }
 .kb-chal-grid > .kb-chal:first-child .kb-chal-xp { bottom: auto; top: 50%; transform: translateY(-50%); right: 14px; }
 
@@ -1135,11 +1188,38 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .variant-xp.tier-magenta .rank     { color: var(--accent-magenta); }
 .variant-xp.tier-amber .rank       { color: var(--accent-amber); }
 .variant-xp.tier-transcend .rank   { color: #fefce8; text-shadow: 0 0 10px rgba(245,165,36,.6), 0 0 20px rgba(255,61,255,.4); }
+.variant-xp.tier-void .rank        {
+  color: #e6efff;
+  text-shadow:
+    1px 0 0 rgba(255,61,255,.6),
+    -1px 0 0 rgba(34,211,238,.6),
+    0 0 14px rgba(180,200,255,.35);
+  animation: kb-void-jitter 5.5s steps(11) infinite;
+}
 
 .variant-xp.tier-cyan .variant-xp-fill      { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta)); }
 .variant-xp.tier-magenta .variant-xp-fill   { background: linear-gradient(90deg, var(--accent-magenta), var(--accent-amber)); box-shadow: 0 0 10px rgba(255,61,255,.5); }
 .variant-xp.tier-amber .variant-xp-fill     { background: linear-gradient(90deg, var(--accent-amber), #fefce8); box-shadow: 0 0 10px rgba(245,165,36,.55); }
 .variant-xp.tier-transcend .variant-xp-fill { background: linear-gradient(90deg, #fefce8, var(--accent-amber), var(--accent-magenta)); box-shadow: 0 0 14px rgba(254,252,232,.7); }
+.variant-xp.tier-void .variant-xp-fill      {
+  background: linear-gradient(90deg, var(--accent-cyan), #d3e3ff, var(--accent-magenta));
+  box-shadow: 0 0 12px rgba(34,211,238,.45), 0 0 12px rgba(255,61,255,.45);
+}
+
+/* Void-tier title chromatic-aberration jitter. Tiny offsets — should read as
+   instability without becoming a focus-pull. Disabled in reduced-motion. */
+@keyframes kb-void-jitter {
+  0%, 100% { transform: translate(0, 0); }
+  18%      { transform: translate(.4px, -.3px); }
+  37%      { transform: translate(-.5px, .2px); }
+  56%      { transform: translate(.3px, .4px); }
+  75%      { transform: translate(-.2px, -.4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .variant-xp.tier-void .rank,
+  .ku-modal.tier-void .ku-new,
+  .kb-pop-ladder-row.tier-void .kb-pop-ladder-name b { animation: none; }
+}
 
 .variant-xp-rank-glyph {
   font-family: var(--font-jp-serif);
@@ -1292,8 +1372,26 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .ku-modal.tier-magenta .ku-new    { color: var(--accent-magenta); text-shadow: 0 0 12px var(--accent-magenta), 0 0 32px rgba(255,61,255,.5); }
 .ku-modal.tier-amber .ku-new      { color: var(--accent-amber);   text-shadow: 0 0 12px var(--accent-amber),   0 0 32px rgba(245,165,36,.55); }
 .ku-modal.tier-transcend .ku-new  { color: #fefce8;               text-shadow: 0 0 8px #fefce8, 0 0 20px rgba(245,165,36,.6), 0 0 40px rgba(255,61,255,.5); }
+.ku-modal.tier-void .ku-new       {
+  color: #e6efff;
+  text-shadow:
+    2px 0 0 rgba(255,61,255,.7),
+    -2px 0 0 rgba(34,211,238,.7),
+    0 0 18px rgba(180,200,255,.5),
+    0 0 40px rgba(255,61,255,.35);
+  animation: kb-void-jitter 1.6s steps(8) infinite;
+}
 .ku-modal.tier-amber      { border-color: var(--accent-amber);   box-shadow: 0 0 0 1px var(--bg-0), 0 0 32px rgba(245,165,36,.35), inset 0 0 80px rgba(245,165,36,.05); }
 .ku-modal.tier-transcend  { border-color: #fefce8;               box-shadow: 0 0 0 1px var(--bg-0), 0 0 40px rgba(254,252,232,.45), inset 0 0 80px rgba(245,165,36,.05); }
+.ku-modal.tier-void       {
+  border-color: #d3e3ff;
+  box-shadow:
+    0 0 0 1px var(--bg-0),
+    0 0 32px rgba(34,211,238,.35),
+    0 0 32px rgba(255,61,255,.35),
+    inset 0 0 80px rgba(34,211,238,.04),
+    inset 0 0 80px rgba(255,61,255,.04);
+}
 
 .ku-plaque {
   padding: var(--sp-5) var(--sp-4);
@@ -1314,6 +1412,13 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .ku-modal.tier-magenta   .ku-glyph { color: var(--accent-magenta); text-shadow: 0 0 14px rgba(255,61,255,.5); }
 .ku-modal.tier-amber     .ku-glyph { color: var(--accent-amber);   text-shadow: 0 0 14px rgba(245,165,36,.55); }
 .ku-modal.tier-transcend .ku-glyph { color: #fefce8;               text-shadow: 0 0 10px #fefce8, 0 0 22px rgba(245,165,36,.6); }
+.ku-modal.tier-void      .ku-glyph {
+  color: #e6efff;
+  text-shadow:
+    1.5px 0 0 rgba(255,61,255,.55),
+    -1.5px 0 0 rgba(34,211,238,.55),
+    0 0 18px rgba(180,200,255,.45);
+}
 
 .ku-kanji {
   font-family: var(--font-jp-serif);
@@ -2155,6 +2260,20 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-pop-ladder-row.tier-magenta   .kb-pop-ladder-glyph { color: var(--accent-magenta); }
 .kb-pop-ladder-row.tier-amber     .kb-pop-ladder-glyph { color: var(--accent-amber); }
 .kb-pop-ladder-row.tier-transcend .kb-pop-ladder-glyph { color: #fefce8; text-shadow: 0 0 8px rgba(254,252,232,.5); }
+.kb-pop-ladder-row.tier-void      .kb-pop-ladder-glyph {
+  color: #e6efff;
+  text-shadow: 1px 0 0 rgba(255,61,255,.5), -1px 0 0 rgba(34,211,238,.5);
+}
+/* Hackery void-tier names jitter on the only row that's currently active. The
+   ladder list can be 30 rows long so the animation only runs on the
+   reached/current rows to keep the GPU honest. */
+.kb-pop-ladder-row.tier-void.is-reached .kb-pop-ladder-name b {
+  color: #e6efff;
+  text-shadow: 1px 0 0 rgba(255,61,255,.6), -1px 0 0 rgba(34,211,238,.6);
+}
+.kb-pop-ladder-row.tier-void.is-current .kb-pop-ladder-name b {
+  animation: kb-void-jitter 4s steps(9) infinite;
+}
 .kb-pop-ladder-rom { font-weight: 700; color: var(--fg-1); font-size: 12px; }
 .kb-pop-ladder-name { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .kb-pop-ladder-name b { font-weight: 700; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }

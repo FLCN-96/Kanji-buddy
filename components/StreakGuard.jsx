@@ -87,6 +87,7 @@ const StreakGuardApp = ({ cards }) => {
   });
   const [beatPb, setBeatPb] = React.useState(false);
   const [xpGained, setXpGained] = React.useState(0);
+  const [hotTier, setHotTier] = React.useState(null);
   const [confirmQuit, setConfirmQuit] = React.useState(false);
   const tickRef = React.useRef(null);
   const lastTickRef = React.useRef(null);
@@ -185,13 +186,15 @@ const StreakGuardApp = ({ cards }) => {
         setPb(savedCount);
       }
       if (window.DB && deck.length > 0) {
-        const isHot = window.Daily && window.Daily.hotChallengeId() === 'streak';
+        const tierAtSave = window.Daily ? window.Daily.hotTier('streak') : null;
+        const mult       = window.Daily ? window.Daily.hotMultiplier('streak') : 1;
         // Pay per saved card, with a clean-sweep bonus for the full grid.
         const base = 40 + savedCount * 8;
         const cleanBonus = (savedCount === deck.length) ? 20 : 0;
         const pbBonus = (savedCount > pb) ? 20 : 0;
-        const earned = Math.round((base + cleanBonus + pbBonus) * (isHot ? window.Daily.HOT_MULTIPLIER : 1));
+        const earned = Math.round((base + cleanBonus + pbBonus) * mult);
         setXpGained(earned);
+        setHotTier(tierAtSave);
         window.DB.saveScore({ mode: 'streak_guard', score: savedCount }).catch(() => {});
         window.DB.saveSession({
           mode: 'streak_guard',
@@ -203,6 +206,7 @@ const StreakGuardApp = ({ cards }) => {
           xp_earned: earned,
         })
           .then(() => window.DB.grantXp(earned))
+          .then(() => { if (tierAtSave && window.Daily) window.Daily.claimHot('streak'); })
           .then(() => window.DB.recordSessionStreak())
           .catch(() => {});
       }
@@ -253,6 +257,7 @@ const StreakGuardApp = ({ cards }) => {
     finishedRef.current = false;
     setDeck([]); setActiveId(null); setFeedback(null); setBeatPb(false);
     setXpGained(0);
+    setHotTier(null);
     setPhase('ready');
   };
   const goHome = () => { window.location.href = 'Home.html'; };
@@ -321,6 +326,7 @@ const StreakGuardApp = ({ cards }) => {
               beatPb={beatPb}
               pb={pb}
               xpGained={xpGained}
+              hotTier={hotTier}
               onAgain={restart}
               onHome={() => window.location.href = 'Home.html'}
             />
