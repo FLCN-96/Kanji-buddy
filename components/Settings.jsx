@@ -391,6 +391,17 @@ const Settings = () => {
           <button className="kb-set-reset" onClick={resetDefaults}>▸ reset appearance to defaults</button>
         </div>
 
+        <section className="kb-set-section">
+          <div className="kb-set-section-head">▸ DIAGNOSTICS</div>
+          <div className="kb-set-row">
+            <div className="kb-set-lbl">▸ OPERATOR READOUT</div>
+            <a href="Diagnostics.html" className="kb-set-save" style={{textDecoration:'none', textAlign:'center'}}>open ▸</a>
+          </div>
+          <div className="kb-set-hint">
+            terminal-style dump of all metrics · streak inject snapshot + gates · session history · troubleshooting
+          </div>
+        </section>
+
         <DangerZone />
         <HardResetSwitch />
       </main>
