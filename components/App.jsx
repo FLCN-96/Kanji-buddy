@@ -447,18 +447,38 @@ const App = ({ cards }) => {
   // wipes the tile and a freshly-broken streak shows it without refresh).
   const refreshInject = React.useCallback(() => {
     if (!window.StreakInject) { setInject(null); return; }
-    const snap = window.StreakInject.ensureSnapshot(user);
-    if (!snap || window.StreakInject.attemptsLeftToday(snap) <= 0) {
-      setInject(null); return;
-    }
-    setInject({
-      lostStreak:    snap.lostStreak,
-      lostDate:      snap.lostDate,
-      odds:          window.StreakInject.currentOdds(snap),
-      attemptsLeft:  window.StreakInject.attemptsLeftToday(snap),
-      attemptsMax:   window.StreakInject.ATTEMPTS_DAY,
-      totalAttempts: window.StreakInject.totalAttempts(snap),
-    });
+    // Apply new-operator safeguards at the READ layer — a snapshot can
+    // be written by _captureFromBreak before the user has crossed the
+    // gates, but we shouldn't surface the tile until they do.
+    if (!window.StreakInject.passesNewUserGates(user)) { setInject(null); return; }
+
+    const present = (snap) => {
+      if (!snap || window.StreakInject.attemptsLeftToday(snap) <= 0) {
+        setInject(null); return;
+      }
+      setInject({
+        lostStreak:    snap.lostStreak,
+        lostDate:      snap.lostDate,
+        odds:          window.StreakInject.currentOdds(snap),
+        attemptsLeft:  window.StreakInject.attemptsLeftToday(snap),
+        attemptsMax:   window.StreakInject.ATTEMPTS_DAY,
+        totalAttempts: window.StreakInject.totalAttempts(snap),
+      });
+    };
+
+    // Fast path: live snapshot in storage (captured at break time, or
+    // previously detected). Skip the async DB scan when we already have one.
+    const live = window.StreakInject.getActiveSnapshot();
+    if (live) { present(live); return; }
+
+    // Try sync detect-from-stale-date — covers users who haven't run today.
+    const syncSnap = window.StreakInject.ensureSnapshot(user);
+    if (syncSnap) { present(syncSnap); return; }
+
+    // Fall back to scanning session history — covers users who already ran
+    // today (last_session_date == today, current_streak == 1) but have a
+    // recoverable break reconstructible from the calendar.
+    window.StreakInject.ensureSnapshotAsync(user).then(present);
   }, [user]);
 
   React.useEffect(() => { refreshInject(); }, [refreshInject]);

@@ -45,6 +45,16 @@
     const broke = prevStreak >= 2 && newStreak === 1;
     if (broke) {
       set(KEYS.BROKEN, { prevStreak, at: Date.now() });
+      // Capture the recoverable-streak snapshot HERE so it survives the
+      // user completing today's daily run (which sets last_session_date
+      // to today and would otherwise hide the gap from detectRecoverable).
+      // Detection on Home is still useful for the "broke chain but hasn't
+      // run today yet" case — both paths converge through ensureSnapshot.
+      try {
+        if (window.StreakInject && window.StreakInject._captureFromBreak) {
+          window.StreakInject._captureFromBreak(prevStreak, prevLastDate);
+        }
+      } catch(e) {}
     } else if (newStreak >= 2) {
       // Quiet "you kept it" puff — only when there was a prior chain and
       // it advanced (avoids firing on day-2 of a brand-new chain). prevStreak
@@ -116,7 +126,7 @@
   // budget should NOT reset just because a fresh chain became recoverable).
   // Odds, by contrast, ARE per-snapshot and so reset on a new snapshot.
   const SPENT_KEY_PREFIX  = 'kb-streak-inject-spent:';
-  const WINDOW_DAYS   = 7;
+  const WINDOW_DAYS   = 14;
   const ATTEMPTS_DAY  = 3;
   const BASE_ODDS     = 0.20;
   const ODDS_STEP     = 0.05;
@@ -194,7 +204,8 @@
 
   // Idempotent: creates a snapshot if one is needed and doesn't yet exist.
   // Returns the active snapshot (existing or freshly-written) or null when
-  // the user has nothing recoverable.
+  // the user has nothing recoverable. Synchronous: only consults the user
+  // record's last_session_date — for the post-run case use ensureSnapshotAsync.
   const ensureSnapshot = (user) => {
     const existing = getActiveSnapshot();
     if (existing) return existing;
@@ -208,6 +219,63 @@
     };
     writeSnapshot(snap);
     return snap;
+  };
+
+  // Scan a sessions-by-day array (oldest → newest, from DB.getSessionsByDay)
+  // for the most recent broken chain pattern: a chain of ≥2 consecutive
+  // session days, followed by a gap of 1..WINDOW_DAYS empty days, followed
+  // by today's session. Used as the fallback path when the user has
+  // already run today (so detectRecoverable can't see the stale-date
+  // signal) but no snapshot was captured at break time.
+  const detectFromSessions = (sessionsByDay) => {
+    const arr = Array.isArray(sessionsByDay) ? sessionsByDay : [];
+    if (arr.length < 3) return null;
+    // Walk from end: skip the current chain (consecutive session days
+    // ending today). i lands on the last gap-day of the most recent gap.
+    let i = arr.length - 1;
+    while (i >= 0 && arr[i].count >= 1) i--;
+    if (i < 0) return null;
+    const gapEnd = i;
+    while (i >= 0 && arr[i].count === 0) i--;
+    const gapStart = i + 1;
+    const gapLen = gapEnd - gapStart + 1;
+    if (gapLen < 1 || gapLen > WINDOW_DAYS) return null;
+    // Walk back through the broken chain.
+    let chainLen = 0;
+    while (i >= 0 && arr[i].count >= 1) { chainLen++; i--; }
+    if (chainLen < 2) return null;
+    // lostDate = the last day of the broken chain (day before the gap).
+    // Convert YYYY-MM-DD to a midnight-local ISO so daysBetween agrees
+    // with the rest of the codebase.
+    const dStr = arr[gapStart - 1].date;
+    const lostDateIso = new Date(dStr + 'T00:00:00').toISOString();
+    return { lostStreak: chainLen, lostDate: lostDateIso, gapDays: gapLen };
+  };
+
+  // Async ensureSnapshot: tries the sync paths first (existing snapshot,
+  // detect-from-stale-date), then falls back to scanning session history
+  // via DB.getSessionsByDay. Useful when the user has already run today
+  // (last_session_date == today) but a recent break is reconstructible
+  // from the calendar. Returns a Promise that resolves to a snapshot or
+  // null.
+  const ensureSnapshotAsync = (user) => {
+    const sync = ensureSnapshot(user);
+    if (sync) return Promise.resolve(sync);
+    if (!window.DB || !window.DB.getSessionsByDay) return Promise.resolve(null);
+    // Pull a few extra days beyond the window so the chain length on the
+    // far edge isn't truncated.
+    return window.DB.getSessionsByDay(WINDOW_DAYS + 14).then(arr => {
+      const det = detectFromSessions(arr || []);
+      if (!det) return null;
+      const snap = {
+        lostStreak: det.lostStreak,
+        lostDate:   det.lostDate,
+        asOf:       new Date().toISOString(),
+        attempts:   [],
+      };
+      writeSnapshot(snap);
+      return snap;
+    }).catch(() => null);
   };
 
   const totalAttempts = (snap) => (snap && snap.attempts ? snap.attempts.length : 0);
@@ -238,9 +306,37 @@
   const attemptsLeftToday = (_snap) => Math.max(0, ATTEMPTS_DAY - getSpentToday());
   const currentOdds = (snap) => Math.min(MAX_ODDS, BASE_ODDS + ODDS_STEP * totalFails(snap));
 
-  // True if the tile should appear on Home: snapshot exists AND user has
-  // at least one attempt left today.
+  // Brand-new operator gates — applied at the READ layer (canInjectNow,
+  // App.jsx refreshInject) rather than the write layer, so a snapshot
+  // captured by _captureFromBreak doesn't surface a tile until the user
+  // has crossed the safeguards. Once passed, gates stay passed (account
+  // age only goes up; best_streak is monotonic).
+  const passesNewUserGates = (user) => {
+    if (!user || !user.created_at) return false;
+    if (daysBetween(user.created_at, new Date()) < MIN_ACCOUNT_AGE_DAYS) return false;
+    if ((user.best_streak || 0) < MIN_BEST_STREAK) return false;
+    return true;
+  };
+
+  // Internal — called by Streak.flagEvents on a BROKEN event so the
+  // snapshot is captured BEFORE the user's last_session_date gets
+  // refreshed by today's session. Overwrites any prior live snapshot
+  // (the freshest break is the most relevant context to recover).
+  const _captureFromBreak = (prevStreak, prevLastDate) => {
+    if (!prevStreak || prevStreak < 2 || !prevLastDate) return;
+    const snap = {
+      lostStreak: prevStreak,
+      lostDate:   prevLastDate,
+      asOf:       new Date().toISOString(),
+      attempts:   [],
+    };
+    writeSnapshot(snap);
+  };
+
+  // True if the tile should appear on Home: snapshot exists AND user
+  // passes new-operator gates AND has at least one attempt left today.
   const canInjectNow = (user) => {
+    if (!passesNewUserGates(user)) return false;
     const snap = getActiveSnapshot() || (user ? ensureSnapshot(user) : null);
     if (!snap) return false;
     return attemptsLeftToday(snap) > 0;
@@ -325,13 +421,17 @@
     MIN_ACCOUNT_AGE_DAYS, MIN_BEST_STREAK,
     getSpentToday,
     detectRecoverable,
+    detectFromSessions,
     getActiveSnapshot,
     ensureSnapshot,
+    ensureSnapshotAsync,
     readSnapshot, writeSnapshot, clearSnapshot,
     totalAttempts, totalFails,
     attemptsToday, attemptsLeftToday,
     currentOdds,
     canInjectNow,
+    passesNewUserGates,
+    _captureFromBreak,
     recordAttempt,
     // recovered-day map (calendar overlay)
     RECOVERED_KEY,
