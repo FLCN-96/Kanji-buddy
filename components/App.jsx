@@ -404,6 +404,10 @@ const App = ({ cards }) => {
   const [openPop, setOpenPop] = React.useState(null);
   // Optional payload for popovers that need it (e.g. ladder tier).
   const [popPayload, setPopPayload] = React.useState(null);
+  // Active STREAK INJECT snapshot (or null). Computed on user load and
+  // refreshed on focus so a recovered run flips the tile back to OVERCLOCK
+  // without needing a hard refresh.
+  const [inject, setInject] = React.useState(null);
 
   React.useEffect(() => {
     if (window.Rank) {
@@ -437,6 +441,37 @@ const App = ({ cards }) => {
       })
       .catch(() => { setUser(null); setUserLoaded(true); });
   }, []);
+
+  // Recompute the STREAK INJECT snapshot whenever the user record loads
+  // or the page regains focus (so returning from a successful recovery
+  // wipes the tile and a freshly-broken streak shows it without refresh).
+  const refreshInject = React.useCallback(() => {
+    if (!window.StreakInject) { setInject(null); return; }
+    const snap = window.StreakInject.ensureSnapshot(user);
+    if (!snap || window.StreakInject.attemptsLeftToday(snap) <= 0) {
+      setInject(null); return;
+    }
+    setInject({
+      lostStreak:    snap.lostStreak,
+      lostDate:      snap.lostDate,
+      odds:          window.StreakInject.currentOdds(snap),
+      attemptsLeft:  window.StreakInject.attemptsLeftToday(snap),
+      attemptsMax:   window.StreakInject.ATTEMPTS_DAY,
+      totalAttempts: window.StreakInject.totalAttempts(snap),
+    });
+  }, [user]);
+
+  React.useEffect(() => { refreshInject(); }, [refreshInject]);
+
+  React.useEffect(() => {
+    const onVis = () => refreshInject();
+    document.addEventListener('visibilitychange', onVis);
+    window.addEventListener('focus', onVis);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('focus', onVis);
+    };
+  }, [refreshInject]);
 
   React.useEffect(() => {
     if (!window.DB || !window.Daily || !cards || !cards.length) return;
@@ -517,6 +552,19 @@ const App = ({ cards }) => {
       }, 160);
     } else {
       window.location.href = 'Run.html';
+    }
+  };
+
+  const onInject = () => {
+    const btn = document.querySelector('.kb-run-primary.is-inject');
+    if (btn) {
+      btn.style.transition = 'none';
+      btn.style.transform = 'scale(.96)';
+      btn.style.animation = 'none';
+      btn.style.boxShadow = '0 0 48px rgba(255,92,106,.95), inset 0 0 0 2px var(--danger)';
+      setTimeout(() => { window.location.href = 'StreakInject.html'; }, 160);
+    } else {
+      window.location.href = 'StreakInject.html';
     }
   };
 
@@ -630,7 +678,7 @@ const App = ({ cards }) => {
             <span className="kb-section-title">Primary run</span>
             <span className="kb-section-r">space · enter</span>
           </div>
-          <RunPrimary state={state} deck={deck} onRun={onRun} />
+          <RunPrimary state={state} deck={deck} onRun={onRun} inject={inject} onInject={onInject} />
 
           <div className="kb-section-head">
             <span className="kb-section-title">Challenge modes</span>

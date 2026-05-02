@@ -91,4 +91,164 @@
     flagEvents,
     consumeContinued, consumeBroken, consumeBest, consumeMilestone,
   };
+
+  // ─────────────────────────────────────────────────────────────────────
+  // STREAK INJECT — recoverable-streak snapshot + attempt economy.
+  //
+  // When the user misses 1–7 days but had a real chain (≥2), Home offers
+  // STREAK INJECT in place of OVERCLOCK. The snapshot captures what the
+  // chain WAS at the moment of loss, persists across the recovery window
+  // independent of subsequent runs, and tracks attempts for the rising-
+  // odds curve. Only the LAST loss is captured — successful recovery or
+  // window-expiry clears the snapshot before the next loss can write a
+  // new one.
+  //
+  // Storage: localStorage `kb-streak-recoverable` = {
+  //   lostStreak: int,        // current_streak at moment of loss
+  //   lostDate:   ISO,        // last_session_date that became stale
+  //   asOf:       ISO,        // when the snapshot was first written
+  //   attempts:   [{ day: 'YYYY-MM-DD', success: bool, at: ISO }, ...]
+  // }
+  // ─────────────────────────────────────────────────────────────────────
+  const SNAPSHOT_KEY  = 'kb-streak-recoverable';
+  const WINDOW_DAYS   = 7;
+  const ATTEMPTS_DAY  = 3;
+  const BASE_ODDS     = 0.20;
+  const ODDS_STEP     = 0.05;
+  const MAX_ODDS      = 0.50;
+  // Brand-new operators must not see this tile — it would read as a punitive
+  // glitch before they understand what a streak even is. Two complementary
+  // gates: account age (proxies "established user") and a best_streak floor
+  // (proxies "actually built a chain at least once"). Both must pass.
+  const MIN_ACCOUNT_AGE_DAYS = 7;
+  const MIN_BEST_STREAK      = 3;
+
+  const dayKey = (d) => {
+    const x = d ? new Date(d) : new Date();
+    const y = x.getFullYear();
+    const m = String(x.getMonth() + 1).padStart(2, '0');
+    const day = String(x.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const startOfDay = (d) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+  const daysBetween = (a, b) => Math.round((startOfDay(b) - startOfDay(a)) / 86400000);
+
+  // Returns recoverable info if user.last_session_date is 1–7 days stale
+  // AND the broken chain was at least 2 AND the account is established
+  // enough that surfacing the corrupt tile won't confuse a brand-new
+  // operator. Does NOT touch storage.
+  const detectRecoverable = (user) => {
+    if (!user) return null;
+    const lostStreak = user.current_streak || 0;
+    if (lostStreak < 2) return null;
+    if (!user.last_session_date) return null;
+    // New-operator safeguards — both must pass.
+    if (!user.created_at) return null;
+    const accountAge = daysBetween(user.created_at, new Date());
+    if (accountAge < MIN_ACCOUNT_AGE_DAYS) return null;
+    if ((user.best_streak || 0) < MIN_BEST_STREAK) return null;
+
+    const gap = daysBetween(user.last_session_date, new Date());
+    if (gap < 1 || gap > WINDOW_DAYS) return null;
+    return { lostStreak, lostDate: user.last_session_date, gapDays: gap };
+  };
+
+  const readSnapshot = () => {
+    try {
+      const raw = localStorage.getItem(SNAPSHOT_KEY);
+      if (!raw) return null;
+      const o = JSON.parse(raw);
+      if (!o || typeof o.lostStreak !== 'number' || !o.lostDate) return null;
+      o.attempts = Array.isArray(o.attempts) ? o.attempts : [];
+      return o;
+    } catch (e) { return null; }
+  };
+
+  const writeSnapshot = (snap) => {
+    try { localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap)); } catch (e) {}
+  };
+
+  const clearSnapshot = () => {
+    try { localStorage.removeItem(SNAPSHOT_KEY); } catch (e) {}
+  };
+
+  // True once the recovery window has elapsed. The snapshot is dropped
+  // on next read so Home can quietly recreate one if a new loss happens.
+  const isExpired = (snap) => {
+    if (!snap || !snap.lostDate) return true;
+    return daysBetween(snap.lostDate, new Date()) > WINDOW_DAYS;
+  };
+
+  // Live snapshot getter — returns null if expired (and clears it).
+  const getActiveSnapshot = () => {
+    const snap = readSnapshot();
+    if (!snap) return null;
+    if (isExpired(snap)) { clearSnapshot(); return null; }
+    return snap;
+  };
+
+  // Idempotent: creates a snapshot if one is needed and doesn't yet exist.
+  // Returns the active snapshot (existing or freshly-written) or null when
+  // the user has nothing recoverable.
+  const ensureSnapshot = (user) => {
+    const existing = getActiveSnapshot();
+    if (existing) return existing;
+    const r = detectRecoverable(user);
+    if (!r) return null;
+    const snap = {
+      lostStreak: r.lostStreak,
+      lostDate:   r.lostDate,
+      asOf:       new Date().toISOString(),
+      attempts:   [],
+    };
+    writeSnapshot(snap);
+    return snap;
+  };
+
+  const totalAttempts = (snap) => (snap && snap.attempts ? snap.attempts.length : 0);
+  const totalFails    = (snap) => (snap && snap.attempts ? snap.attempts.filter(a => !a.success).length : 0);
+  const attemptsToday = (snap) => {
+    if (!snap || !snap.attempts) return 0;
+    const today = dayKey();
+    return snap.attempts.filter(a => a.day === today).length;
+  };
+  const attemptsLeftToday = (snap) => Math.max(0, ATTEMPTS_DAY - attemptsToday(snap));
+  const currentOdds = (snap) => Math.min(MAX_ODDS, BASE_ODDS + ODDS_STEP * totalFails(snap));
+
+  // True if the tile should appear on Home: snapshot exists AND user has
+  // at least one attempt left today.
+  const canInjectNow = (user) => {
+    const snap = getActiveSnapshot() || (user ? ensureSnapshot(user) : null);
+    if (!snap) return false;
+    return attemptsLeftToday(snap) > 0;
+  };
+
+  // Append an attempt. Successful attempts also clear the snapshot since
+  // the recovery has been consumed.
+  const recordAttempt = (success) => {
+    const snap = getActiveSnapshot();
+    if (!snap) return null;
+    snap.attempts.push({ day: dayKey(), success: !!success, at: new Date().toISOString() });
+    if (success) {
+      clearSnapshot();
+      return { ...snap, _cleared: true };
+    }
+    writeSnapshot(snap);
+    return snap;
+  };
+
+  window.StreakInject = {
+    SNAPSHOT_KEY, WINDOW_DAYS, ATTEMPTS_DAY,
+    BASE_ODDS, ODDS_STEP, MAX_ODDS,
+    MIN_ACCOUNT_AGE_DAYS, MIN_BEST_STREAK,
+    detectRecoverable,
+    getActiveSnapshot,
+    ensureSnapshot,
+    readSnapshot, writeSnapshot, clearSnapshot,
+    totalAttempts, totalFails,
+    attemptsToday, attemptsLeftToday,
+    currentOdds,
+    canInjectNow,
+    recordAttempt,
+  };
 })();

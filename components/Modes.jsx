@@ -15,38 +15,111 @@ const CHALLENGES = [
 // numbers stay in lock-step with the multiplier system. The tile reads the
 // claim status off Daily.hotTier(id) — the parent passes hotTier in.
 
-const RunPrimary = ({ state, deck, onRun }) => {
+// Cipher-rotating text — flips through scramble glyphs and resolves toward
+// `target`, one slot at a time. Used for the INJECT label so it reads as
+// unstable/corrupted rather than just stylized. Re-resolves periodically so
+// the effect loops without the user needing to look away.
+const SCRAMBLE_GLYPHS = '#@%&$*?!§¥+=<>/\\|×';
+const useCipherText = (target, opts) => {
+  const o = opts || {};
+  const tickMs   = o.tickMs   || 70;
+  const lockMs   = o.lockMs   || 90;   // ms per character to "lock"
+  const idleMs   = o.idleMs   || 1900; // hold fully-resolved for this long
+  const rescramble = o.rescramble != null ? o.rescramble : true;
+
+  const [out, setOut] = React.useState(target);
+  React.useEffect(() => {
+    if (!target) return;
+    let cancelled = false;
+    const len = target.length;
+    let phase = 'scramble'; // scramble | hold
+    let resolvedUntil = 0;  // index up to which letters are locked
+    let lastReveal = performance.now();
+    let holdUntil = 0;
+    const rand = () => SCRAMBLE_GLYPHS[Math.floor(Math.random() * SCRAMBLE_GLYPHS.length)];
+
+    const tick = () => {
+      if (cancelled) return;
+      const now = performance.now();
+      if (phase === 'hold') {
+        if (now >= holdUntil) {
+          phase = 'scramble';
+          resolvedUntil = 0;
+          lastReveal = now;
+        }
+      } else {
+        if (now - lastReveal >= lockMs && resolvedUntil < len) {
+          resolvedUntil += 1;
+          lastReveal = now;
+        }
+        if (resolvedUntil >= len) {
+          if (rescramble) {
+            phase = 'hold';
+            holdUntil = now + idleMs;
+          }
+        }
+      }
+      let s = '';
+      for (let i = 0; i < len; i++) s += i < resolvedUntil ? target[i] : rand();
+      setOut(s);
+    };
+
+    const id = setInterval(tick, tickMs);
+    tick();
+    return () => { cancelled = true; clearInterval(id); };
+  }, [target, tickMs, lockMs, idleMs, rescramble]);
+  return out;
+};
+
+const RunPrimary = ({ state, deck, onRun, inject, onInject }) => {
   const loading      = state === 'loading';
   const clear        = state === 'clear';
-  const overachiever = clear;
+  // INJECT preempts OVERCLOCK — when both could fire (quota clear + recoverable
+  // streak), the recovery offer is more urgent and gets the slot.
+  const isInject     = !!inject;
+  const overachiever = clear && !isInject;
   const disabled     = loading;
   const count        = deck?.total ?? 0;
   const mins         = count > 0 ? Math.max(1, Math.ceil(count * 9 / 60)) : 0;
 
+  // INJECT-tile copy is built from the live snapshot so the user can read
+  // the chain at risk + their odds + remaining attempts before tapping.
+  const injectOddsPct = isInject ? Math.round((inject.odds || 0) * 100) : 0;
+
   const topLabel = loading      ? '▸ syncing deck…'
+                 : isInject     ? '▸ STREAK.RECOVER() // chain corrupted'
                  : overachiever ? '▸ EXTRA CYCLE? · entirely optional'
                  : '▸ resume daily run';
   const label    = loading      ? 'RUN'
+                 : isInject     ? 'STREAK INJECT'
                  : overachiever ? 'OVERCLOCK'
                  : 'RUN';
   const subCopy  = loading      ? 'loading…'
+                 : isInject     ? `chain @ ${inject.lostStreak}d · 80% acc · ${injectOddsPct}% recover · ${inject.attemptsLeft}/${inject.attemptsMax} left`
                  : overachiever ? 'quota cleared · extra intake · future forecast grows'
                  : `${count} ${count === 1 ? 'card' : 'cards'} · ~${mins}m · srs priority`;
 
+  const cipherLabel = useCipherText(isInject ? label : '');
+
   const cls = `kb-run-primary`
     + (disabled     ? ' is-disabled'     : '')
+    + (isInject     ? ' is-inject'       : '')
     + (overachiever ? ' is-overachiever' : '');
 
   // Cornered HUD brackets only on the regular daily CTA — they'd clash with
-  // the overclock tile's chaotic radial-gradient halo.
-  const showCorners = !disabled && !overachiever;
+  // the overclock halo and the inject tile's corrupt frame.
+  const showCorners = !disabled && !overachiever && !isInject;
+
+  const handleClick = disabled ? undefined : (isInject ? onInject : onRun);
+  const screenLabel = isInject ? 'run-primary-inject' : (overachiever ? 'run-primary-overclock' : 'run-primary');
 
   return (
     <button
       className={cls}
-      onClick={disabled ? undefined : onRun}
-      data-screen-label={overachiever ? 'run-primary-overclock' : 'run-primary'}
+      onClick={handleClick}
+      data-screen-label={screenLabel}
       data-overachiever={overachiever ? 'true' : undefined}
+      data-inject={isInject ? 'true' : undefined}
     >
       {showCorners && (
         <>
@@ -56,9 +129,20 @@ const RunPrimary = ({ state, deck, onRun }) => {
           <span className="kb-rp-corner br" aria-hidden>◢</span>
         </>
       )}
+      {isInject && (
+        <>
+          <span className="kb-rp-skull" aria-hidden>☠</span>
+          <span className="kb-rp-corner inj tl" aria-hidden>◤</span>
+          <span className="kb-rp-corner inj tr" aria-hidden>◥</span>
+          <span className="kb-rp-corner inj bl" aria-hidden>◣</span>
+          <span className="kb-rp-corner inj br" aria-hidden>◢</span>
+        </>
+      )}
       <div className="kb-rp-body">
         <div className="kb-rp-top">{topLabel}</div>
-        <div className="kb-rp-label" data-text={label}>{label}</div>
+        <div className="kb-rp-label" data-text={label}>
+          {isInject ? cipherLabel : label}
+        </div>
         <div className="kb-rp-sub">{subCopy}</div>
       </div>
       <div className="kb-rp-arrow">▸</div>

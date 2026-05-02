@@ -2,7 +2,7 @@
 // land on next visit without forcing cache-version bumps. Cache-first
 // for heavy/stable assets (cards.json, icons, manifest, fonts).
 
-const CACHE = 'kb-v22';
+const CACHE = 'kb-v23';
 const CDN_CACHE = 'kb-cdn-v2';
 const NAV_FALLBACK = './Home.html';
 
@@ -14,6 +14,7 @@ const LOCAL_ASSETS = [
   './TimeAttack.html',
   './Survival.html',
   './StreakGuard.html',
+  './StreakInject.html',
   './LeechHunt.html',
   './Match.html',
   './Settings.html',
@@ -22,6 +23,7 @@ const LOCAL_ASSETS = [
   './timeattack.css',
   './survival.css',
   './streakguard.css',
+  './streakinject.css',
   './leechhunt.css',
   './match.css',
   './settings.css',
@@ -65,6 +67,7 @@ const LOCAL_ASSETS = [
   './components/StreakGuard.jsx',
   './components/SGPlay.jsx',
   './components/SGScreens.jsx',
+  './components/StreakInject.jsx',
   './components/LeechHunt.jsx',
   './components/LHHunt.jsx',
   './components/LHScreens.jsx',

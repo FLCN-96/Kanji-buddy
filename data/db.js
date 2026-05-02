@@ -271,6 +271,24 @@ const DB = {
     });
   },
 
+  // Force-restore the streak to a specific value. Used by STREAK INJECT after
+  // a successful recovery roll — bypasses the normal lastDate→yesterday math
+  // because the chain didn't actually continue, it was patched. Skips
+  // Streak.flagEvents on purpose: this isn't a session, it's a hotfix, and
+  // the inject end screen is its own celebration.
+  restoreStreakTo(n) {
+    return DB.getUser().then(user => {
+      if (!user) return null;
+      const target = Math.max(1, Math.floor(n) || 1);
+      const best = Math.max(user.best_streak || 0, target);
+      return DB.updateUser({
+        current_streak:    target,
+        best_streak:       best,
+        last_session_date: new Date().toISOString(),
+      });
+    });
+  },
+
   // Per-day session presence over the last n days — feeds the streak chip
   // popover heatmap (B4). Returns array of { date: 'YYYY-MM-DD', count }
   // ordered oldest → newest, length n. Days without sessions are zero-count.
