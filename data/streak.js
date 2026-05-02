@@ -110,7 +110,12 @@
   //   attempts:   [{ day: 'YYYY-MM-DD', success: bool, at: ISO }, ...]
   // }
   // ─────────────────────────────────────────────────────────────────────
-  const SNAPSHOT_KEY  = 'kb-streak-recoverable';
+  const SNAPSHOT_KEY      = 'kb-streak-recoverable';
+  // Per-day attempt counter — keyed by local date so it survives snapshot
+  // turnover (a successful recovery clears the snapshot, but the day's
+  // budget should NOT reset just because a fresh chain became recoverable).
+  // Odds, by contrast, ARE per-snapshot and so reset on a new snapshot.
+  const SPENT_KEY_PREFIX  = 'kb-streak-inject-spent:';
   const WINDOW_DAYS   = 7;
   const ATTEMPTS_DAY  = 3;
   const BASE_ODDS     = 0.20;
@@ -207,12 +212,30 @@
 
   const totalAttempts = (snap) => (snap && snap.attempts ? snap.attempts.length : 0);
   const totalFails    = (snap) => (snap && snap.attempts ? snap.attempts.filter(a => !a.success).length : 0);
-  const attemptsToday = (snap) => {
-    if (!snap || !snap.attempts) return 0;
-    const today = dayKey();
-    return snap.attempts.filter(a => a.day === today).length;
+
+  // Per-day spent counter — persists across snapshot turnover so a fresh
+  // recoverable chain doesn't grant fresh attempts on the same day.
+  const spentTodayKey = () => SPENT_KEY_PREFIX + dayKey();
+  const getSpentToday = () => {
+    try {
+      const raw = localStorage.getItem(spentTodayKey());
+      const n = parseInt(raw, 10);
+      return Number.isFinite(n) && n > 0 ? n : 0;
+    } catch (e) { return 0; }
   };
-  const attemptsLeftToday = (snap) => Math.max(0, ATTEMPTS_DAY - attemptsToday(snap));
+  const incSpentToday = () => {
+    try {
+      localStorage.setItem(spentTodayKey(), String(getSpentToday() + 1));
+    } catch (e) {}
+  };
+
+  // attemptsToday/attemptsLeftToday now read the day-keyed counter and
+  // ignore the snap argument (kept in the signature for API stability).
+  // Odds, by design, still derive from the SNAPSHOT's fail history so a
+  // newly-formed snapshot resets to BASE_ODDS regardless of the day's
+  // prior spend.
+  const attemptsToday = (_snap) => getSpentToday();
+  const attemptsLeftToday = (_snap) => Math.max(0, ATTEMPTS_DAY - getSpentToday());
   const currentOdds = (snap) => Math.min(MAX_ODDS, BASE_ODDS + ODDS_STEP * totalFails(snap));
 
   // True if the tile should appear on Home: snapshot exists AND user has
@@ -223,10 +246,12 @@
     return attemptsLeftToday(snap) > 0;
   };
 
-  // Append an attempt. Successful attempts also clear the snapshot since
-  // the recovery has been consumed.
+  // Append an attempt. Always bumps the per-day spent counter (so the
+  // 3/day cap is enforced across snapshot turnover). Successful attempts
+  // also clear the snapshot since the recovery has been consumed.
   const recordAttempt = (success) => {
     const snap = getActiveSnapshot();
+    incSpentToday(); // unconditional — quitting/aborting also bumps via callers
     if (!snap) return null;
     snap.attempts.push({ day: dayKey(), success: !!success, at: new Date().toISOString() });
     if (success) {
@@ -294,9 +319,11 @@
   };
 
   window.StreakInject = {
-    SNAPSHOT_KEY, WINDOW_DAYS, ATTEMPTS_DAY,
+    SNAPSHOT_KEY, SPENT_KEY_PREFIX,
+    WINDOW_DAYS, ATTEMPTS_DAY,
     BASE_ODDS, ODDS_STEP, MAX_ODDS,
     MIN_ACCOUNT_AGE_DAYS, MIN_BEST_STREAK,
+    getSpentToday,
     detectRecoverable,
     getActiveSnapshot,
     ensureSnapshot,
