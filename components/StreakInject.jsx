@@ -476,6 +476,10 @@ const StreakInjectApp = ({ cards }) => {
       if (rolled) {
         const target = (snap.lostStreak || 1) + 1;
         try { await window.DB.restoreStreakTo(target); } catch (e) {}
+        // Mark the missed days as recovered so the calendar can render the
+        // smiley overlay instead of empty cells. Done BEFORE recordAttempt
+        // since that clears the snapshot we read lostDate from.
+        try { window.StreakInject.markGapRecovered(snap.lostDate); } catch (e) {}
         setRestoredTo(target);
         const after = window.StreakInject.recordAttempt(true);
         setSnapAfter(null);

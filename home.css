@@ -2481,6 +2481,51 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 }
 .kb-pop-cal-cell.is-on  { background: rgba(34,211,238,.55); border-color: var(--accent-cyan); }
 .kb-pop-cal-cell.is-hot { background: var(--accent-magenta); border-color: var(--accent-magenta); box-shadow: 0 0 6px rgba(255,61,255,.6); }
+/* Recovered (patched by STREAK INJECT) — fill with a dim lime tint and
+   overlay a 5×5 pixel-art smiley so the cell reads as "covered, not lost".
+   The SVG is inline-encoded with shape-rendering="crispEdges" + image-
+   rendering: pixelated so it stays blocky at any cell size. The :is-on
+   override below handles the (impossible-but-defensive) case where a
+   real session was also logged for a recovered day. */
+.kb-pop-cal-cell.is-recovered {
+  background: rgba(163,230,53,.18);
+  border-color: var(--accent-lime);
+  position: relative;
+  box-shadow: 0 0 4px rgba(163,230,53,.45);
+}
+.kb-pop-cal-cell.is-recovered::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 5' shape-rendering='crispEdges'><rect x='1' y='1' width='1' height='1' fill='%23a3e635'/><rect x='3' y='1' width='1' height='1' fill='%23a3e635'/><rect x='0' y='3' width='1' height='1' fill='%23a3e635'/><rect x='4' y='3' width='1' height='1' fill='%23a3e635'/><rect x='1' y='4' width='3' height='1' fill='%23a3e635'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 76% 76%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 0 2px rgba(163,230,53,.6));
+  pointer-events: none;
+}
+.kb-pop-cal-cell.is-recovered.is-on,
+.kb-pop-cal-cell.is-recovered.is-hot {
+  background: rgba(163,230,53,.35);
+}
+/* Legend swatch reuses the same SVG so the legend reads consistently. */
+.kb-pop-swatch.is-recovered {
+  background: rgba(163,230,53,.18);
+  border-color: var(--accent-lime);
+  position: relative;
+}
+.kb-pop-swatch.is-recovered::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 5' shape-rendering='crispEdges'><rect x='1' y='1' width='1' height='1' fill='%23a3e635'/><rect x='3' y='1' width='1' height='1' fill='%23a3e635'/><rect x='0' y='3' width='1' height='1' fill='%23a3e635'/><rect x='4' y='3' width='1' height='1' fill='%23a3e635'/><rect x='1' y='4' width='3' height='1' fill='%23a3e635'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 76% 76%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+}
 
 /* B5 — full leech list */
 .kb-pop-leech-list {

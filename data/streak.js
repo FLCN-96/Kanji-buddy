@@ -237,6 +237,62 @@
     return snap;
   };
 
+  // ─────────────────────────────────────────────────────────────────────
+  // RECOVERED-GAP TRACKING
+  //
+  // After a successful inject, the calendar would still render the
+  // missed days as empty cells — visually misleading because the chain
+  // says they don't count anymore. Persist a per-day map of patched
+  // gap days so the calendar can mark them with the smiley overlay.
+  //
+  // Storage: localStorage `kb-streak-recovered-days` =
+  //   { 'YYYY-MM-DD': ISO_recovery_at, ... }
+  // No size cap — entries are tiny and survive across deploys. We don't
+  // prune; the calendar only renders the last 35 days anyway, and the
+  // map is harmless beyond that.
+  // ─────────────────────────────────────────────────────────────────────
+  const RECOVERED_KEY = 'kb-streak-recovered-days';
+
+  const readRecoveredDays = () => {
+    try {
+      const raw = localStorage.getItem(RECOVERED_KEY);
+      if (!raw) return {};
+      const o = JSON.parse(raw);
+      return (o && typeof o === 'object') ? o : {};
+    } catch (e) { return {}; }
+  };
+
+  const writeRecoveredDays = (map) => {
+    try { localStorage.setItem(RECOVERED_KEY, JSON.stringify(map)); } catch (e) {}
+  };
+
+  // Mark every day strictly between lostDate and today as recovered.
+  // (lostDate itself was a real session day; today gets a fresh
+  // last_session_date via DB.restoreStreakTo so it's a real session day
+  // too — only the in-between gap needs patching on the calendar.)
+  const markGapRecovered = (lostDateIso) => {
+    if (!lostDateIso) return;
+    const start = new Date(lostDateIso); if (isNaN(start.getTime())) return;
+    start.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const map = readRecoveredDays();
+    const at  = new Date().toISOString();
+    let d = new Date(start.getTime() + 86400000); // first gap day
+    let added = 0;
+    while (d.getTime() < today.getTime() && added < 60) { // belt-and-suspenders cap
+      map[dayKey(d)] = at;
+      d = new Date(d.getTime() + 86400000);
+      added += 1;
+    }
+    writeRecoveredDays(map);
+  };
+
+  const isRecoveredDay = (key) => !!readRecoveredDays()[key];
+
+  const clearRecoveredDays = () => {
+    try { localStorage.removeItem(RECOVERED_KEY); } catch (e) {}
+  };
+
   window.StreakInject = {
     SNAPSHOT_KEY, WINDOW_DAYS, ATTEMPTS_DAY,
     BASE_ODDS, ODDS_STEP, MAX_ODDS,
@@ -250,5 +306,11 @@
     currentOdds,
     canInjectNow,
     recordAttempt,
+    // recovered-day map (calendar overlay)
+    RECOVERED_KEY,
+    readRecoveredDays,
+    isRecoveredDay,
+    markGapRecovered,
+    clearRecoveredDays,
   };
 })();

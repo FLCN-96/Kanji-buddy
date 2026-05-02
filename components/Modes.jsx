@@ -74,9 +74,10 @@ const useCipherText = (target, opts) => {
 const RunPrimary = ({ state, deck, onRun, inject, onInject }) => {
   const loading      = state === 'loading';
   const clear        = state === 'clear';
-  // INJECT preempts OVERCLOCK — when both could fire (quota clear + recoverable
-  // streak), the recovery offer is more urgent and gets the slot.
-  const isInject     = !!inject;
+  // Daily run ALWAYS wins the slot when there's still daily work — INJECT
+  // only surfaces post-clear (the OVERCLOCK position) so the user can't
+  // accidentally trade today's required session for an optional gamble.
+  const isInject     = !!inject && clear;
   const overachiever = clear && !isInject;
   const disabled     = loading;
   const count        = deck?.total ?? 0;

@@ -127,6 +127,13 @@ const DeckBreakdownPopover = ({ deck, picks, onClose }) => {
 // ── B4 — Streak history (calendar heatmap) ─────────────────────────
 const StreakHistoryPopover = ({ user, onClose }) => {
   const [days, setDays] = React.useState(null);
+  // Map of recovered days from the STREAK INJECT hotfix. Cells show a pixel
+  // smiley overlay so the calendar doesn't read as if those days were lost.
+  const recovered = React.useMemo(() => (
+    (window.StreakInject && window.StreakInject.readRecoveredDays())
+      ? window.StreakInject.readRecoveredDays()
+      : {}
+  ), []);
   React.useEffect(() => {
     if (!window.DB || !window.DB.getSessionsByDay) { setDays([]); return; }
     window.DB.getSessionsByDay(35).then(setDays).catch(() => setDays([]));
@@ -137,6 +144,7 @@ const StreakHistoryPopover = ({ user, onClose }) => {
   const lastLbl = lastIso
     ? new Date(lastIso).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
     : '—';
+  const hasAnyRecovered = days && days.some(d => !!recovered[d.date]);
   return (
     <PopShell title="STREAK · LAST 35 DAYS" className="kb-pop-streak" onClose={onClose}>
       <div className="kb-pop-stats">
@@ -149,14 +157,19 @@ const StreakHistoryPopover = ({ user, onClose }) => {
       ) : (
         <div className="kb-pop-cal" role="img" aria-label="calendar heatmap of recent sessions">
           {days.map(d => {
-            const cls = d.count > 1 ? 'is-hot' : d.count === 1 ? 'is-on' : 'is-off';
+            const wasRecovered = !!recovered[d.date];
+            const base = d.count > 1 ? 'is-hot' : d.count === 1 ? 'is-on' : 'is-off';
+            const cls = `${base}${wasRecovered ? ' is-recovered' : ''}`;
             const dt = new Date(d.date + 'T00:00:00');
             const lbl = dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            const tip = wasRecovered
+              ? `${lbl} · patched by streak inject`
+              : `${lbl} · ${d.count} session${d.count === 1 ? '' : 's'}`;
             return (
               <span
                 key={d.date}
                 className={`kb-pop-cal-cell ${cls}`}
-                title={`${lbl} · ${d.count} session${d.count === 1 ? '' : 's'}`}
+                title={tip}
               />
             );
           })}
@@ -166,6 +179,9 @@ const StreakHistoryPopover = ({ user, onClose }) => {
         <span><i className="kb-pop-swatch is-off" /> nothing</span>
         <span><i className="kb-pop-swatch is-on" /> 1 session</span>
         <span><i className="kb-pop-swatch is-hot" /> multiple</span>
+        {hasAnyRecovered && (
+          <span><i className="kb-pop-swatch is-recovered" /> patched</span>
+        )}
       </div>
     </PopShell>
   );
