@@ -2481,17 +2481,19 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 }
 .kb-pop-cal-cell.is-on  { background: rgba(34,211,238,.55); border-color: var(--accent-cyan); }
 .kb-pop-cal-cell.is-hot { background: var(--accent-magenta); border-color: var(--accent-magenta); box-shadow: 0 0 6px rgba(255,61,255,.6); }
-/* Recovered (patched by STREAK INJECT) — fill with a dim lime tint and
-   overlay a 5×5 pixel-art smiley so the cell reads as "covered, not lost".
-   The SVG is inline-encoded with shape-rendering="crispEdges" + image-
-   rendering: pixelated so it stays blocky at any cell size. The :is-on
-   override below handles the (impossible-but-defensive) case where a
-   real session was also logged for a recovered day. */
+/* Recovered (patched by STREAK INJECT) — keep the cell dark and let a
+   bright lime pixel-art smiley do the talking. Lime-on-lime at small
+   sizes was washing out with anti-aliasing; dark-on-bright is the only
+   way the 5×5 pixels stay legible inside a ~26px calendar cell.
+   shape-rendering="crispEdges" inside the SVG keeps the rects from
+   getting blurred by the rasterizer. */
 .kb-pop-cal-cell.is-recovered {
-  background: rgba(163,230,53,.18);
+  background: var(--bg-0);
   border-color: var(--accent-lime);
   position: relative;
-  box-shadow: 0 0 4px rgba(163,230,53,.45);
+  box-shadow:
+    0 0 0 1px var(--accent-lime),
+    0 0 8px rgba(163,230,53,.55);
 }
 .kb-pop-cal-cell.is-recovered::after {
   content: '';
@@ -2499,21 +2501,23 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1IDUiIHNoYXBlLXJlbmRlcmluZz0iY3Jpc3BFZGdlcyI+PHJlY3QgeD0iMSIgeT0iMSIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI2EzZTYzNSIvPjxyZWN0IHg9IjMiIHk9IjEiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNhM2U2MzUiLz48cmVjdCB4PSIwIiB5PSIzIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjYTNlNjM1Ii8+PHJlY3QgeD0iNCIgeT0iMyIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI2EzZTYzNSIvPjxyZWN0IHg9IjEiIHk9IjQiIHdpZHRoPSIzIiBoZWlnaHQ9IjEiIGZpbGw9IiNhM2U2MzUiLz48L3N2Zz4=");
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 76% 76%;
+  background-size: 84% 84%;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  filter: drop-shadow(0 0 2px rgba(163,230,53,.6));
   pointer-events: none;
 }
+/* Defensive: if a real session was also logged for a recovered day,
+   the cell should still read as patched (dark + lime + smiley). */
 .kb-pop-cal-cell.is-recovered.is-on,
 .kb-pop-cal-cell.is-recovered.is-hot {
-  background: rgba(163,230,53,.35);
+  background: var(--bg-0);
 }
 /* Legend swatch reuses the same SVG so the legend reads consistently. */
 .kb-pop-swatch.is-recovered {
-  background: rgba(163,230,53,.18);
+  background: var(--bg-0);
   border-color: var(--accent-lime);
   position: relative;
+  box-shadow: 0 0 0 1px var(--accent-lime);
 }
 .kb-pop-swatch.is-recovered::after {
   content: '';
@@ -2521,7 +2525,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1IDUiIHNoYXBlLXJlbmRlcmluZz0iY3Jpc3BFZGdlcyI+PHJlY3QgeD0iMSIgeT0iMSIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI2EzZTYzNSIvPjxyZWN0IHg9IjMiIHk9IjEiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNhM2U2MzUiLz48cmVjdCB4PSIwIiB5PSIzIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjYTNlNjM1Ii8+PHJlY3QgeD0iNCIgeT0iMyIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI2EzZTYzNSIvPjxyZWN0IHg9IjEiIHk9IjQiIHdpZHRoPSIzIiBoZWlnaHQ9IjEiIGZpbGw9IiNhM2U2MzUiLz48L3N2Zz4=");
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 76% 76%;
+  background-size: 84% 84%;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   pointer-events: none;
