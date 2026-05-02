@@ -3,6 +3,31 @@
   "entries": [
     {
       "v": "current",
+      "date": "2026-05-02",
+      "title": "Streak Inject — recover a lost chain",
+      "notes": [
+        "When a streak of ≥2 days lapses 1–7 days ago, Home's OVERCLOCK slot is replaced by a corrupt red INJECT tile (jittering, glitch text, skull motif)",
+        "15-card review (no SRS writes); needs ≥12/15 accuracy to roll, then 20% RNG to actually patch the chain",
+        "+5% recovery odds per failed attempt (cap 50%), 3 attempts/day, snapshot persists 7 days",
+        "+60 XP consolation when accuracy is met but the roll rejects",
+        "Daily run always wins the slot first — INJECT only surfaces post-clear so it can't be traded for required practice",
+        "Patched gap days render a pixel smiley on the streak calendar instead of empty cells",
+        "New-operator safeguards: account age ≥7d AND best_streak ≥3 must hold before the tile can ever appear"
+      ]
+    },
+    {
+      "v": "previous",
+      "date": "2026-04-28",
+      "title": "XP economy — 30-rank ladder + void tier",
+      "notes": [
+        "Rank ladder rewritten end-to-end: 30 ranks across cyan/magenta/amber/transcend/void tiers (Ⅰ NOVICE → ⅩⅩⅩ K̷ANJI.exe)",
+        "Void tier (ranks 26–30) carries combining-mark distortion + chromatic-aberration text-shadow + jitter so it reads as unstable",
+        "Daily HOT challenge now has a two-tier bonus: GOLD (3×) on the first run of the day, SILVER (1.5×) on subsequent runs",
+        "Per-mode XP balances retuned to land N5/N4/N3 finishers at meaningful rank checkpoints"
+      ]
+    },
+    {
+      "v": "previous",
       "date": "2026-04-25",
       "title": "Streak celebrations + tap-for-detail panes",
       "notes": [
