@@ -8,7 +8,20 @@
   margin: 0 auto;
   width: 100%;
   font-family: var(--font-mono);
-  padding-bottom: var(--sp-12);
+  /* Top inset clears the Dynamic Island / iOS status bar in standalone PWA
+     mode — the rest of the app gets this from .kb-topbar but Diagnostics
+     has no topbar and would slide its dx-head under the notch otherwise.
+     Bottom inset keeps the foot row above the home indicator. */
+  padding-top: calc(var(--sp-3) + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(var(--sp-12) + env(safe-area-inset-bottom, 0px));
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  /* Belt-and-suspenders against any single child that overflows the
+     viewport (long ISO timestamps, base64 dumps, error stack traces).
+     min-width:0 is the canonical fix for flex/grid descendants whose
+     intrinsic content otherwise refuses to shrink. */
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .dx-loading {
@@ -31,12 +44,21 @@
   padding-bottom: var(--sp-3);
   border-bottom: 1px solid var(--line-dim);
   margin-bottom: var(--sp-3);
+  /* Allow the title to truncate instead of forcing the whole row wider
+     than the viewport when the screen is narrow. */
+  min-width: 0;
 }
 .dx-head-title {
   color: var(--accent-cyan);
   font-size: 11px;
   letter-spacing: .16em;
   text-shadow: 0 0 6px rgba(34,211,238,.4);
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
 }
 .dx-head-refresh {
   background: transparent;
@@ -66,6 +88,8 @@
   color: var(--accent-cyan);
   text-shadow: 0 0 4px rgba(34,211,238,.4);
   box-shadow: inset 0 0 30px rgba(34,211,238,.04);
+  min-width: 0;
+  overflow: hidden;
 }
 .dx-banner-prompt {
   color: var(--accent-lime);
@@ -141,20 +165,26 @@
 /* ── Row ──────────────────────────────────────────────────────── */
 .dx-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  /* Cap the third column so a long hint can never push the row past
+     viewport width. minmax(0, 1fr) on the first two tracks lets long
+     content shrink/wrap instead of pinning the column to its intrinsic
+     min-content width (which is what causes the iOS horizontal scroll). */
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, auto);
   align-items: baseline;
   gap: var(--sp-3);
   padding: 3px 0;
   border-bottom: 1px dotted rgba(255,255,255,.04);
   font-size: 12px;
+  min-width: 0;
 }
 .dx-row:last-child { border-bottom: 0; }
 .dx-row-k {
   color: var(--fg-1);
   letter-spacing: .04em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Long keys (e.g. "states w/ 0 reviews") are allowed to wrap rather
+     than ellipsize — readability beats compactness on a debug page. */
+  word-break: break-word;
+  min-width: 0;
 }
 .dx-row-k::before {
   content: '> ';
@@ -163,9 +193,13 @@
 .dx-row-v {
   color: var(--fg-0);
   font-weight: 500;
+  /* break-all (not break-word) so an unbroken token like an ISO timestamp
+     or a SHA can wrap mid-string instead of forcing horizontal overflow. */
+  overflow-wrap: anywhere;
   word-break: break-word;
   text-align: right;
   font-variant-numeric: tabular-nums;
+  min-width: 0;
 }
 .dx-row-v.tone-ok   { color: var(--accent-lime);   text-shadow: 0 0 4px rgba(163,230,53,.4); }
 .dx-row-v.tone-fail { color: var(--danger);        text-shadow: 0 0 4px rgba(255,92,106,.4); }
@@ -220,25 +254,45 @@
   margin-top: 6px;
   max-height: 320px;
   overflow-y: auto;
+  /* Hide accidental horizontal overflow inside the block itself; long
+     localStorage keys + values otherwise let the *whole page* scroll
+     sideways on iOS. */
+  overflow-x: hidden;
 }
 .dx-block-row {
   display: grid;
-  grid-template-columns: minmax(160px, auto) 1fr;
-  gap: var(--sp-3);
+  /* Stack key over value on narrow screens (mobile / iOS PWA) so neither
+     column has to truncate or push the row past viewport width. The wide
+     layout below restores the side-by-side grid for tablet+. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
   padding: 4px 10px;
   font-size: 11px;
   border-bottom: 1px dotted rgba(255,255,255,.04);
+  min-width: 0;
+}
+@media (min-width: 560px) {
+  .dx-block-row {
+    grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+    gap: var(--sp-3);
+  }
 }
 .dx-block-row:last-child { border-bottom: 0; }
 .dx-block-k {
   color: var(--accent-cyan);
   letter-spacing: .04em;
-  white-space: nowrap;
+  word-break: break-all;
+  min-width: 0;
 }
 .dx-block-v {
   color: var(--fg-1);
+  /* overflow-wrap:anywhere is the right tool here — break-all also breaks
+     across letters but doesn't kick in on `:` or `-` characters in some
+     iOS Safari versions, leaving long ISO timestamps/keys unbroken. */
+  overflow-wrap: anywhere;
   word-break: break-all;
   font-variant-numeric: tabular-nums;
+  min-width: 0;
 }
 .dx-block-v.tone-dim { color: var(--fg-3); }
 

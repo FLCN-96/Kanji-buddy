@@ -699,7 +699,6 @@ const XpBar = ({ xp = 0 }) => {
             {cur.label}
           </span>
         </span>
-        <span style={{color:'var(--accent-cyan)'}}>LIFETIME · {xp.toLocaleString()} XP</span>
       </div>
       <div className="variant-xp-bar"><div className="variant-xp-fill" style={{width:`${shown}%`}} /></div>
       <div className="variant-xp-meta">
