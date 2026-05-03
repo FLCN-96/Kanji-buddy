@@ -32,8 +32,11 @@
   //   1. Capture the tier *before* writing XP via `Daily.hotTier(modeId)`
   //      (so the end screen shows what was actually applied).
   //   2. Apply `Daily.hotMultiplier(modeId)` to the base XP.
-  //   3. Call `Daily.claimHot(modeId)` after `grantXp` resolves so the next
-  //      run today flips to silver.
+  //   3. Call `Daily.claimHot(modeId)` synchronously, before the IDB save
+  //      chain. The claim is just a localStorage write and must NOT be
+  //      gated on saveSession/grantXp — iOS PWAs can suspend or navigate
+  //      away before that promise chain resolves, leaving the flag
+  //      unwritten and every run stuck on gold.
   // ──────────────────────────────────────────────────────────────
   const HOT_GOLD = 3;
   const HOT_SILVER = 1.5;

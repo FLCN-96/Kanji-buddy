@@ -30,8 +30,53 @@
 <script type="text/babel" src="components/Diagnostics.jsx"></script>
 
 <script type="text/babel">
-  const root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(<Diagnostics />);
+  // Surface load/render failures inline. Blank-page silence is the worst
+  // possible diagnostic for a *diagnostic* page — if components/Diagnostics.jsx
+  // fails to load (stale SW + network miss) or the component throws during
+  // render, paint a terminal-style fallback with the actual error so the
+  // user has something to copy/paste.
+  const mount = document.getElementById('root');
+  const showFallback = (title, detail) => {
+    mount.innerHTML =
+      '<div class="kb-shell variant-game">' +
+        '<main class="kb-main dx-main" data-screen-label="diagnostics-fallback">' +
+          '<div class="dx-head">' +
+            '<a href="Settings.html" class="kb-set-back">◂ settings</a>' +
+            '<span class="dx-head-title">▸ DIAGNOSTICS // load failure</span>' +
+          '</div>' +
+          '<div class="dx-banner">' +
+            '<span class="dx-banner-prompt">$</span>' +
+            '<span>kb --diag --recover</span>' +
+            '<span class="dx-banner-cursor"></span>' +
+          '</div>' +
+          '<section class="dx-sec">' +
+            '<div class="dx-sec-head"><span class="dx-sec-title">▸ ' + title + '</span></div>' +
+            '<div class="dx-sec-body"><pre style="white-space:pre-wrap;color:var(--fg-1);font:12px/1.5 var(--font-mono);margin:0">' +
+              String(detail).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])) +
+            '</pre></div>' +
+          '</section>' +
+          '<div class="dx-foot">' +
+            '<span class="dx-banner-prompt">$</span>' +
+            '<span>hint: pull-to-refresh, or Settings → reset caches</span>' +
+            '<span class="dx-banner-cursor"></span>' +
+          '</div>' +
+        '</main>' +
+      '</div>';
+  };
+  try {
+    if (typeof DiagnosticsRoot !== 'function') {
+      throw new Error('window.DiagnosticsRoot is not defined — components/Diagnostics.jsx failed to load. Likely a stale service worker or offline fetch. Try the version-update banner on Home, or hard-refresh.');
+    }
+    const root = ReactDOM.createRoot(mount);
+    root.render(<DiagnosticsRoot />);
+  } catch (e) {
+    showFallback('render failed', (e && e.stack) || (e && e.message) || String(e));
+  }
+  window.addEventListener('error', (ev) => {
+    if (mount.children.length === 0) {
+      showFallback('uncaught error', (ev.error && ev.error.stack) || ev.message || String(ev));
+    }
+  });
 </script>
 
 <script>

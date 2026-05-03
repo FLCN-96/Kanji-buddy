@@ -195,6 +195,11 @@ const StreakGuardApp = ({ cards }) => {
         const earned = Math.round((base + cleanBonus + pbBonus) * mult);
         setXpGained(earned);
         setHotTier(tierAtSave);
+        // Burn the gold synchronously — claim is just a localStorage write
+        // and must not depend on the IDB chain below resolving (iOS PWA can
+        // suspend or navigate away before saveSession/grantXp finish,
+        // leaving the flag unwritten and every run stuck on gold).
+        if (tierAtSave && window.Daily) window.Daily.claimHot('streak');
         window.DB.saveScore({ mode: 'streak_guard', score: savedCount }).catch(() => {});
         window.DB.saveSession({
           mode: 'streak_guard',
@@ -206,7 +211,6 @@ const StreakGuardApp = ({ cards }) => {
           xp_earned: earned,
         })
           .then(() => window.DB.grantXp(earned))
-          .then(() => { if (tierAtSave && window.Daily) window.Daily.claimHot('streak'); })
           .then(() => window.DB.recordSessionStreak())
           .catch(() => {});
       }

@@ -141,8 +141,7 @@ const TimeAttackApp = ({ cards }) => {
   React.useEffect(() => {
     if (phase !== 'end' || !window.DB) return;
     if (hits + misses === 0) return; // didn't actually play
-    // Snapshot the hot tier *before* claiming so the end screen can show
-    // exactly what was applied. After grantXp resolves we burn the gold.
+    // Snapshot the hot tier so the end screen shows exactly what was applied.
     const tierAtSave = window.Daily ? window.Daily.hotTier('time') : null;
     const mult       = window.Daily ? window.Daily.hotMultiplier('time') : 1;
     const cleanBonus = misses === 0 ? TA_XP_CLEAN : 0;
@@ -153,6 +152,11 @@ const TimeAttackApp = ({ cards }) => {
     const earned = Math.round(base * mult);
     setXpGained(earned);
     setHotTier(tierAtSave);
+    // Burn the gold synchronously — claim is just a localStorage write and
+    // must not depend on the IDB chain below resolving (iOS PWA can suspend
+    // or navigate away before saveSession/grantXp finish, leaving the flag
+    // unwritten and every run stuck on gold).
+    if (tierAtSave && window.Daily) window.Daily.claimHot('time');
     window.DB.saveScore({
       mode: 'time_attack',
       score,
@@ -169,7 +173,6 @@ const TimeAttackApp = ({ cards }) => {
       xp_earned: earned,
     })
       .then(() => window.DB.grantXp(earned))
-      .then(() => { if (tierAtSave && window.Daily) window.Daily.claimHot('time'); })
       .then(() => window.DB.recordSessionStreak())
       .catch(() => {});
   }, [phase]);

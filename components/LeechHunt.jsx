@@ -288,6 +288,11 @@ const LeechHuntApp = ({ cards }) => {
       const earned = Math.round((base + completeBonus + pbBonus) * mult);
       setXpGained(earned);
       setHotTier(tierAtSave);
+      // Burn the gold synchronously — claim is just a localStorage write and
+      // must not depend on the IDB chain below resolving (iOS PWA can suspend
+      // or navigate away before saveSession/grantXp finish, leaving the flag
+      // unwritten and every run stuck on gold).
+      if (tierAtSave && window.Daily) window.Daily.claimHot('leech');
       window.DB.saveScore({ mode: 'leech_hunt', score: purged, result: res }).catch(() => {});
       window.DB.saveSession({
         mode: 'leech_hunt',
@@ -299,7 +304,6 @@ const LeechHuntApp = ({ cards }) => {
         xp_earned: earned,
       })
         .then(() => window.DB.grantXp(earned))
-        .then(() => { if (tierAtSave && window.Daily) window.Daily.claimHot('leech'); })
         .then(() => window.DB.recordSessionStreak())
         .catch(() => {});
     }

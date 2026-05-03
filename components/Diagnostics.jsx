@@ -405,4 +405,50 @@ const Diagnostics = () => {
   );
 };
 
-Object.assign(window, { Diagnostics });
+// Render-time error boundary — function components can't catch their own
+// render exceptions, so wrap Diagnostics in this so a thrown invariant
+// surfaces as a readable terminal panel instead of an empty body.
+class DiagnosticsBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { err: null }; }
+  static getDerivedStateFromError(err) { return { err }; }
+  componentDidCatch(err, info) { try { console.error('[diagnostics]', err, info); } catch(e) {} }
+  render() {
+    if (this.state.err) {
+      const e = this.state.err;
+      const detail = (e && e.stack) || (e && e.message) || String(e);
+      return (
+        <div className="kb-shell variant-game">
+          <main className="kb-main dx-main" data-screen-label="diagnostics-error">
+            <div className="dx-head">
+              <a href="Settings.html" className="kb-set-back">◂ settings</a>
+              <span className="dx-head-title">▸ DIAGNOSTICS // render exception</span>
+              <button className="dx-head-refresh" onClick={() => this.setState({ err: null })}>↻ retry</button>
+            </div>
+            <div className="dx-banner">
+              <span className="dx-banner-prompt">$</span>
+              <span>kb --diag --trace</span>
+              <span className="dx-banner-cursor" />
+            </div>
+            <section className="dx-sec">
+              <div className="dx-sec-head"><span className="dx-sec-title">▸ exception</span></div>
+              <div className="dx-sec-body">
+                <pre style={{whiteSpace:'pre-wrap', color:'var(--fg-1)', font:'12px/1.5 var(--font-mono)', margin:0}}>
+                  {detail}
+                </pre>
+              </div>
+            </section>
+          </main>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const DiagnosticsRoot = () => (
+  <DiagnosticsBoundary>
+    <Diagnostics />
+  </DiagnosticsBoundary>
+);
+
+Object.assign(window, { Diagnostics, DiagnosticsRoot, DiagnosticsBoundary });
