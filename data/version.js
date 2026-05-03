@@ -43,6 +43,16 @@
   let shown = false;
   let dismissedForSha = null; // silence the banner until a newer sha ships
   let refreshing = false;     // guard against double-fire of performRefresh
+  // True when consumeUpdMarker detects that we just performed a refresh
+  // targeting a SHA that SERVED_SHA *still* doesn't match. Means iOS Safari
+  // pinned this version.js (or another source file) in its HTTP cache and
+  // our caches.delete() / SW unregister did not actually swap the bytes.
+  // Auto-reloading again would tight-loop (Home is passive → performRefresh
+  // → reload → same stale JS → mismatch → reload …) — observed as a PWA
+  // boot-loop that only resolves after force-closing the app and waiting
+  // for iOS to evict its HTTP cache entry. When stuck, suppress the
+  // auto-reload path and surface a banner that diagnoses the situation.
+  let stuckLoop = false;
 
   // Pages where a silent auto-reload would yank the user out of mid-flow
   // work (active timers, in-progress quiz, partial answers). On these we
@@ -95,20 +105,28 @@
     window.location.replace(u.toString());
   };
 
-  const showBanner = (remote) => {
+  const showBanner = (remote, opts) => {
     if (shown) return;
     if (remote && remote.sha && dismissedForSha === remote.sha) return;
     shown = true;
+    const stuck = !!(opts && opts.stuck);
 
     const el = document.createElement('div');
     el.id = BANNER_ID;
+    if (stuck) el.classList.add('is-stuck');
     el.setAttribute('role', 'alert');
+    const lbl = stuck
+      ? '\u25B8 UPDATE PINNED BY iOS CACHE'
+      : '\u25B8 NEW VERSION READY';
+    const sub = stuck
+      ? 'cache reload no-op \u00B7 force-close PWA + reopen in ~10s'
+      : 'mid-session \u00B7 tap to reload now \u00B7 progress is safe';
     el.innerHTML =
       '<button class="kb-upd-btn" type="button" aria-label="reload to load new version">' +
         '<span class="kb-upd-pulse" aria-hidden="true"></span>' +
         '<span class="kb-upd-txt">' +
-          '<span class="kb-upd-lbl">\u25B8 NEW VERSION READY</span>' +
-          '<span class="kb-upd-sub">mid-session \u00B7 tap to reload now \u00B7 progress is safe</span>' +
+          '<span class="kb-upd-lbl">' + lbl + '</span>' +
+          '<span class="kb-upd-sub">' + sub + '</span>' +
         '</span>' +
         '<span class="kb-upd-arrow" aria-hidden="true">\u27F3</span>' +
       '</button>' +
@@ -124,12 +142,13 @@
   };
 
   // Single funnel for both signal sources (version.json poll + SW
-   // updatefound). Decides between auto-reload (passive pages) and
-   // banner (mid-session pages).
+  // updatefound). Decides between auto-reload (passive pages) and
+  // banner (mid-session pages). When `stuckLoop` is set we never auto-
+  // reload — that's the path that loops when iOS pins the JS bytes.
   const handleMismatch = (remote) => {
     if (refreshing) return;
-    if (isModePage()) {
-      showBanner(remote);
+    if (stuckLoop || isModePage()) {
+      showBanner(remote, { stuck: stuckLoop });
     } else {
       performRefresh(remote);
     }
@@ -166,15 +185,26 @@
 
   // If we just came back from a performRefresh() reload, the URL carries
   // ?upd=<sha7>. Strip it so a manual refresh doesn't replay the
-  // celebration, then play the animation.
+  // celebration, then either play the success animation (refresh took)
+  // or flag stuckLoop (iOS pinned the JS bytes — our purge was a no-op).
   const consumeUpdMarker = () => {
     try {
       const params = new URLSearchParams(window.location.search);
       if (!params.has('upd')) return;
+      const attempted = params.get('upd');
       params.delete('upd');
       const qs = params.toString();
       const clean = window.location.pathname + (qs ? '?' + qs : '') + window.location.hash;
       history.replaceState(null, '', clean);
+      // If SERVED_SHA still doesn't carry the seven hex chars we tried to
+      // land on, we're running stale bytes — set the loop guard so the
+      // mismatch we're about to detect doesn't auto-reload us back into
+      // the same stale build. Skip this entirely on local dev where
+      // SERVED_SHA is the literal 'dev' sentinel.
+      if (SERVED_SHA !== 'dev' && attempted && SERVED_SHA.slice(0, 7) !== attempted) {
+        stuckLoop = true;
+        return;
+      }
       // Defer one tick so styles are injected first (injectStyles runs
       // synchronously below, but the success card uses its own keyframes
       // and we want them parsed before the element appears).
@@ -230,6 +260,16 @@
         'transition:color 120ms,background 120ms;',
       '}',
       '@media (hover: hover){#kb-update-banner .kb-upd-dismiss:hover{color:#e6edf3;background:rgba(255,255,255,.04)}}',
+      // Stuck-on-stale-cache variant — amber instead of cyan so the user
+      // reads it as a *different* state ("won't help — force-close")
+      // rather than "tap me, same as before."
+      '#kb-update-banner.is-stuck{',
+        'border-color:#f59e0b;',
+        'box-shadow:0 0 0 1px #0a0e14,0 0 24px rgba(245,158,11,.4),0 8px 24px rgba(0,0,0,.6);',
+      '}',
+      '#kb-update-banner.is-stuck .kb-upd-pulse{background:#f59e0b;box-shadow:0 0 8px #f59e0b,0 0 16px rgba(245,158,11,.6)}',
+      '#kb-update-banner.is-stuck .kb-upd-lbl{color:#f59e0b;text-shadow:0 0 6px rgba(245,158,11,.55)}',
+      '#kb-update-banner.is-stuck .kb-upd-arrow{color:#f59e0b;text-shadow:0 0 6px rgba(245,158,11,.55)}',
       // Success celebration — center-screen card, neon checkmark, brief.
       '#kb-upd-success{',
         'position:fixed;inset:0;z-index:10000;pointer-events:none;',

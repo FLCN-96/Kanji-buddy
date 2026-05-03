@@ -99,6 +99,8 @@ Locally, `SERVED_SHA === 'dev'` short-circuits the check so the banner never fir
 
 A secondary trigger (`watchSW`) surfaces the banner on SW `updatefound` → `installed` transitions for browsers where that path works reliably (desktop / Android). Either signal firing is enough to notify the user.
 
+**Stuck-cache loop guard (iOS PWA):** `caches.delete()` and SW unregister only clear Cache Storage and the SW registration — the iOS Safari **HTTP cache** (a separate layer) can still hand back stale `data/version.js` bytes after the reload, leaving `SERVED_SHA` unchanged. On Home (a passive page), that re-triggers `performRefresh` → reload → same stale JS → infinite reboot loop, only resolved by the user force-closing the PWA and waiting ~10 min for iOS to evict the entry. `consumeUpdMarker` defends against this: when the URL carries `?upd=<sha7>` after a reload but `SERVED_SHA.slice(0,7)` still doesn't match, it sets the `stuckLoop` flag, which makes `handleMismatch` show an amber "UPDATE PINNED BY iOS CACHE — force-close and reopen" banner instead of auto-reloading.
+
 ## Conventions
 
 - All code is written for the browser. There is no Node, no bundler, no transpiler outside Babel-standalone — keep components in plain JSX with `React.useState` / `React.useEffect` (no hook imports).
