@@ -1,5 +1,6 @@
-# Archive deck source — imported via browser, not needed in repo
-uploads/*.zip
+# Local deck source artifacts — never needed in the repo, the bundled
+# data/cards.json is what the app reads at runtime.
+uploads/
 
 # Scratch / handoff artifacts
 tmp/

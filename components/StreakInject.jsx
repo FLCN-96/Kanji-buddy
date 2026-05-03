@@ -474,10 +474,25 @@ const StreakInjectApp = ({ cards }) => {
     // splash callback can finalize.
     const finalize = async () => {
       if (rolled) {
-        const target = (snap.lostStreak || 1) + 1;
+        // Patching the gap means every day from lostDate forward now
+        // counts as a session day, so the recovered streak is the
+        // pre-break chain plus *every* day since (the patched gap days
+        // + today's session). Previously this added a flat +1 which
+        // under-counted multi-day gaps (a 9-day chain that broke 3
+        // days ago should recover to 12, not 10).
+        const lostStreak = snap.lostStreak || 1;
+        const lostMs = new Date(snap.lostDate).getTime();
+        const lostDay = isNaN(lostMs) ? null : new Date(lostMs);
+        const today = new Date();
+        if (lostDay) { lostDay.setHours(0,0,0,0); }
+        today.setHours(0,0,0,0);
+        const daysSinceLost = lostDay
+          ? Math.max(1, Math.round((today - lostDay) / 86400000))
+          : 1;
+        const target = lostStreak + daysSinceLost;
         try { await window.DB.restoreStreakTo(target); } catch (e) {}
         // Mark the missed days as recovered so the calendar can render the
-        // smiley overlay instead of empty cells. Done BEFORE recordAttempt
+        // checkmark overlay instead of empty cells. Done BEFORE recordAttempt
         // since that clears the snapshot we read lostDate from.
         try { window.StreakInject.markGapRecovered(snap.lostDate); } catch (e) {}
         setRestoredTo(target);

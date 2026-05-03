@@ -364,7 +364,7 @@
   // After a successful inject, the calendar would still render the
   // missed days as empty cells — visually misleading because the chain
   // says they don't count anymore. Persist a per-day map of patched
-  // gap days so the calendar can mark them with the smiley overlay.
+  // gap days so the calendar can mark them with a checkmark overlay.
   //
   // Storage: localStorage `kb-streak-recovered-days` =
   //   { 'YYYY-MM-DD': ISO_recovery_at, ... }

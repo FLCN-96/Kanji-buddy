@@ -331,14 +331,13 @@
   box-shadow: 0 0 0 1px var(--accent-lime), 0 0 6px rgba(163,230,53,.55);
 }
 .dx-cal-pip.is-recovered::after {
-  content: '';
+  content: '\2713'; /* ✓ — unicode checkmark, no SVG/raster dependency */
   position: absolute; inset: 0;
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1IDUiIHNoYXBlLXJlbmRlcmluZz0iY3Jpc3BFZGdlcyI+PHJlY3QgeD0iMSIgeT0iMSIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI2EzZTYzNSIvPjxyZWN0IHg9IjMiIHk9IjEiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNhM2U2MzUiLz48cmVjdCB4PSIwIiB5PSIzIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjYTNlNjM1Ii8+PHJlY3QgeD0iNCIgeT0iMyIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI2EzZTYzNSIvPjxyZWN0IHg9IjEiIHk9IjQiIHdpZHRoPSIzIiBoZWlnaHQ9IjEiIGZpbGw9IiNhM2U2MzUiLz48L3N2Zz4=");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 84% 84%;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent-lime);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
 }
 .dx-cal-lbl { font-size: 9px; }
 .dx-cal-n   { color: var(--fg-3); font-size: 9px; }

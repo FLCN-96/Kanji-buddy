@@ -127,8 +127,8 @@ const DeckBreakdownPopover = ({ deck, picks, onClose }) => {
 // ── B4 — Streak history (calendar heatmap) ─────────────────────────
 const StreakHistoryPopover = ({ user, onClose }) => {
   const [days, setDays] = React.useState(null);
-  // Map of recovered days from the STREAK INJECT hotfix. Cells show a pixel
-  // smiley overlay so the calendar doesn't read as if those days were lost.
+  // Map of recovered days from the STREAK INJECT hotfix. Cells show a lime
+  // checkmark overlay so the calendar doesn't read as if those days were lost.
   const recovered = React.useMemo(() => (
     (window.StreakInject && window.StreakInject.readRecoveredDays())
       ? window.StreakInject.readRecoveredDays()

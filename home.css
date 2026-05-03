@@ -2481,12 +2481,11 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 }
 .kb-pop-cal-cell.is-on  { background: rgba(34,211,238,.55); border-color: var(--accent-cyan); }
 .kb-pop-cal-cell.is-hot { background: var(--accent-magenta); border-color: var(--accent-magenta); box-shadow: 0 0 6px rgba(255,61,255,.6); }
-/* Recovered (patched by STREAK INJECT) — keep the cell dark and let a
-   bright lime pixel-art smiley do the talking. Lime-on-lime at small
-   sizes was washing out with anti-aliasing; dark-on-bright is the only
-   way the 5×5 pixels stay legible inside a ~26px calendar cell.
-   shape-rendering="crispEdges" inside the SVG keeps the rects from
-   getting blurred by the rasterizer. */
+/* Patched-gap day: dark cell, lime border + glow, lime checkmark glyph
+   centered. Earlier rev tried a pixel-art smiley via SVG data URI but
+   the rasterized output was unreliable across iOS PWA installs (some
+   devices rendered a blank cell). A unicode checkmark is universally
+   rendered, scales with font, and reads clearly at calendar size. */
 .kb-pop-cal-cell.is-recovered {
   background: var(--bg-0);
   border-color: var(--accent-lime);
@@ -2496,23 +2495,23 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
     0 0 8px rgba(163,230,53,.55);
 }
 .kb-pop-cal-cell.is-recovered::after {
-  content: '';
+  content: '\2713'; /* ✓ */
   position: absolute; inset: 0;
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1IDUiIHNoYXBlLXJlbmRlcmluZz0iY3Jpc3BFZGdlcyI+PHJlY3QgeD0iMSIgeT0iMSIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI2EzZTYzNSIvPjxyZWN0IHg9IjMiIHk9IjEiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNhM2U2MzUiLz48cmVjdCB4PSIwIiB5PSIzIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjYTNlNjM1Ii8+PHJlY3QgeD0iNCIgeT0iMyIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI2EzZTYzNSIvPjxyZWN0IHg9IjEiIHk9IjQiIHdpZHRoPSIzIiBoZWlnaHQ9IjEiIGZpbGw9IiNhM2U2MzUiLz48L3N2Zz4=");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 84% 84%;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent-lime);
+  font-size: 12px;
+  font-weight: 700;
+  text-shadow: 0 0 4px rgba(163,230,53,.6);
   pointer-events: none;
+  font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
 }
 /* Defensive: if a real session was also logged for a recovered day,
-   the cell should still read as patched (dark + lime + smiley). */
+   the cell should still read as patched (dark + lime + checkmark). */
 .kb-pop-cal-cell.is-recovered.is-on,
 .kb-pop-cal-cell.is-recovered.is-hot {
   background: var(--bg-0);
 }
-/* Legend swatch reuses the same SVG so the legend reads consistently. */
+/* Legend swatch — same glyph, smaller, so the legend reads consistently. */
 .kb-pop-swatch.is-recovered {
   background: var(--bg-0);
   border-color: var(--accent-lime);
@@ -2520,15 +2519,14 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   box-shadow: 0 0 0 1px var(--accent-lime);
 }
 .kb-pop-swatch.is-recovered::after {
-  content: '';
+  content: '\2713';
   position: absolute; inset: 0;
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1IDUiIHNoYXBlLXJlbmRlcmluZz0iY3Jpc3BFZGdlcyI+PHJlY3QgeD0iMSIgeT0iMSIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI2EzZTYzNSIvPjxyZWN0IHg9IjMiIHk9IjEiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNhM2U2MzUiLz48cmVjdCB4PSIwIiB5PSIzIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjYTNlNjM1Ii8+PHJlY3QgeD0iNCIgeT0iMyIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI2EzZTYzNSIvPjxyZWN0IHg9IjEiIHk9IjQiIHdpZHRoPSIzIiBoZWlnaHQ9IjEiIGZpbGw9IiNhM2U2MzUiLz48L3N2Zz4=");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 84% 84%;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent-lime);
+  font-size: 9px;
+  font-weight: 700;
   pointer-events: none;
+  font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
 }
 
 /* B5 — full leech list */
