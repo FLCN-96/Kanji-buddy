@@ -419,18 +419,18 @@ const Diagnostics = () => {
         </Section>
 
         <Section title="STREAK INJECT // detection probes">
-          <Row k="detect-from-stale-date"
+          <Row k="stale-date"
                v={detectFromUser ? `lost ${detectFromUser.lostStreak}d, gap ${detectFromUser.gapDays}d` : '(no match)'}
                tone={detectFromUser ? 'ok' : 'dim'} />
-          <Row k="detect-from-sessions (filtered)"
+          <Row k="sessions (filtered)"
                v={detectFromHistory ? `lost ${detectFromHistory.lostStreak}d, gap ${detectFromHistory.gapDays}d` : '(no match)'}
                tone={detectFromHistory ? 'warn' : 'ok'}
-               hint={detectFromHistory ? 'gap still detected after applying recoveredDays overlay' : 'gap suppressed by recoveredDays — correct'} />
-          <Row k="detect-from-sessions (raw)"
+               hint={detectFromHistory ? 'gap leaks through recoveredDays filter' : null} />
+          <Row k="sessions (raw IDB)"
                v={detectFromHistoryRaw ? `lost ${detectFromHistoryRaw.lostStreak}d, gap ${detectFromHistoryRaw.gapDays}d` : '(no match)'}
                tone={detectFromHistoryRaw ? 'warn' : 'dim'}
-               hint={detectFromHistoryRaw ? 'IDB session history alone still shows a gap' : null} />
-          <Row k="canInjectNow(user)"
+               hint={detectFromHistoryRaw ? 'raw history has gap — filter should suppress' : null} />
+          <Row k="canInjectNow"
                v={canShow ? 'YES' : 'NO'}
                tone={canShow ? 'warn' : 'ok'} />
         </Section>
