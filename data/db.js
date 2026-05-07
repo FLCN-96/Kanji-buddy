@@ -70,7 +70,10 @@ const DB = {
   // ── user ──────────────────────────────────────────────────────────
 
   getUser() {
-    return rw('user_profile', 'readonly', s => s.get(1));
+    return rw('user_profile', 'readonly', s => s.get(1)).then(u => {
+      if (u) window._kbUserCache = u;
+      return u;
+    });
   },
 
   createUser(display_name) {
@@ -91,7 +94,10 @@ const DB = {
     return DB.getUser().then(user => {
       if (!user) return null;
       const next = { ...user, ...patch };
-      return rw('user_profile', 'readwrite', s => s.put(next)).then(() => next);
+      return rw('user_profile', 'readwrite', s => s.put(next)).then(() => {
+        window._kbUserCache = next;
+        return next;
+      });
     });
   },
 

@@ -195,10 +195,27 @@
   };
 
   // Live snapshot getter — returns null if expired (and clears it).
+  // Also clears if the user's live current_streak already exceeds the
+  // snapshot's lostStreak — that means the chain was rebuilt naturally
+  // (or via a previous inject) and the snapshot is stale. Reading the
+  // user record here is sync-only (we check window.DB._cachedUser if
+  // available, else skip) to keep this non-async.
   const getActiveSnapshot = () => {
     const snap = readSnapshot();
     if (!snap) return null;
     if (isExpired(snap)) { clearSnapshot(); return null; }
+    // Stale-streak guard: if the live streak is already higher than what
+    // the snapshot thought was lost, the break has been healed and the
+    // tile should not re-appear.
+    try {
+      const cachedUser = window._kbUserCache;
+      if (cachedUser && typeof cachedUser.current_streak === 'number') {
+        if (cachedUser.current_streak > snap.lostStreak) {
+          clearSnapshot();
+          return null;
+        }
+      }
+    } catch (e) {}
     return snap;
   };
 
