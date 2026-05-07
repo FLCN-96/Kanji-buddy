@@ -165,10 +165,41 @@ const Diagnostics = () => {
   const recoveredMap = SI ? SI.readRecoveredDays() : {};
   const recoveredCount = Object.keys(recoveredMap).length;
   const detectFromUser = SI ? SI.detectRecoverable(user) : null;
+  // Two probes: one with the recoveredDays overlay (what the live code uses)
+  // and one raw (no overlay) so we can see if session history still exposes
+  // the gap even after a successful inject.
   const detectFromHistory = SI && sessionsByDay.length
     ? SI.detectFromSessions(sessionsByDay, recoveredMap)
     : null;
+  const detectFromHistoryRaw = SI && sessionsByDay.length
+    ? SI.detectFromSessions(sessionsByDay)
+    : null;
   const canShow = SI ? SI.canInjectNow(user) : false;
+
+  // Gap day analysis — build a day-by-day table for the active gap window.
+  // Uses the snapshot's lostDate if available, else the detect result.
+  const gapSource = snap || detectFromHistoryRaw || detectFromUser;
+  const gapDays = (() => {
+    if (!gapSource || !gapSource.lostDate) return [];
+    const start = new Date(gapSource.lostDate);
+    if (isNaN(start.getTime())) return [];
+    start.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const rows = [];
+    let d = new Date(start.getTime() + 86400000);
+    while (d.getTime() < today.getTime() && rows.length < 60) {
+      const y = d.getFullYear(), mo = d.getMonth() + 1, dy = d.getDate();
+      const key = `${y}-${String(mo).padStart(2,'0')}-${String(dy).padStart(2,'0')}`;
+      const sbd = sessionsByDay.find(s => s.date === key);
+      rows.push({
+        date: key,
+        sessions: sbd ? sbd.count : 0,
+        recovered: !!recoveredMap[key],
+      });
+      d = new Date(d.getTime() + 86400000);
+    }
+    return rows;
+  })();
 
   // Days that are flagged as patched but ALSO have a real session — these
   // should never have been marked. Fixing them is the calendar half of
@@ -353,11 +384,23 @@ const Diagnostics = () => {
               <Row k="lostStreak"     v={`${snap.lostStreak}d`} tone="ok" />
               <Row k="lostDate"       v={fmtIso(snap.lostDate)} />
               <Row k="asOf"           v={fmtIso(snap.asOf)} />
-              <Row k="attempts (all)" v={String((snap.attempts || []).length)} />
-              <Row k="fails (this snap)" v={String((snap.attempts || []).filter(a => !a.success).length)} />
+              <Row k="days since lost" v={`${Math.max(0, daysBetween(snap.lostDate, now))}d`} />
+              <Row k="window remaining" v={`${Math.max(0, (SI?.WINDOW_DAYS || 14) - daysBetween(snap.lostDate, now))}d`} />
               <Row k="current odds"   v={`${Math.round((odds || 0) * 100)}%`} tone="ok" />
               <Row k="attempts left today" v={`${attemptsLeft}/${SI ? SI.ATTEMPTS_DAY : 3}`} tone={attemptsLeft > 0 ? 'ok' : 'fail'} />
-              <Row k="window remaining" v={`${Math.max(0, (SI?.WINDOW_DAYS || 14) - daysBetween(snap.lostDate, now))}d`} />
+              <Row k="attempts (all)" v={String((snap.attempts || []).length)} />
+              {(snap.attempts || []).length > 0 && (
+                <div className="dx-block">
+                  {(snap.attempts || []).map((a, i) => (
+                    <div key={i} className="dx-block-row">
+                      <span className={`dx-block-k${a.success ? '' : ' tone-warn'}`}>
+                        {a.success ? '✓' : '✕'} {a.day}
+                      </span>
+                      <span className="dx-block-v">{fmtIso(a.at)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           ) : (
             <Row k="snapshot" v="(none)" tone="dim" />
@@ -368,12 +411,48 @@ const Diagnostics = () => {
           <Row k="detect-from-stale-date"
                v={detectFromUser ? `lost ${detectFromUser.lostStreak}d, gap ${detectFromUser.gapDays}d` : '(no match)'}
                tone={detectFromUser ? 'ok' : 'dim'} />
-          <Row k="detect-from-sessions"
+          <Row k="detect-from-sessions (filtered)"
                v={detectFromHistory ? `lost ${detectFromHistory.lostStreak}d, gap ${detectFromHistory.gapDays}d` : '(no match)'}
-               tone={detectFromHistory ? 'ok' : 'dim'} />
+               tone={detectFromHistory ? 'warn' : 'ok'}
+               hint={detectFromHistory ? 'gap still detected after applying recoveredDays overlay' : 'gap suppressed by recoveredDays — correct'} />
+          <Row k="detect-from-sessions (raw)"
+               v={detectFromHistoryRaw ? `lost ${detectFromHistoryRaw.lostStreak}d, gap ${detectFromHistoryRaw.gapDays}d` : '(no match)'}
+               tone={detectFromHistoryRaw ? 'warn' : 'dim'}
+               hint={detectFromHistoryRaw ? 'IDB session history alone still shows a gap' : null} />
           <Row k="canInjectNow(user)"
                v={canShow ? 'YES' : 'NO'}
-               tone={canShow ? 'ok' : 'fail'} />
+               tone={canShow ? 'warn' : 'ok'} />
+        </Section>
+
+        <Section title="STREAK INJECT // gap analysis">
+          {gapSource ? (
+            <>
+              <Row k="source" v={snap ? 'live snapshot' : detectFromHistoryRaw ? 'raw session scan' : 'stale-date detect'} tone="dim" />
+              <Row k="lostDate" v={fmtIso(gapSource.lostDate)} />
+              <Row k="gap days total" v={String(gapDays.length)} />
+              <Row k="covered by sessions" v={String(gapDays.filter(d => d.sessions > 0).length)} tone={gapDays.every(d => d.sessions > 0) ? 'ok' : 'dim'} />
+              <Row k="covered by recoveredDays" v={String(gapDays.filter(d => d.recovered).length)} tone={gapDays.every(d => d.recovered) ? 'ok' : 'warn'} />
+              <Row k="still empty (neither)" v={String(gapDays.filter(d => !d.sessions && !d.recovered).length)} tone={gapDays.some(d => !d.sessions && !d.recovered) ? 'fail' : 'ok'} />
+              {gapDays.length > 0 && (
+                <div className="dx-block">
+                  {gapDays.map(d => {
+                    const status = d.sessions > 0 ? 'session' : d.recovered ? 'recovered' : 'EMPTY';
+                    const tone = d.sessions > 0 ? '' : d.recovered ? '' : ' tone-fail';
+                    return (
+                      <div key={d.date} className="dx-block-row">
+                        <span className={`dx-block-k${tone}`}>{d.date}</span>
+                        <span className={`dx-block-v${tone}`}>
+                          {d.sessions > 0 ? `${d.sessions} session${d.sessions > 1 ? 's' : ''}` : d.recovered ? '✓ patched' : '✕ empty gap'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          ) : (
+            <Row k="gap" v="no gap detected" tone="ok" />
+          )}
         </Section>
 
         <Section title="STREAK INJECT // recovered map">
