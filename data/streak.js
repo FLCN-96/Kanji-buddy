@@ -127,10 +127,10 @@
   // Odds, by contrast, ARE per-snapshot and so reset on a new snapshot.
   const SPENT_KEY_PREFIX  = 'kb-streak-inject-spent:';
   const WINDOW_DAYS   = 14;
-  const ATTEMPTS_DAY  = 3;
-  const BASE_ODDS     = 0.20;
+  const ATTEMPTS_DAY  = 99;  // DEBUG: uncapped for troubleshooting
+  const BASE_ODDS     = 1.00; // DEBUG: 100% success on accuracy pass
   const ODDS_STEP     = 0.05;
-  const MAX_ODDS      = 0.50;
+  const MAX_ODDS      = 1.00; // DEBUG: 100%
   // Brand-new operators must not see this tile — it would read as a punitive
   // glitch before they understand what a streak even is. Two complementary
   // gates: account age (proxies "established user") and a best_streak floor
