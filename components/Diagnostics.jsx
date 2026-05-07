@@ -166,7 +166,7 @@ const Diagnostics = () => {
   const recoveredCount = Object.keys(recoveredMap).length;
   const detectFromUser = SI ? SI.detectRecoverable(user) : null;
   const detectFromHistory = SI && sessionsByDay.length
-    ? SI.detectFromSessions(sessionsByDay)
+    ? SI.detectFromSessions(sessionsByDay, recoveredMap)
     : null;
   const canShow = SI ? SI.canInjectNow(user) : false;
 
