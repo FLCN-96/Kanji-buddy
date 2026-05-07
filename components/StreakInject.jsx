@@ -501,10 +501,18 @@ const StreakInjectApp = ({ cards }) => {
           safeTarget = Math.max(target, (liveUser && liveUser.current_streak) || 0);
         } catch (e) {}
         try { await window.DB.restoreStreakTo(safeTarget); } catch (e) {}
-        // Mark the missed days as recovered so the calendar can render the
-        // checkmark overlay instead of empty cells. Done BEFORE recordAttempt
-        // since that clears the snapshot we read lostDate from.
-        try { window.StreakInject.markGapRecovered(snap.lostDate); } catch (e) {}
+        // Mark only the true gap days (no real session) as recovered so the
+        // calendar renders the checkmark overlay on the right cells. Passing
+        // the session-day set ensures days that already have a real session
+        // are never stamped as "patched".
+        try {
+          let sessionDaySet;
+          try {
+            const sbd = await window.DB.getSessionsByDay(120);
+            sessionDaySet = new Set((sbd || []).filter(d => d && d.count > 0).map(d => d.date));
+          } catch (e) { sessionDaySet = undefined; }
+          window.StreakInject.markGapRecovered(snap.lostDate, sessionDaySet);
+        } catch (e) {}
         setRestoredTo(safeTarget);
         const after = window.StreakInject.recordAttempt(true);
         setSnapAfter(null);

@@ -391,17 +391,26 @@
   // (lostDate itself was a real session day; today gets a fresh
   // last_session_date via DB.restoreStreakTo so it's a real session day
   // too — only the in-between gap needs patching on the calendar.)
-  const markGapRecovered = (lostDateIso) => {
+  // sessionDaySet is an optional Set<'YYYY-MM-DD'> of days that already have
+  // real sessions — those days are never marked as patched because they aren't
+  // actually gaps. Without this guard every day from lostDate to today would be
+  // marked, stamping real session days as "recovered" when only the true gap
+  // days (no session) should carry the overlay.
+  const markGapRecovered = (lostDateIso, sessionDaySet) => {
     if (!lostDateIso) return;
     const start = new Date(lostDateIso); if (isNaN(start.getTime())) return;
     start.setHours(0,0,0,0);
     const today = new Date(); today.setHours(0,0,0,0);
     const map = readRecoveredDays();
     const at  = new Date().toISOString();
+    const hasSet = sessionDaySet instanceof Set;
     let d = new Date(start.getTime() + 86400000); // first gap day
     let added = 0;
-    while (d.getTime() < today.getTime() && added < 60) { // belt-and-suspenders cap
-      map[dayKey(d)] = at;
+    while (d.getTime() < today.getTime() && added < 60) {
+      const key = dayKey(d);
+      if (!hasSet || !sessionDaySet.has(key)) {
+        map[key] = at;
+      }
       d = new Date(d.getTime() + 86400000);
       added += 1;
     }
