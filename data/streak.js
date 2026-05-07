@@ -414,6 +414,46 @@
     try { localStorage.removeItem(RECOVERED_KEY); } catch (e) {}
   };
 
+  // Remove entries from the recovered-days map that overlap with real
+  // session days. A day with a real session was never a "patched gap" —
+  // marking it would mislead the calendar and (when combined with
+  // recalcStreakFromHistory) double-count its contribution to the chain.
+  // Returns { removed, kept } for diagnostics summary.
+  const repairRecoveredDays = (sessionsByDay) => {
+    const map = readRecoveredDays();
+    const keys = Object.keys(map);
+    if (!keys.length) return { removed: [], kept: [] };
+    const sessionSet = new Set(
+      (sessionsByDay || []).filter(d => d && d.count > 0).map(d => d.date)
+    );
+    const removed = [], kept = [];
+    for (const k of keys) {
+      if (sessionSet.has(k)) { removed.push(k); delete map[k]; }
+      else kept.push(k);
+    }
+    if (removed.length) writeRecoveredDays(map);
+    return { removed, kept };
+  };
+
+  // Recompute current streak from session history + recovered-day map.
+  // A day counts as a chain link if it has a real session (count > 0)
+  // OR is flagged as a patched gap day. Walks backwards from the newest
+  // entry; the first day that is neither a session nor a patched gap
+  // breaks the chain. sessionsByDay must be ordered oldest→newest
+  // (DB.getSessionsByDay output) and SHOULD include today's slot.
+  const recalcStreakFromHistory = (sessionsByDay, recoveredDays) => {
+    const arr = Array.isArray(sessionsByDay) ? sessionsByDay : [];
+    const rec = recoveredDays || readRecoveredDays();
+    let chain = 0;
+    for (let i = arr.length - 1; i >= 0; i--) {
+      const d = arr[i];
+      if (!d) break;
+      if ((d.count > 0) || !!rec[d.date]) chain++;
+      else break;
+    }
+    return chain;
+  };
+
   window.StreakInject = {
     SNAPSHOT_KEY, SPENT_KEY_PREFIX,
     WINDOW_DAYS, ATTEMPTS_DAY,
@@ -439,5 +479,7 @@
     isRecoveredDay,
     markGapRecovered,
     clearRecoveredDays,
+    repairRecoveredDays,
+    recalcStreakFromHistory,
   };
 })();

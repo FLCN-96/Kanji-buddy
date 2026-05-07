@@ -245,6 +245,47 @@
   font-size: 11px;
   letter-spacing: .03em;
 }
+.dx-note.tone-ok {
+  border-color: var(--accent-lime);
+  background: rgba(163,230,53,.06);
+  color: var(--accent-lime);
+}
+
+/* ── Repair action row (recovered-map fix-up) ─────────────────── */
+.dx-actions {
+  display: flex; align-items: center; gap: var(--sp-3);
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.dx-btn-repair {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  padding: 6px 12px;
+  background: rgba(245,165,36,.08);
+  color: var(--accent-amber);
+  border: 1px solid var(--accent-amber);
+  cursor: pointer;
+  text-shadow: 0 0 6px rgba(245,165,36,.4);
+  transition: background .12s linear;
+}
+.dx-btn-repair:hover,
+.dx-btn-repair:focus-visible {
+  background: rgba(245,165,36,.18);
+  outline: none;
+}
+.dx-actions-hint {
+  font-size: 11px;
+  color: var(--fg-2);
+  letter-spacing: .03em;
+}
+
+/* Warn-toned key in a block row (recovered-map overlap entries). */
+.dx-block-k.tone-warn {
+  color: var(--accent-amber);
+  text-shadow: 0 0 4px rgba(245,165,36,.35);
+}
 
 /* ── Block (key/value list, monospaced) ──────────────────────── */
 .dx-block {

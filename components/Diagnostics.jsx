@@ -64,6 +64,7 @@ const Diagnostics = () => {
   const [scores, setScores] = React.useState([]);
   const [loaded, setLoaded] = React.useState(false);
   const [tick, setTick] = React.useState(0);
+  const [repairResult, setRepairResult] = React.useState(null);
 
   const refresh = React.useCallback(async () => {
     try {
@@ -71,8 +72,11 @@ const Diagnostics = () => {
       await window.DB.open();
       const u = await window.DB.getUser();
       const cs = await window.DB.getAllCardStates();
+      // Pull a long window so recalcStreakFromHistory can see the full
+      // chain — a user with a 60-day streak shouldn't be capped by the
+      // diagnostics fetch.
       const sd = window.DB.getSessionsByDay
-        ? await window.DB.getSessionsByDay(20).catch(() => [])
+        ? await window.DB.getSessionsByDay(120).catch(() => [])
         : [];
       // Pull raw sessions list for mode breakdown.
       const ss = await new Promise((resolve) => {
@@ -165,6 +169,44 @@ const Diagnostics = () => {
     ? SI.detectFromSessions(sessionsByDay)
     : null;
   const canShow = SI ? SI.canInjectNow(user) : false;
+
+  // Days that are flagged as patched but ALSO have a real session — these
+  // should never have been marked. Fixing them is the calendar half of
+  // the inject patch.
+  const sessionDaySet = new Set(
+    sessionsByDay.filter(d => d && d.count > 0).map(d => d.date)
+  );
+  const recoveredOverlap = Object.keys(recoveredMap).filter(k => sessionDaySet.has(k));
+  // Recompute what the streak SHOULD be from sessions + recovered-day map.
+  // If this is higher than the live current_streak, the user's chain was
+  // under-restored by a buggy inject and the repair should bump it up.
+  const recalcStreak = SI && sessionsByDay.length
+    ? SI.recalcStreakFromHistory(sessionsByDay, recoveredMap)
+    : null;
+  const liveStreak = user?.current_streak || 0;
+  const streakMismatch = recalcStreak != null && recalcStreak !== liveStreak;
+  const needsRepair = recoveredOverlap.length > 0 || (streakMismatch && recalcStreak > liveStreak);
+
+  const onRepair = async () => {
+    if (!SI || !window.DB) return;
+    const fixedMap = SI.repairRecoveredDays(sessionsByDay);
+    // Recalculate against the freshly-cleaned map.
+    const newRec = SI.readRecoveredDays();
+    const correctStreak = SI.recalcStreakFromHistory(sessionsByDay, newRec);
+    const before = (user && user.current_streak) || 0;
+    let streakChanged = false;
+    if (correctStreak > before) {
+      try { await window.DB.restoreStreakTo(correctStreak); streakChanged = true; } catch (e) {}
+    }
+    setRepairResult({
+      removed: fixedMap.removed,
+      kept: fixedMap.kept,
+      streakBefore: before,
+      streakAfter: streakChanged ? correctStreak : before,
+      streakChanged,
+    });
+    setTick(t => t + 1);
+  };
 
   // Why is/isn't it showing? Build a list of pass/fail checks.
   const tileChecks = [];
@@ -335,14 +377,49 @@ const Diagnostics = () => {
 
         <Section title="STREAK INJECT // recovered map">
           <Row k="entries" v={String(recoveredCount)} />
+          <Row
+            k="overlap with real sessions"
+            v={String(recoveredOverlap.length)}
+            tone={recoveredOverlap.length > 0 ? 'warn' : 'ok'}
+            hint={recoveredOverlap.length > 0 ? 'days flagged as patched that actually had a session' : null}
+          />
+          <Row
+            k="recalculated streak"
+            v={recalcStreak == null ? '—' : `${recalcStreak}d`}
+            tone={recalcStreak == null ? 'dim' : (streakMismatch ? 'warn' : 'ok')}
+            hint={streakMismatch
+              ? `live current_streak is ${liveStreak}d — repair will ${recalcStreak > liveStreak ? 'raise to ' + recalcStreak + 'd' : 'leave alone (won\'t reduce)'}`
+              : null}
+          />
           {recoveredCount > 0 && (
             <div className="dx-block">
-              {Object.keys(recoveredMap).sort().map(d => (
-                <div key={d} className="dx-block-row">
-                  <span className="dx-block-k">{d}</span>
-                  <span className="dx-block-v">{fmtIso(recoveredMap[d])}</span>
-                </div>
-              ))}
+              {Object.keys(recoveredMap).sort().map(d => {
+                const overlap = sessionDaySet.has(d);
+                return (
+                  <div key={d} className="dx-block-row">
+                    <span className={`dx-block-k${overlap ? ' tone-warn' : ''}`}>
+                      {overlap ? '⚠ ' : ''}{d}
+                    </span>
+                    <span className="dx-block-v">{fmtIso(recoveredMap[d])}{overlap ? ' · real session' : ''}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {needsRepair && (
+            <div className="dx-actions">
+              <button className="dx-btn-repair" onClick={onRepair}>▸ REPAIR</button>
+              <span className="dx-actions-hint">
+                {recoveredOverlap.length > 0 && `clears ${recoveredOverlap.length} bad mark${recoveredOverlap.length === 1 ? '' : 's'}`}
+                {recoveredOverlap.length > 0 && streakMismatch && recalcStreak > liveStreak && ' · '}
+                {streakMismatch && recalcStreak > liveStreak && `raises streak ${liveStreak}d→${recalcStreak}d`}
+              </span>
+            </div>
+          )}
+          {repairResult && (
+            <div className="dx-note tone-ok">
+              ▸ repair complete · removed {repairResult.removed.length} · kept {repairResult.kept.length}
+              {repairResult.streakChanged && ` · streak ${repairResult.streakBefore}d → ${repairResult.streakAfter}d`}
             </div>
           )}
         </Section>
