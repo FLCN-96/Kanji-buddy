@@ -180,15 +180,16 @@ const Diagnostics = () => {
   // Recompute what the streak SHOULD be from sessions + recovered-day map.
   // If this is higher than the live current_streak, the user's chain was
   // under-restored by a buggy inject and the repair should bump it up.
-  const recalcStreak = SI && sessionsByDay.length
+  const recalcStreak = SI && typeof SI.recalcStreakFromHistory === 'function' && sessionsByDay.length
     ? SI.recalcStreakFromHistory(sessionsByDay, recoveredMap)
     : null;
   const liveStreak = user?.current_streak || 0;
   const streakMismatch = recalcStreak != null && recalcStreak !== liveStreak;
-  const needsRepair = recoveredOverlap.length > 0 || (streakMismatch && recalcStreak > liveStreak);
+  const hasRepairFns = SI && typeof SI.repairRecoveredDays === 'function' && typeof SI.recalcStreakFromHistory === 'function';
+  const needsRepair = hasRepairFns && (recoveredOverlap.length > 0 || (streakMismatch && recalcStreak > liveStreak));
 
   const onRepair = async () => {
-    if (!SI || !window.DB) return;
+    if (!SI || !window.DB || typeof SI.repairRecoveredDays !== 'function' || typeof SI.recalcStreakFromHistory !== 'function') return;
     const fixedMap = SI.repairRecoveredDays(sessionsByDay);
     // Recalculate against the freshly-cleaned map.
     const newRec = SI.readRecoveredDays();
