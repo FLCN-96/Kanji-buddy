@@ -381,7 +381,11 @@ const Diagnostics = () => {
         <Section title="STREAK INJECT // snapshot">
           {snap ? (
             <>
-              <Row k="lostStreak"     v={`${snap.lostStreak}d`} tone="ok" />
+              <Row k="lostStreak"     v={`${snap.lostStreak}d`}
+                tone={(user && snap.lostStreak < (user.current_streak || 0)) ? 'warn' : 'ok'}
+                hint={(user && snap.lostStreak < (user.current_streak || 0))
+                  ? `current streak (${user.current_streak}d) already exceeds lostStreak — snapshot is stale`
+                  : null} />
               <Row k="lostDate"       v={fmtIso(snap.lostDate)} />
               <Row k="asOf"           v={fmtIso(snap.asOf)} />
               <Row k="days since lost" v={`${Math.max(0, daysBetween(snap.lostDate, now))}d`} />
@@ -401,6 +405,13 @@ const Diagnostics = () => {
                   ))}
                 </div>
               )}
+              <div className="dx-actions">
+                <button className="dx-btn-repair" onClick={() => {
+                  if (SI) { try { SI.clearSnapshot(); } catch(e) {} }
+                  setTick(t => t + 1);
+                }}>▸ CLEAR SNAPSHOT</button>
+                <span className="dx-actions-hint">removes kb-streak-recoverable · tile will hide if no new break detected</span>
+              </div>
             </>
           ) : (
             <Row k="snapshot" v="(none)" tone="dim" />
