@@ -307,7 +307,7 @@ const Diagnostics = () => {
           <Row k="created_at"        v={fmtIso(user?.created_at)} />
           <Row k="account age"       v={`${accountAgeDays ?? '—'}d`} tone={ageOk ? 'ok' : 'warn'} />
           <Row k="total_xp"          v={String(user?.total_xp ?? 0)} />
-          <Row k="rank"              v={(window.Rank ? window.Rank.fromXp(user?.total_xp || 0).label : '—')} />
+          <Row k="rank"              v={(window.Rank ? (window.Rank.getRankForXp(user?.total_xp || 0) || {}).label || '—' : '—')} />
         </Section>
 
         <Section title="TODAY">
