@@ -227,27 +227,37 @@
   // by today's session. Used as the fallback path when the user has
   // already run today (so detectRecoverable can't see the stale-date
   // signal) but no snapshot was captured at break time.
-  const detectFromSessions = (sessionsByDay) => {
+  //
+  // recoveredDays is an optional map of { 'YYYY-MM-DD': timestamp } from
+  // readRecoveredDays(). Days in that map count as filled for gap detection
+  // so a successfully-injected gap doesn't register as a new break.
+  const detectFromSessions = (sessionsByDay, recoveredDays) => {
     const arr = Array.isArray(sessionsByDay) ? sessionsByDay : [];
     if (arr.length < 3) return null;
+    const rec = (recoveredDays && typeof recoveredDays === 'object') ? recoveredDays : null;
+    // Treat recovered-map days as having a session so a patched gap is
+    // invisible to the algorithm (it's no longer a real gap).
+    const effective = rec
+      ? arr.map(d => ({ ...d, count: d.count || (rec[d.date] ? 1 : 0) }))
+      : arr;
     // Walk from end: skip the current chain (consecutive session days
     // ending today). i lands on the last gap-day of the most recent gap.
-    let i = arr.length - 1;
-    while (i >= 0 && arr[i].count >= 1) i--;
+    let i = effective.length - 1;
+    while (i >= 0 && effective[i].count >= 1) i--;
     if (i < 0) return null;
     const gapEnd = i;
-    while (i >= 0 && arr[i].count === 0) i--;
+    while (i >= 0 && effective[i].count === 0) i--;
     const gapStart = i + 1;
     const gapLen = gapEnd - gapStart + 1;
     if (gapLen < 1 || gapLen > WINDOW_DAYS) return null;
     // Walk back through the broken chain.
     let chainLen = 0;
-    while (i >= 0 && arr[i].count >= 1) { chainLen++; i--; }
+    while (i >= 0 && effective[i].count >= 1) { chainLen++; i--; }
     if (chainLen < 2) return null;
     // lostDate = the last day of the broken chain (day before the gap).
     // Convert YYYY-MM-DD to a midnight-local ISO so daysBetween agrees
     // with the rest of the codebase.
-    const dStr = arr[gapStart - 1].date;
+    const dStr = effective[gapStart - 1].date;
     const lostDateIso = new Date(dStr + 'T00:00:00').toISOString();
     return { lostStreak: chainLen, lostDate: lostDateIso, gapDays: gapLen };
   };
@@ -265,7 +275,10 @@
     // Pull a few extra days beyond the window so the chain length on the
     // far edge isn't truncated.
     return window.DB.getSessionsByDay(WINDOW_DAYS + 14).then(arr => {
-      const det = detectFromSessions(arr || []);
+      // Pass the recovered-days map so already-patched gaps are treated as
+      // filled — prevents a successful inject from immediately re-writing a
+      // snapshot for the same gap when Home calls ensureSnapshotAsync.
+      const det = detectFromSessions(arr || [], readRecoveredDays());
       if (!det) return null;
       const snap = {
         lostStreak: det.lostStreak,
