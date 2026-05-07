@@ -490,12 +490,22 @@ const StreakInjectApp = ({ cards }) => {
           ? Math.max(1, Math.round((today - lostDay) / 86400000))
           : 1;
         const target = lostStreak + daysSinceLost;
-        try { await window.DB.restoreStreakTo(target); } catch (e) {}
+        // Guard against streak regression. A stale snapshot (from a
+        // previous break the user already recovered from naturally) can
+        // produce a target lower than the live current_streak. Without
+        // this max(), restoreStreakTo would shrink the chain — a user
+        // sitting at 7d would drop to 6d if lostStreak=5 + daysSinceLost=1.
+        let safeTarget = target;
+        try {
+          const liveUser = await window.DB.getUser();
+          safeTarget = Math.max(target, (liveUser && liveUser.current_streak) || 0);
+        } catch (e) {}
+        try { await window.DB.restoreStreakTo(safeTarget); } catch (e) {}
         // Mark the missed days as recovered so the calendar can render the
         // checkmark overlay instead of empty cells. Done BEFORE recordAttempt
         // since that clears the snapshot we read lostDate from.
         try { window.StreakInject.markGapRecovered(snap.lostDate); } catch (e) {}
-        setRestoredTo(target);
+        setRestoredTo(safeTarget);
         const after = window.StreakInject.recordAttempt(true);
         setSnapAfter(null);
         try {

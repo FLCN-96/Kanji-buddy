@@ -303,14 +303,17 @@ const DB = {
           if (!s || !s.date) continue;
           const d = new Date(s.date);
           if (isNaN(d.getTime())) continue;
-          const key = d.toISOString().slice(0, 10);
+          // Use local date so calendar slots match the user's timezone.
+          const y = d.getFullYear(), mo = d.getMonth() + 1, dy = d.getDate();
+          const key = `${y}-${String(mo).padStart(2,'0')}-${String(dy).padStart(2,'0')}`;
           counts.set(key, (counts.get(key) || 0) + 1);
         }
         const out = [];
         const today = new Date(); today.setHours(0,0,0,0);
         for (let i = n - 1; i >= 0; i--) {
           const day = new Date(today.getTime() - i * 86400000);
-          const key = day.toISOString().slice(0, 10);
+          const y = day.getFullYear(), mo = day.getMonth() + 1, dy = day.getDate();
+          const key = `${y}-${String(mo).padStart(2,'0')}-${String(dy).padStart(2,'0')}`;
           out.push({ date: key, count: counts.get(key) || 0 });
         }
         resolve(out);
