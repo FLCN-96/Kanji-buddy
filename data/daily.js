@@ -79,7 +79,7 @@
   //
   // Budget for a small deck (5 cards by default):
   //   - 2 NEW     (cards the operator has never reviewed)
-  //   - 2 DUE     (card_states whose due_date ≤ now, lowest lapses first)
+  //   - 2 DUE     (card_states whose due_date ≤ now, oldest due_date first)
   //   - 1 LEECH   (card_states with lapses ≥ LEECH_LAPSES)
   //
   // Empty slots cascade: leech → due → new (or the reverse) so we always

@@ -285,7 +285,7 @@ const LeechPanel = ({ cards, states }) => {
               <span className="kb-leech-body">
                 <span className="kb-leech-m">{first || '—'}</span>
                 <span className="kb-leech-stats">
-                  <span className="kb-leech-lap">×{state.lapses || 0} lapses</span>
+                  <span className="kb-leech-lap">×{Math.floor(state.lapses || 0)} lapses</span>
                   <span className="kb-leech-sep">·</span>
                   <span className="kb-leech-int">{nextLbl}</span>
                 </span>

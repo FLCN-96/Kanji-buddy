@@ -146,7 +146,8 @@ const Diagnostics = () => {
     s.due_date && s.due_date <= now.toISOString() &&
     (!s.last_reviewed || fmtDayKey(s.last_reviewed) !== todayKey)
   ).length;
-  const leechCount = cardStates.filter(s => (s.lapses || 0) >= 3).length;
+  const leechThreshold = (window.Daily?.LEECH_LAPSES) ?? 3;
+  const leechCount = cardStates.filter(s => (s.lapses || 0) >= leechThreshold).length;
   const matureCount = cardStates.filter(s => (s.interval_days || 0) >= 21).length;
   const youngCount = cardStates.filter(s => (s.interval_days || 0) < 21 && (s.reviews || 0) >= 1).length;
   const newButTouched = cardStates.filter(s => (s.reviews || 0) === 0).length;
@@ -364,7 +365,7 @@ const Diagnostics = () => {
         <Section title="CARD STATES">
           <Row k="total seen"         v={String(totalSeen)} />
           <Row k="due now"            v={String(dueNowCount)} />
-          <Row k="leeches (≥3 lapses)" v={String(leechCount)} tone={leechCount > 0 ? 'warn' : 'ok'} />
+          <Row k={`leeches (≥${leechThreshold} lapses)`} v={String(leechCount)} tone={leechCount > 0 ? 'warn' : 'ok'} />
           <Row k="mature (≥21d)"      v={String(matureCount)} />
           <Row k="young (<21d)"       v={String(youngCount)} />
           <Row k="states w/ 0 reviews" v={String(newButTouched)} tone="dim" />

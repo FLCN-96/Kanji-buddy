@@ -20,6 +20,13 @@
 //     flat-resetting to 1d graduation — so a 60d card that slipped and
 //     is immediately recalled comes back in ~15 days, not 1. Preserves
 //     the "cost already paid" on stable cards without ignoring the slip.
+//   • LEECH RECOVERY: lapses is a fractional float, not an int counter.
+//     Each pass shaves it: easy −1.0, ok −0.5, hard −0.25 (floored at 0).
+//     Each miss still adds +1. So a card stuck at lapses=4 escapes the
+//     ≥3 leech threshold after roughly 3 easy / 6 ok / 12 hard verdicts
+//     (or any mix), and a single miss undoes ~1 ok + 1 hard worth of
+//     work. Display sites floor for "×N lapses" chips; threshold checks
+//     (`>= 3`) compare correctly against floats unchanged.
 //
 // Lapse path (q < 3): interval resets to 0 (6h same-day relearn),
 // reviews counter resets to 0, lapses++, ease decreases.
@@ -43,6 +50,10 @@
   const MISS_EASE_DROP = 0.20;
   const HARD_EASE_DROP = 0.15;
   const EASY_EASE_GAIN = 0.15;
+  // Fractional lapse-recovery weights — see header for rationale.
+  const LAPSE_RECOVER_HARD = 0.25;
+  const LAPSE_RECOVER_OK   = 0.50;
+  const LAPSE_RECOVER_EASY = 1.00;
 
   function fuzzInterval(interval) {
     if (interval < FUZZ_THRESHOLD) return interval;
@@ -79,7 +90,10 @@
       nextLapsedFrom = prevInterval >= MATURE_DAYS ? prevInterval : 0;
     } else {
       nextReviews = prevReviews + 1;
-      nextLapses  = prevLapses;
+      const recover = q === 5 ? LAPSE_RECOVER_EASY
+                    : q === 4 ? LAPSE_RECOVER_OK
+                    :           LAPSE_RECOVER_HARD; // q === 3
+      nextLapses  = Math.max(0, prevLapses - recover);
 
       if (nextReviews === 1 && lapsedFrom >= MATURE_DAYS) {
         // Post-lapse recovery — reinstate a meaningful interval instead

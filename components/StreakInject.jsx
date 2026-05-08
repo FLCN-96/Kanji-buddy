@@ -28,12 +28,13 @@ const buildInjectDeck = (cards, states, n) => {
   const seenStates = (states || []).filter(s => s && s.idx != null && byIdx.has(s.idx));
   const nowIso = new Date().toISOString();
 
+  const leechThreshold = (window.Daily?.LEECH_LAPSES) ?? 3;
   const leech = [];
   const due   = [];
   const seen  = [];
   for (const s of seenStates) {
     seen.push(s);
-    if ((s.lapses || 0) >= 3) leech.push(s);
+    if ((s.lapses || 0) >= leechThreshold) leech.push(s);
     else if (s.due_date && s.due_date <= nowIso) due.push(s);
   }
   due.sort((a, b) => (a.due_date || '').localeCompare(b.due_date || ''));

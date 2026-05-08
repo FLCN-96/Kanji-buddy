@@ -137,10 +137,13 @@ const DB = {
   // Top-N cards sorted by lapse count — feeds the Home leech panel.
   // Threshold mirrors Daily.LEECH_LAPSES (default 3) so what's called a
   // leech on Home matches the buckets in daily-deck selection.
-  getLeeches(limit = 3, threshold = 3) {
+  // window.Daily isn't available at db.js load time (it loads after this
+  // file), so we resolve it inside the function body at call time.
+  getLeeches(limit = 3, threshold) {
+    const t = threshold ?? ((typeof window !== 'undefined' && window.Daily?.LEECH_LAPSES) ?? 3);
     return DB.getAllCardStates().then(states =>
       (states || [])
-        .filter(s => (s.lapses || 0) >= threshold)
+        .filter(s => (s.lapses || 0) >= t)
         .sort((a, b) => (b.lapses || 0) - (a.lapses || 0))
         .slice(0, limit)
     );

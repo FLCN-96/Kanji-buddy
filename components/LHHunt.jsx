@@ -35,8 +35,9 @@ const LHHunt = ({ leech, stage, stageIdx, onPick, feedback, isUnseen }) => {
     : stage.kind === 'reading' ? '▸ DECODE // VOICE'
     : '▸ PROVE // FIELD USE';
   const tier = TIER_LETTERS[card.jlpt] || 'D';
-  const lapses = leech.lapses || 0;
-  const bleedCls = lapses >= 3 ? 'lh-hunt-target-cont' : lapses >= 1 ? 'lh-hunt-target-jlpt' : 'lh-hunt-target-eyebrow';
+  const lapses = Math.floor(leech.lapses || 0);
+  const leechThreshold = (window.Daily?.LEECH_LAPSES) ?? 3;
+  const bleedCls = lapses >= leechThreshold ? 'lh-hunt-target-cont' : lapses >= 1 ? 'lh-hunt-target-jlpt' : 'lh-hunt-target-eyebrow';
 
   return (
     <div className="lh-hunt" data-screen-label={`lh-hunt-${stage.kind}`}>

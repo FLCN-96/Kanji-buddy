@@ -192,8 +192,9 @@ const LeechListPopover = ({ cards, states, onClose }) => {
   const rows = React.useMemo(() => {
     if (!cards || !Array.isArray(states)) return [];
     const byIdx = new Map(cards.map(c => [c.idx, c]));
+    const threshold = (window.Daily?.LEECH_LAPSES) ?? 3;
     return (states || [])
-      .filter(s => (s.lapses || 0) >= 3)
+      .filter(s => (s.lapses || 0) >= threshold)
       .sort((a, b) => (b.lapses || 0) - (a.lapses || 0))
       .map(s => ({ state: s, card: byIdx.get(s.idx) }))
       .filter(x => x.card);
@@ -214,7 +215,7 @@ const LeechListPopover = ({ cards, states, onClose }) => {
                 <span className="kb-pop-leech-meta">
                   <span className="kb-pop-leech-m">{first || '—'}</span>
                   <span className="kb-pop-leech-tags">
-                    <span>×{state.lapses || 0} lapses</span>
+                    <span>×{Math.floor(state.lapses || 0)} lapses</span>
                     <span className="kb-pop-leech-sep">·</span>
                     <span>next {nextLbl}</span>
                     <span className="kb-pop-leech-sep">·</span>

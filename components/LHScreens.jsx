@@ -136,10 +136,11 @@ const LHRowGlyphSub = ({ leech, idx }) => {
 const BOUNTY_TIERS = { 5: 'd', 4: 'c', 3: 'b', 2: 'a', 1: 's' };
 
 const LHLeechRow = ({ leech, onEngage, idx }) => {
-  const lapses = leech.lapses || 0;
+  const lapses = Math.floor(leech.lapses || 0);
   const filled = Math.min(lapses, 8);
   const tier = BOUNTY_TIERS[leech.card.jlpt] || 'd';
-  const bleedCls = lapses >= 5 ? 'is-bad' : lapses >= 3 ? 'is-warn' : '';
+  const leechThreshold = (window.Daily?.LEECH_LAPSES) ?? 3;
+  const bleedCls = lapses >= 5 ? 'is-bad' : lapses >= leechThreshold ? 'is-warn' : '';
   return (
     <div className={`lh-row lh-row-${leech.status}`} data-screen-label={`lh-leech-${idx}`}>
       <div className="lh-row-idx">#{String(idx+1).padStart(2,'0')}</div>
