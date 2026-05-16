@@ -1,0 +1,319 @@
+/* Dictionary — exploratory list-and-detail browser for the derived
+   top-25 words per kanji. Inherits the cyberpunk shell + section
+   patterns from home.css; only adds page-specific bits here. */
+
+.kb-dict-back {
+  color: var(--fg-2);
+  background: transparent;
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: lowercase;
+  padding: 4px 8px;
+  border: 1px solid var(--line-dim);
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-snap),
+              border-color var(--dur-fast) var(--ease-snap);
+}
+@media (hover: hover) {
+  .kb-dict-back:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); }
+}
+.kb-dict-back:focus-visible {
+  outline: none;
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+/* ─── list intro ─── */
+.kb-dict-intro {
+  padding: var(--sp-3);
+  border: 1px solid var(--line-dim);
+  background: var(--bg-1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.kb-dict-intro-line {
+  color: var(--accent-cyan);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.kb-dict-intro-sub {
+  color: var(--fg-2);
+  font-size: 12px;
+  letter-spacing: .02em;
+}
+
+/* ─── tier groups ─── */
+.kb-dict-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/* ─── kanji grid ─── */
+.kb-dict-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 6px;
+}
+.kb-dict-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--bg-1);
+  border: 1px solid var(--line-dim);
+  color: var(--fg-0);
+  font-family: var(--font-jp-serif);
+  font-weight: var(--fw-bold);
+  font-size: 28px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all var(--dur-fast) var(--ease-snap);
+  -webkit-tap-highlight-color: transparent;
+}
+.kb-dict-cell-k {
+  display: block;
+}
+.kb-dict-cell-meta {
+  position: absolute;
+  bottom: 2px; right: 4px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--fg-3);
+  letter-spacing: .04em;
+  font-weight: var(--fw-regular);
+}
+@media (hover: hover) {
+  .kb-dict-cell:hover {
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+    box-shadow: 0 0 12px rgba(34,211,238,.18);
+  }
+  .kb-dict-cell:hover .kb-dict-cell-meta { color: var(--fg-1); }
+}
+.kb-dict-cell:active {
+  transform: scale(.96);
+}
+.kb-dict-cell:focus-visible {
+  outline: none;
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+/* ─── detail view ─── */
+.kb-dict-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.kb-dict-detail-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-4);
+  padding: var(--sp-3);
+  border: 1px solid var(--accent-cyan);
+  background:
+    linear-gradient(180deg, rgba(34,211,238,.08), transparent 40%),
+    var(--bg-1);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 0 18px rgba(34,211,238,.10);
+  align-items: center;
+}
+.kb-dict-detail-k {
+  font-family: var(--font-jp-serif);
+  font-weight: var(--fw-bold);
+  font-size: 96px;
+  line-height: 1;
+  color: var(--fg-0);
+  text-shadow: 0 0 18px rgba(34,211,238,.35);
+}
+.kb-dict-detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.kb-dict-detail-mean {
+  color: var(--fg-0);
+  font-size: 14px;
+  letter-spacing: .04em;
+  line-height: var(--lh-snug);
+}
+.kb-dict-detail-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.kb-dict-detail-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: lowercase;
+  color: var(--fg-1);
+  border: 1px solid var(--line-dim);
+  padding: 2px 6px;
+}
+.kb-dict-detail-tag-dim {
+  color: var(--fg-3);
+}
+
+/* ─── blocks (readings, examples, derived) ─── */
+.kb-dict-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/* readings */
+.kb-dict-rdgroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--line-dim);
+  background: var(--bg-1);
+}
+.kb-dict-rdrow {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: var(--sp-3);
+  align-items: start;
+}
+.kb-dict-rdlbl {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+  padding-top: 4px;
+}
+.kb-dict-rds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.kb-dict-rd {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--line-dim);
+  background: var(--bg-0);
+  font-size: 12px;
+}
+.kb-dict-rd.is-main {
+  border-color: var(--accent-magenta);
+  background: var(--accent-magenta-bg);
+}
+.kb-dict-rd-k {
+  font-family: var(--font-jp-sans);
+  color: var(--accent-magenta);
+  font-size: 13px;
+}
+.kb-dict-rd-g {
+  font-family: var(--font-mono);
+  color: var(--fg-2);
+  font-size: 10px;
+  letter-spacing: .04em;
+}
+.kb-dict-empty {
+  color: var(--fg-3);
+  font-size: 11px;
+  font-style: italic;
+  padding-top: 4px;
+}
+
+/* word lists (examples + derived) */
+.kb-dict-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line-dim);
+  background: var(--bg-1);
+}
+.kb-dict-list-numbered .kb-dict-item {
+  grid-template-columns: 28px auto auto 1fr;
+}
+.kb-dict-item {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: var(--sp-3);
+  align-items: baseline;
+  padding: 8px var(--sp-3);
+  border-bottom: 1px dashed var(--line-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.kb-dict-item:last-child {
+  border-bottom: none;
+}
+.kb-dict-item-rank {
+  color: var(--fg-3);
+  font-size: 10px;
+  letter-spacing: .04em;
+}
+.kb-dict-item-w {
+  font-family: var(--font-jp-sans);
+  font-weight: var(--fw-medium);
+  font-size: 15px;
+  color: var(--fg-0);
+  white-space: nowrap;
+}
+.kb-dict-item-r {
+  font-family: var(--font-jp-sans);
+  color: var(--accent-magenta);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.kb-dict-item-m {
+  color: var(--fg-1);
+  font-size: 12px;
+  letter-spacing: .01em;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.kb-dict-empty-block {
+  padding: var(--sp-3);
+  border: 1px dashed var(--line-dim);
+  background: var(--bg-1);
+  color: var(--fg-2);
+  font-size: 12px;
+  font-style: italic;
+  text-align: center;
+}
+
+/* ─── narrow screens: stack the detail header ─── */
+@media (max-width: 480px) {
+  .kb-dict-detail-head {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: var(--sp-3);
+  }
+  .kb-dict-detail-meta {
+    align-items: center;
+  }
+  .kb-dict-detail-k {
+    font-size: 72px;
+  }
+  .kb-dict-item {
+    grid-template-columns: auto auto;
+    grid-template-areas:
+      "w r"
+      "m m";
+  }
+  .kb-dict-list-numbered .kb-dict-item {
+    grid-template-columns: 24px auto auto;
+    grid-template-areas:
+      "rank w r"
+      ".    m m";
+  }
+  .kb-dict-item-rank { grid-area: rank; }
+  .kb-dict-item-w { grid-area: w; }
+  .kb-dict-item-r { grid-area: r; }
+  .kb-dict-item-m { grid-area: m; }
+}

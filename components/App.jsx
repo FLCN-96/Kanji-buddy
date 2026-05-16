@@ -712,6 +712,19 @@ const App = ({ cards }) => {
           </div>
           <LadderBar cards={cards} states={cardStates} onTierTap={(tier) => openPanePop('ladder-tier', tier)} />
 
+          <div className="kb-section-head">
+            <span className="kb-section-title">Explore</span>
+            <span className="kb-section-r">temporary</span>
+          </div>
+          <a href="Dictionary.html" className="kb-dict-nav">
+            <span className="kb-dict-nav-k" aria-hidden>辞</span>
+            <span className="kb-dict-nav-body">
+              <span className="kb-dict-nav-title">Dictionary</span>
+              <span className="kb-dict-nav-sub">browse all kanji · derived top-25 words</span>
+            </span>
+            <span className="kb-dict-nav-arrow" aria-hidden>▸</span>
+          </a>
+
           <div style={{height: 8}} />
         </main>
       </div>

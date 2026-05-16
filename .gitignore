@@ -14,5 +14,8 @@ Thumbs.db
 .vscode/
 *.swp
 
+# JMdict source cache for the kanji-words generator (regenerate from tools/build-kanji-words.py)
+tools/cache/
+
 # Agent / local assistant state (never commit — contains host-specific paths)
 .claude/

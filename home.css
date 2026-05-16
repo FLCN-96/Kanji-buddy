@@ -2674,3 +2674,69 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   .kb-pop-ladder-row { grid-template-columns: 24px 26px 1fr auto; }
   .kb-pop-ladder-cursor { display: none; }
 }
+
+/* =========================================================
+   EXPLORE — Dictionary nav (temporary placement)
+   Lives at the bottom of Home so the new dataset is easy to
+   poke at while we figure out the production-quality UI.
+   ========================================================= */
+.kb-dict-nav {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--bg-1);
+  border: 1px solid var(--line-dim);
+  border-left: 2px solid var(--accent-cyan);
+  color: var(--fg-0);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-snap);
+  -webkit-tap-highlight-color: transparent;
+}
+.kb-dict-nav:hover,
+.kb-dict-nav:focus-visible {
+  outline: none;
+  border-color: var(--accent-cyan);
+  background:
+    linear-gradient(180deg, rgba(34,211,238,.06), transparent 60%),
+    var(--bg-1);
+  box-shadow: 0 0 16px rgba(34,211,238,.18);
+}
+.kb-dict-nav-k {
+  font-family: var(--font-jp-serif);
+  font-weight: var(--fw-bold);
+  font-size: 32px;
+  line-height: 1;
+  color: var(--accent-cyan);
+  text-shadow: 0 0 10px rgba(34,211,238,.45);
+  width: 40px; height: 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--bg-0);
+  border: 1px solid var(--line-dim);
+}
+.kb-dict-nav-body {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.kb-dict-nav-title {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: var(--fw-bold);
+  letter-spacing: .08em;
+  color: var(--fg-0);
+}
+.kb-dict-nav-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .02em;
+  color: var(--fg-2);
+}
+.kb-dict-nav-arrow {
+  color: var(--accent-cyan);
+  font-size: 14px;
+  transition: transform var(--dur-fast) var(--ease-snap);
+}
+.kb-dict-nav:hover .kb-dict-nav-arrow {
+  transform: translateX(3px);
+}

@@ -2,7 +2,7 @@
 // land on next visit without forcing cache-version bumps. Cache-first
 // for heavy/stable assets (cards.json, icons, manifest, fonts).
 
-const CACHE = 'kb-v24';
+const CACHE = 'kb-v25';
 const CDN_CACHE = 'kb-cdn-v2';
 const NAV_FALLBACK = './Home.html';
 
@@ -19,6 +19,7 @@ const LOCAL_ASSETS = [
   './Match.html',
   './Settings.html',
   './Diagnostics.html',
+  './Dictionary.html',
   './home.css',
   './run.css',
   './timeattack.css',
@@ -29,6 +30,7 @@ const LOCAL_ASSETS = [
   './match.css',
   './settings.css',
   './diagnostics.css',
+  './dictionary.css',
   './design_system/colors_and_type.css',
   './design_system/logo-mark.svg',
   './design_system/scanlines.svg',
@@ -39,9 +41,11 @@ const LOCAL_ASSETS = [
   './icons/icon-512.png',
   './icons/icon-512-maskable.png',
   './data/cards.json',
+  './data/kanji-words.json',
   './data/changelog.json',
   './data/db.js',
   './data/load-cards.js',
+  './data/load-words.js',
   './data/daily.js',
   './data/srs.js',
   './data/rank.js',
@@ -77,6 +81,7 @@ const LOCAL_ASSETS = [
   './components/Match.jsx',
   './components/MTLanes.jsx',
   './components/MTScreens.jsx',
+  './components/Dictionary.jsx',
 ];
 
 const CDN_ASSETS = [
