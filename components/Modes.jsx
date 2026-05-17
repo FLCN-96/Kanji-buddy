@@ -72,48 +72,59 @@ const useCipherText = (target, opts) => {
   return out;
 };
 
-const RunPrimary = ({ state, deck, onRun, inject, onInject }) => {
-  const loading      = state === 'loading';
-  const clear        = state === 'clear';
-  // Daily run ALWAYS wins the slot when there's still daily work — INJECT
-  // only surfaces post-clear (the OVERCLOCK position) so the user can't
-  // accidentally trade today's required session for an optional gamble.
-  const isInject     = !!inject && clear;
-  const overachiever = clear && !isInject;
-  const disabled     = loading;
-  const count        = deck?.total ?? 0;
-  const mins         = count > 0 ? Math.max(1, Math.ceil(count * 9 / 60)) : 0;
+// InjectSlot — post-daily side modes. Lives just above ChallengeGrid.
+//   • locked    — daily run not yet complete. Padlock cross-fades with
+//                 "REQUIRES DAILY" copy; tile is non-interactive.
+//   • overclock — daily done, no STREAK INJECT snapshot. Optional extra cycle.
+//   • inject    — daily done, snapshot present. Chain-recovery offer.
+// Daily-run launching itself has moved to <DailyStrip> on Home, so this tile
+// no longer owns the primary CTA — only the post-daily branches.
+const InjectSlot = ({ dailyDone, inject, onInject, onRun }) => {
+  const locked       = !dailyDone;
+  const isInject     = !!inject && dailyDone;
+  const overachiever = dailyDone && !isInject;
 
-  // INJECT-tile copy is built from the live snapshot so the user can read
-  // the chain at risk + their odds + remaining attempts before tapping.
   const injectOddsPct = isInject ? Math.round((inject.odds || 0) * 100) : 0;
 
-  const topLabel = loading      ? '▸ syncing deck…'
+  // Locked state — keep label slot empty so the cipher hook stays quiet.
+  const topLabel = locked       ? null
                  : isInject     ? '▸ STREAK.RECOVER() // chain corrupted'
-                 : overachiever ? '▸ EXTRA CYCLE? · entirely optional'
-                 : '▸ resume daily run';
-  const label    = loading      ? 'RUN'
-                 : isInject     ? 'STREAK INJECT'
+                 : '▸ EXTRA CYCLE? · entirely optional';
+  const label    = isInject     ? 'STREAK INJECT'
                  : overachiever ? 'OVERCLOCK'
-                 : 'RUN';
-  const subCopy  = loading      ? 'loading…'
-                 : isInject     ? `chain @ ${inject.lostStreak}d · 80% acc · ${injectOddsPct}% recover · ${inject.attemptsLeft}/${inject.attemptsMax} left`
+                 : '';
+  const subCopy  = isInject     ? `chain @ ${inject.lostStreak}d · 80% acc · ${injectOddsPct}% recover · ${inject.attemptsLeft}/${inject.attemptsMax} left`
                  : overachiever ? 'quota cleared · extra intake · future forecast grows'
-                 : `${count} ${count === 1 ? 'card' : 'cards'} · ~${mins}m · srs priority`;
+                 : '';
 
   const cipherLabel = useCipherText(isInject ? label : '');
 
-  const cls = `kb-run-primary`
-    + (disabled     ? ' is-disabled'     : '')
+  const cls = `kb-inject-slot`
+    + (locked       ? ' is-locked'       : '')
     + (isInject     ? ' is-inject'       : '')
     + (overachiever ? ' is-overachiever' : '');
 
-  // Cornered HUD brackets only on the regular daily CTA — they'd clash with
-  // the overclock halo and the inject tile's corrupt frame.
-  const showCorners = !disabled && !overachiever && !isInject;
+  if (locked) {
+    return (
+      <div
+        className={cls}
+        data-screen-label="inject-slot-locked"
+        aria-disabled="true"
+        title="finish today's daily run to unlock"
+      >
+        <div className="kb-inject-lock" aria-hidden>
+          <svg className="kb-inject-lock-pad" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="5" y="10.5" width="14" height="9.5" rx="1.2" />
+            <path d="M8 10.5 V8 a4 4 0 0 1 8 0 v2.5" />
+          </svg>
+          <span className="kb-inject-lock-text">REQUIRES DAILY</span>
+        </div>
+      </div>
+    );
+  }
 
-  const handleClick = disabled ? undefined : (isInject ? onInject : onRun);
-  const screenLabel = isInject ? 'run-primary-inject' : (overachiever ? 'run-primary-overclock' : 'run-primary');
+  const handleClick = isInject ? onInject : onRun;
+  const screenLabel = isInject ? 'inject-slot-inject' : 'inject-slot-overclock';
 
   return (
     <button
@@ -123,14 +134,6 @@ const RunPrimary = ({ state, deck, onRun, inject, onInject }) => {
       data-overachiever={overachiever ? 'true' : undefined}
       data-inject={isInject ? 'true' : undefined}
     >
-      {showCorners && (
-        <>
-          <span className="kb-rp-corner tl" aria-hidden>◤</span>
-          <span className="kb-rp-corner tr" aria-hidden>◥</span>
-          <span className="kb-rp-corner bl" aria-hidden>◣</span>
-          <span className="kb-rp-corner br" aria-hidden>◢</span>
-        </>
-      )}
       {isInject && (
         <>
           <span className="kb-rp-skull" aria-hidden>☠</span>
@@ -198,4 +201,4 @@ const ChallengeGrid = ({ onPick, hotId, dailyDone, hotTier }) => {
   );
 };
 
-Object.assign(window, { RunPrimary, ChallengeGrid, CHALLENGES });
+Object.assign(window, { InjectSlot, ChallengeGrid, CHALLENGES });

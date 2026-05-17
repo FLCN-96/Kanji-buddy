@@ -28,102 +28,6 @@ const PopShell = ({ title, onClose, className = '', children, footer }) => {
   );
 };
 
-// ── B1 — Forecast 30-day grid ──────────────────────────────────────
-const ForecastDetailPopover = ({ byDay, onClose }) => {
-  const DAYS = 30;
-  const cells = [];
-  let max = 0;
-  for (let d = 1; d <= DAYS; d++) {
-    const v = (byDay && byDay.get && byDay.get(d)) || 0;
-    cells.push(v);
-    if (v > max) max = v;
-  }
-  const total = cells.reduce((a, b) => a + b, 0);
-  const avg = Math.round(total / DAYS);
-  const peakIdx = cells.reduce((bi, v, i, a) => v > a[bi] ? i : bi, 0);
-  const peakOffset = peakIdx + 1;
-  const fmt = (offset) => {
-    const d = new Date();
-    d.setDate(d.getDate() + offset);
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  };
-  return (
-    <PopShell title="FORECAST · NEXT 30 DAYS" className="kb-pop-forecast" onClose={onClose}>
-      <div className="kb-pop-stats">
-        <div><span>{total}</span><em>total reviews</em></div>
-        <div><span>{avg}</span><em>per-day avg</em></div>
-        <div><span>{cells[peakIdx]}</span><em>peak +{peakOffset}d</em></div>
-      </div>
-      <div className="kb-pop-heatmap" role="img" aria-label={`${total} reviews over the next 30 days`}>
-        {cells.map((v, i) => {
-          const ratio = max > 0 ? v / max : 0;
-          const isPeak = i === peakIdx && v > 0;
-          const tone = v === 0 ? 'is-empty' : ratio >= 0.66 ? 'is-hot' : ratio >= 0.33 ? 'is-warm' : 'is-cool';
-          return (
-            <div
-              key={i}
-              className={`kb-pop-heatmap-cell ${tone}${isPeak ? ' is-peak' : ''}`}
-              title={`+${i + 1}d · ${fmt(i + 1)} · ${v} review${v === 1 ? '' : 's'}`}
-            >
-              <span className="kb-pop-heatmap-day">{i + 1}</span>
-              <span className="kb-pop-heatmap-bar" style={{ height: `${Math.max(8, Math.round(ratio * 100))}%` }} />
-            </div>
-          );
-        })}
-      </div>
-      <div className="kb-pop-legend">
-        <span><i className="kb-pop-swatch is-empty" /> none</span>
-        <span><i className="kb-pop-swatch is-cool" /> light</span>
-        <span><i className="kb-pop-swatch is-warm" /> busy</span>
-        <span><i className="kb-pop-swatch is-hot" /> heavy</span>
-      </div>
-    </PopShell>
-  );
-};
-
-// ── B2 — Daily deck breakdown ──────────────────────────────────────
-const DeckBreakdownPopover = ({ deck, picks, onClose }) => {
-  const total = (deck && deck.total) || 0;
-  const groups = [
-    { key: 'new',   label: 'NEW',   tone: 'cyan'    },
-    { key: 'due',   label: 'DUE',   tone: 'amber'   },
-    { key: 'leech', label: 'LEECH', tone: 'magenta' },
-  ];
-  return (
-    <PopShell title="DAILY DECK · WHAT'S QUEUED" className="kb-pop-deck" onClose={onClose}>
-      <div className="kb-pop-stats">
-        <div><span>{total}</span><em>cards today</em></div>
-        <div><span>{(deck && deck.size) || 0}</span><em>deck size</em></div>
-        <div><span>{(deck && deck.leech) || 0}</span><em>leeches</em></div>
-      </div>
-      {total === 0 ? (
-        <div className="kb-pop-empty">✓ daily quota cleared · come back tomorrow</div>
-      ) : (
-        <div className="kb-pop-deck-groups">
-          {groups.map(g => {
-            const picksOfBucket = (picks || []).filter(p => p._bucket === g.key);
-            const n = (deck && deck[g.key]) || 0;
-            if (n === 0) return null;
-            return (
-              <div key={g.key} className={`kb-pop-deck-group tone-${g.tone}`}>
-                <div className="kb-pop-deck-grouphead">
-                  <span>▸ {g.label}</span>
-                  <span>×{n}</span>
-                </div>
-                <div className="kb-pop-deck-cards">
-                  {picksOfBucket.map(p => (
-                    <span key={p.idx} className="kb-pop-deck-k" title={p.mean || ''}>{p.k}</span>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </PopShell>
-  );
-};
-
 // ── B4 — Streak history (calendar heatmap) ─────────────────────────
 const StreakHistoryPopover = ({ user, onClose }) => {
   const [days, setDays] = React.useState(null);
@@ -366,8 +270,6 @@ const ChangelogPopover = ({ onClose }) => {
 };
 
 Object.assign(window, {
-  ForecastDetailPopover,
-  DeckBreakdownPopover,
   StreakHistoryPopover,
   LeechListPopover,
   HeroDetailPopover,

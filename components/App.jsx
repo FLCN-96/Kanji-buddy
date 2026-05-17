@@ -358,7 +358,7 @@ const StreakChip = ({ user, burst, onTap }) => {
   );
 };
 
-const Topbar = ({ displayName, user, burst, onStreakTap, onVersionTap }) => {
+const Topbar = ({ user, burst, onStreakTap, onVersionTap }) => {
   const [wm, typing] = useGreeting(user);
   return (
     <header className={`kb-top${typing ? ' is-greeting' : ''}`}>
@@ -378,7 +378,12 @@ const Topbar = ({ displayName, user, burst, onStreakTap, onVersionTap }) => {
       </div>
       <div className="kb-top-right" aria-hidden={typing ? 'true' : undefined}>
         <StreakChip user={user} burst={burst} onTap={onStreakTap} />
-        <span style={{color:'var(--fg-2)'}}>{displayName || '—'}</span>
+        <a href="Dictionary.html" className="kb-top-dict" aria-label="dictionary" title="dictionary">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" aria-hidden>
+            <path d="M2 3.5 L8 5 L8 13.5 L2 12 Z" />
+            <path d="M14 3.5 L8 5 L8 13.5 L14 12 Z" />
+          </svg>
+        </a>
         <a href="Settings.html" className="kb-top-cog" aria-label="settings">⚙</a>
       </div>
     </header>
@@ -390,9 +395,8 @@ const App = ({ cards }) => {
   const [user, setUser] = React.useState(null);
   const [userLoaded, setUserLoaded] = React.useState(false);
   const [deck, setDeck] = React.useState(null);       // {new, due, leech, total} — today's Run preview
-  const [picks, setPicks] = React.useState([]);       // actual cards selected — feeds DeckBreakdownPopover
   const [reviewedToday, setReviewedToday] = React.useState(0); // intraday progress for the queue bar
-  const [cardStates, setCardStates] = React.useState(null); // full card_states for ProgressPanel tier math
+  const [cardStates, setCardStates] = React.useState(null); // full card_states — leech list + ladder math
   const [promotion, setPromotion] = React.useState(null);
   // One-shot streak event payloads consumed once on mount. The chip uses
   // these to render A1 (puff), A2 (shake), A4 (twinkle) effects; the
@@ -510,7 +514,6 @@ const App = ({ cards }) => {
         const deckSize = window.Daily.resolveDeckSize(u);
         const dailyDone = reviewed >= deckSize;
         const todaysPicks = dailyDone ? [] : window.Daily.selectDailyDeck(cards, states, deckSize);
-        setPicks(todaysPicks);
         setDeck({
           new:   todaysPicks.filter(c => c._bucket === 'new').length,
           due:   todaysPicks.filter(c => c._bucket === 'due').length,
@@ -558,13 +561,16 @@ const App = ({ cards }) => {
   }, [hotChallengeId]);
 
   const onRun = () => {
-    const btn = document.querySelector('.kb-run-primary');
+    // Daily strip OR the post-clear overclock tile may have fired this —
+    // animate whichever is on screen, then navigate.
+    const strip = document.querySelector('.kb-daily-strip');
+    const oc = document.querySelector('.kb-inject-slot.is-overachiever');
+    const btn = oc || strip;
     if (btn) {
-      const over = btn.classList.contains('is-overachiever');
       btn.style.transition = 'none';
       btn.style.transform = 'scale(.96)';
       btn.style.animation = 'none';
-      btn.style.boxShadow = over
+      btn.style.boxShadow = oc
         ? '0 0 48px rgba(255,61,255,.9), inset 0 0 0 2px var(--accent-magenta)'
         : '0 0 40px rgba(34,211,238,.9), inset 0 0 0 2px var(--accent-cyan)';
       setTimeout(() => {
@@ -576,7 +582,7 @@ const App = ({ cards }) => {
   };
 
   const onInject = () => {
-    const btn = document.querySelector('.kb-run-primary.is-inject');
+    const btn = document.querySelector('.kb-inject-slot.is-inject');
     if (btn) {
       btn.style.transition = 'none';
       btn.style.transform = 'scale(.96)';
@@ -608,10 +614,14 @@ const App = ({ cards }) => {
   const variantClass = 'kb-shell variant-game';
   const openPanePop = (kind, payload = null) => { setPopPayload(payload); setOpenPop(kind); };
   const closePop = () => { setOpenPop(null); setPopPayload(null); };
-  const forecastByDay = React.useMemo(
-    () => (window.computeForecast ? window.computeForecast(cardStates || [], new Date()).byDay : new Map()),
-    [cardStates]
-  );
+
+  const leechCount = React.useMemo(() => {
+    if (!Array.isArray(cardStates)) return 0;
+    const threshold = (window.Daily && window.Daily.LEECH_LAPSES) || 3;
+    let n = 0;
+    for (const s of cardStates) if ((s.lapses || 0) >= threshold) n++;
+    return n;
+  }, [cardStates]);
 
   return (
     <>
@@ -643,12 +653,6 @@ const App = ({ cards }) => {
       {openPop === 'rank-ladder' && window.RankLadderModal && (
         <RankLadderModal totalXp={user?.total_xp ?? 0} onClose={closePop} />
       )}
-      {openPop === 'forecast' && window.ForecastDetailPopover && (
-        <ForecastDetailPopover byDay={forecastByDay} onClose={closePop} />
-      )}
-      {openPop === 'deck' && window.DeckBreakdownPopover && (
-        <DeckBreakdownPopover deck={deck} picks={picks} onClose={closePop} />
-      )}
       {openPop === 'leech' && window.LeechListPopover && (
         <LeechListPopover cards={cards} states={cardStates} onClose={closePop} />
       )}
@@ -661,7 +665,6 @@ const App = ({ cards }) => {
 
       <div className={variantClass}>
         <Topbar
-          displayName={user?.display_name}
           user={user}
           burst={streakBurst}
           onStreakTap={() => openPanePop('streak-history')}
@@ -675,55 +678,37 @@ const App = ({ cards }) => {
             </div>
           )}
 
-          <Countdown state={state} />
+          <DailyStrip
+            state={state}
+            deck={deck}
+            reviewedToday={reviewedToday}
+            todayKanji={todayKanji}
+            onRun={onRun}
+          />
 
-          <div className="kb-stats-row">
-            <div className="kb-pane-wrap" onClick={() => openPanePop('deck')} title="tap to see what's in today's deck">
-              <DuePanel state={state} deck={deck} reviewedToday={reviewedToday} />
+          {leechCount > 0 && (
+            <div className="kb-pane-wrap" onClick={() => openPanePop('leech')} title="tap for the full leech list">
+              <LeechPanel cards={cards} states={cardStates} />
             </div>
-            <div className="kb-pane-wrap" onClick={() => openPanePop('forecast')} title="tap for the 30-day forecast">
-              <ProgressPanel cards={cards} states={cardStates} />
-            </div>
-          </div>
-
-          <div className="kb-pane-wrap" onClick={() => openPanePop('leech')} title="tap for the full leech list">
-            <LeechPanel cards={cards} states={cardStates} />
-          </div>
+          )}
 
           <div className="kb-pane-wrap" onClick={() => openPanePop('rank-ladder')} title="tap for the full rank ladder">
             <XpBar xp={user?.total_xp ?? 0} />
           </div>
 
           <div className="kb-section-head">
-            <span className="kb-section-title">Primary run</span>
-            <span className="kb-section-r">space · enter</span>
-          </div>
-          <RunPrimary state={state} deck={deck} onRun={onRun} inject={inject} onInject={onInject} />
-
-          <div className="kb-section-head">
             <span className="kb-section-title">Challenge modes</span>
             <span className="kb-section-r">alt / bonus xp</span>
           </div>
+          <InjectSlot dailyDone={state === 'clear'} inject={inject} onInject={onInject} onRun={onRun} />
           <ChallengeGrid onPick={onPick} hotId={hotChallengeId} hotTier={hotTier} dailyDone={state === 'clear'} />
 
           <div className="kb-section-head">
             <span className="kb-section-title">Jōyō ladder</span>
             <span className="kb-section-r">N5 → N1</span>
           </div>
-          <LadderBar cards={cards} states={cardStates} onTierTap={(tier) => openPanePop('ladder-tier', tier)} />
-
-          <div className="kb-section-head">
-            <span className="kb-section-title">Explore</span>
-            <span className="kb-section-r">temporary</span>
-          </div>
-          <a href="Dictionary.html" className="kb-dict-nav">
-            <span className="kb-dict-nav-k" aria-hidden>辞</span>
-            <span className="kb-dict-nav-body">
-              <span className="kb-dict-nav-title">Dictionary</span>
-              <span className="kb-dict-nav-sub">browse all kanji · derived top-25 words</span>
-            </span>
-            <span className="kb-dict-nav-arrow" aria-hidden>▸</span>
-          </a>
+          <LadderBar cards={cards} states={cardStates} />
+          <LadderChips cards={cards} states={cardStates} onTierTap={(tier) => openPanePop('ladder-tier', tier)} />
 
           <div style={{height: 8}} />
         </main>

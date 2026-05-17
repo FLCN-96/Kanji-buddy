@@ -446,169 +446,6 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-hero-mean { font-size: 13px; color: var(--fg-1); }
 .kb-hero-tag { font-size: 10px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; }
 
-/* Timer strip */
-.kb-countdown {
-  display: grid; grid-template-columns: 1fr auto;
-  align-items: center;
-  padding: var(--sp-3) var(--sp-4);
-  border-top: 1px solid var(--line-dim);
-  background: linear-gradient(90deg, transparent, var(--accent-cyan-bg));
-}
-.kb-countdown-l .kb-countdown-lbl { font-size: 10px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 2px; }
-.kb-countdown-l .kb-countdown-val { font-size: 13px; color: var(--fg-0); }
-.kb-countdown-time { font-family: var(--font-mono); font-weight: 700; font-size: 22px; color: var(--accent-cyan); letter-spacing: .04em; text-shadow: var(--glow-text-cyan); }
-.kb-countdown.is-overdue .kb-countdown-time { color: var(--accent-amber); text-shadow: 0 0 6px rgba(245,165,36,0.5); }
-.kb-countdown.is-clear { background: transparent; }
-.kb-countdown.is-clear .kb-countdown-time { color: var(--fg-1); text-shadow: none; }
-
-/* =========================================================
-   QUEUE BAR + STREAK
-   ========================================================= */
-.kb-stats-row {
-  display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3);
-}
-
-.kb-due {
-  border: 1px solid var(--line-dim); background: var(--bg-1);
-  padding: var(--sp-3); position: relative;
-}
-.kb-due-head {
-  display: flex; justify-content: space-between; align-items: baseline;
-  margin-bottom: var(--sp-2);
-}
-.kb-due-lbl { font-size: 10px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; }
-.kb-due-count {
-  font-family: var(--font-mono); font-weight: 700;
-  font-size: 28px; line-height: 1; color: var(--fg-0);
-}
-.kb-due-count.amber { color: var(--accent-amber); }
-.kb-due-count.cyan { color: var(--accent-cyan); }
-.kb-due-count.dim { color: var(--fg-2); }
-.kb-due-count .unit { font-size: 12px; color: var(--fg-2); font-weight: 400; margin-left: 4px; letter-spacing: .12em; text-transform: uppercase; }
-.kb-due-sub { font-size: 11px; color: var(--fg-2); margin-top: 4px; }
-/* Daily-queue cells: one slot per planned card today (DECK_MAX = 5).
-   `is-done` = reviewed (solid cyan); the rest carry their bucket colour
-   as a dim outline so the panel doubles as a composition preview that
-   fills left→right as the user works through the deck. */
-.kb-due-seg { display: flex; gap: 3px; margin-top: var(--sp-3); height: 8px; }
-.kb-due-seg-s {
-  flex: 1; background: var(--bg-2);
-  border: 1px solid var(--line-dim);
-  transition: background var(--dur-fast) var(--ease-snap),
-              border-color var(--dur-fast) var(--ease-snap),
-              box-shadow var(--dur-fast) var(--ease-snap);
-}
-.kb-due-seg-s.is-done {
-  background: var(--accent-cyan);
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 6px rgba(34,211,238,.55);
-}
-.kb-due-seg-s.is-new {
-  background: var(--bg-2);
-  border-color: var(--accent-cyan-dim);
-  box-shadow: inset 0 0 4px rgba(34,211,238,.18);
-}
-.kb-due-seg-s.is-due {
-  background: rgba(245,165,36,.10);
-  border-color: var(--accent-amber);
-}
-.kb-due-seg-s.is-leech {
-  background: var(--accent-magenta-bg);
-  border-color: var(--accent-magenta);
-  box-shadow: 0 0 6px rgba(255,61,255,.35);
-}
-.kb-due-seg-s.is-pending {
-  background: var(--bg-2);
-  border-color: var(--line-dim);
-}
-
-/* Progress — JLPT ladder position. Rotating headline + SVG ring
-   whose arc colour encodes the tier you're currently clearing. The
-   copy cycles every 4s through four views of the same truth
-   (position → overall % → in-tier % → cards remaining). Hover
-   pauses; reduced-motion freezes on frame 0. */
-.kb-progress {
-  border: 1px solid var(--line-dim); background: var(--bg-1);
-  padding: var(--sp-3); display: flex; flex-direction: column; gap: 4px;
-  position: relative; overflow: hidden;
-  min-width: 0;
-}
-.kb-progress-lbl { font-size: 10px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; }
-.kb-progress-val {
-  font-family: var(--font-mono); font-weight: 700; font-size: 28px; line-height: 1;
-  color: var(--accent-cyan); display: inline-flex; align-items: baseline; gap: 4px;
-  text-shadow: 0 0 10px rgba(34,211,238,0.4);
-  min-width: 0;
-  /* Headline swap is a value-change, not a slide — let the digits
-     settle cleanly so the dot indicator is what reads as "rotating". */
-  transition: color var(--dur-base) var(--ease-snap),
-              text-shadow var(--dur-base) var(--ease-snap);
-}
-.kb-progress.tier-cyan    .kb-progress-val { color: var(--accent-cyan);    text-shadow: 0 0 10px rgba(34,211,238,0.4); }
-.kb-progress.tier-amber   .kb-progress-val { color: var(--accent-amber);   text-shadow: 0 0 10px rgba(245,165,36,0.4); }
-.kb-progress.tier-magenta .kb-progress-val { color: var(--accent-magenta); text-shadow: 0 0 10px rgba(255,61,255,0.4); }
-.kb-progress.tier-transcend .kb-progress-val { color: #fefce8; text-shadow: 0 0 8px rgba(254,252,232,.5), 0 0 18px rgba(245,165,36,.4); }
-.kb-progress.tier-void    .kb-progress-val { color: #d3e3ff; text-shadow: 1px 0 0 rgba(255,61,255,.55), -1px 0 0 rgba(34,211,238,.55); }
-.kb-progress-val .unit {
-  font-size: 11px; color: var(--fg-2); font-weight: 400;
-  letter-spacing: .12em; text-transform: uppercase; text-shadow: none;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  min-width: 0;
-}
-.kb-progress-sub {
-  font-size: 10px; color: var(--fg-2); letter-spacing: .08em;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  padding-right: 44px; /* clear the ring */
-}
-.kb-progress-dots {
-  display: flex; gap: 4px; margin-top: 4px;
-}
-.kb-progress-dots span {
-  width: 5px; height: 5px;
-  background: var(--bg-2);
-  border: 1px solid var(--line-dim);
-  transition: background var(--dur-fast) var(--ease-snap),
-              border-color var(--dur-fast) var(--ease-snap),
-              box-shadow var(--dur-fast) var(--ease-snap);
-}
-.kb-progress.tier-cyan    .kb-progress-dots span.is-on { background: var(--accent-cyan);    border-color: var(--accent-cyan);    box-shadow: 0 0 5px rgba(34,211,238,.6); }
-.kb-progress.tier-amber   .kb-progress-dots span.is-on { background: var(--accent-amber);   border-color: var(--accent-amber);   box-shadow: 0 0 5px rgba(245,165,36,.6); }
-.kb-progress.tier-magenta .kb-progress-dots span.is-on { background: var(--accent-magenta); border-color: var(--accent-magenta); box-shadow: 0 0 5px rgba(255,61,255,.6); }
-.kb-progress.tier-transcend .kb-progress-dots span.is-on { background: #fefce8; border-color: #fefce8; box-shadow: 0 0 5px rgba(254,252,232,.6); }
-.kb-progress.tier-void    .kb-progress-dots span.is-on { background: #d3e3ff; border-color: #d3e3ff; box-shadow: 0 0 4px rgba(255,61,255,.5), 0 0 4px rgba(34,211,238,.5); }
-
-.kb-progress-ring-wrap {
-  position: absolute; right: 8px; top: 8px;
-  width: 40px; height: 40px;
-  display: flex; align-items: center; justify-content: center;
-  pointer-events: none;
-}
-.kb-progress-ring { display: block; width: 40px; height: 40px; }
-.kb-progress-ring-track {
-  fill: none;
-  stroke: var(--line-dim);
-  stroke-width: 3;
-}
-.kb-progress-ring-arc {
-  fill: none;
-  stroke-width: 3;
-  stroke-linecap: square;
-  transition: stroke-dashoffset var(--dur-slow) var(--ease-snap),
-              stroke var(--dur-base) var(--ease-snap),
-              filter var(--dur-base) var(--ease-snap);
-}
-.kb-progress-ring.tier-cyan    .kb-progress-ring-arc { stroke: var(--accent-cyan);    filter: drop-shadow(0 0 3px rgba(34,211,238,.7)); }
-.kb-progress-ring.tier-amber   .kb-progress-ring-arc { stroke: var(--accent-amber);   filter: drop-shadow(0 0 3px rgba(245,165,36,.7)); }
-.kb-progress-ring.tier-magenta .kb-progress-ring-arc { stroke: var(--accent-magenta); filter: drop-shadow(0 0 3px rgba(255,61,255,.7)); }
-.kb-progress-ring.tier-transcend .kb-progress-ring-arc { stroke: #fefce8; filter: drop-shadow(0 0 3px rgba(254,252,232,.7)); }
-.kb-progress-ring.tier-void    .kb-progress-ring-arc { stroke: #d3e3ff; filter: drop-shadow(1px 0 0 rgba(255,61,255,.55)) drop-shadow(-1px 0 0 rgba(34,211,238,.55)); }
-
-@media (prefers-reduced-motion: reduce) {
-  .kb-progress-val,
-  .kb-progress-ring-arc,
-  .kb-progress-dots span { transition: none; }
-}
-
 /* =========================================================
    PRIMARY RUN + CHALLENGES
    ========================================================= */
@@ -623,130 +460,105 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-section-title::before { content: '▸'; color: var(--accent-cyan); }
 .kb-section-r { font-size: 10px; color: var(--fg-2); letter-spacing: .08em; }
 
-/* RUN primary — big CTA. Layered drama (corner brackets, top specular
-   highlight, slow cyan shine sweep) so the daily action feels premium
-   without the chaotic flair the OVERCLOCK tile leans on. */
-.kb-run-primary {
-  border: 2px solid var(--accent-cyan);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.06), transparent 18%),
-    linear-gradient(180deg, var(--accent-cyan-bg), transparent 60%);
-  padding: var(--sp-3);
-  display: grid; grid-template-columns: 1fr auto;
-  align-items: center; gap: var(--sp-3);
-  cursor: pointer;
+/* InjectSlot — base layout shared by locked / overclock / inject states.
+   The locked state shows a centred padlock + REQUIRES DAILY copy with a
+   cross-fade between them. Overclock and Streak Inject reuse the body
+   markup (.kb-rp-body, .kb-rp-top, .kb-rp-label, .kb-rp-sub, .kb-rp-arrow)
+   that the old RunPrimary established. */
+.kb-inject-slot {
   position: relative;
-  overflow: hidden;
-  box-shadow:
-    0 0 18px rgba(34,211,238,.25),
-    inset 0 0 0 1px var(--accent-cyan),
-    inset 0 1px 0 rgba(255,255,255,.16);
-  transition: all var(--dur-fast) var(--ease-snap);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--line-dim);
+  background: var(--bg-1);
   font-family: var(--font-mono);
   color: var(--fg-0);
   text-align: left;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-snap);
 }
-/* Slow cyan shine — same GPU-composited transform technique used by the
-   hot-tile glimmer. Lives on ::after; the overachiever variant overrides
-   it with its own ::after, so this stays scoped to the regular CTA. */
-.kb-run-primary::after {
-  content: '';
-  position: absolute;
-  top: -30%;
-  bottom: -30%;
-  left: 0;
-  width: 22%;
-  pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(180,240,255,.10) 30%,
-    rgba(220,250,255,.42) 50%,
-    rgba(180,240,255,.10) 70%,
-    transparent 100%
-  );
-  transform: translate3d(-180%, 0, 0) rotate(22deg);
-  transform-origin: center;
-  will-change: transform;
-  animation: kb-rp-shine 11s cubic-bezier(.3,.7,.4,1) infinite;
-  z-index: 1;
+.kb-inject-slot.is-locked {
+  cursor: not-allowed;
+  opacity: .55;
+  border-color: var(--line-dim);
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 6px,
+      rgba(255,255,255,.02) 6px 7px
+    ),
+    var(--bg-1);
+  grid-template-columns: 1fr;
+  justify-items: center;
+  min-height: 64px;
 }
-@keyframes kb-rp-shine {
-  0%   { transform: translate3d(-180%, 0, 0) rotate(22deg); }
-  18%  { transform: translate3d(560%, 0, 0)  rotate(22deg); }
-  100% { transform: translate3d(560%, 0, 0)  rotate(22deg); }
-}
+.kb-inject-slot.is-locked:active { transform: none; }
 
-@media (hover: hover) {
-  .kb-run-primary:hover {
-    box-shadow:
-      0 0 32px rgba(34,211,238,.55),
-      inset 0 0 0 1px var(--accent-cyan),
-      inset 0 1px 0 rgba(255,255,255,.22);
-    transform: translateY(-1px);
-  }
+/* Locked overlay — padlock and copy share the same slot. Each animates
+   on a 3s cycle in opposite phase so one fades out as the other fades
+   in. Color cycles to bright cyan on the copy so the "REQUIRES DAILY"
+   read pops without the tile lighting up. */
+.kb-inject-lock {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 36px;
+  color: var(--fg-2);
 }
-.kb-run-primary:active { transform: scale(.99); }
-
-/* Corner brackets — quiet ◤◥◣◢ in cyan with a soft halo. Lift slightly
-   on hover. Skipped on overachiever via the JSX gate. */
-.kb-rp-corner {
+.kb-inject-lock-pad,
+.kb-inject-lock-text {
   position: absolute;
-  font-size: 9px;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.kb-inject-lock-pad {
+  color: var(--fg-2);
+  animation: kb-inject-lock-fade 3s ease-in-out infinite;
+}
+.kb-inject-lock-text {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .22em;
   color: var(--accent-cyan);
-  text-shadow: 0 0 4px rgba(34,211,238,.55);
-  opacity: .8;
-  z-index: 2;
-  pointer-events: none;
-  transition: opacity var(--dur-fast) var(--ease-snap),
-              text-shadow var(--dur-fast) var(--ease-snap);
+  text-shadow: 0 0 8px rgba(34,211,238,.6);
+  animation: kb-inject-lock-fade 3s ease-in-out infinite reverse;
 }
-.kb-rp-corner.tl { top: 5px; left: 6px; }
-.kb-rp-corner.tr { top: 5px; right: 6px; }
-.kb-rp-corner.bl { bottom: 5px; left: 6px; }
-.kb-rp-corner.br { bottom: 5px; right: 6px; }
-@media (hover: hover) {
-  .kb-run-primary:hover .kb-rp-corner {
-    opacity: 1;
-    text-shadow: 0 0 9px rgba(34,211,238,.85);
-  }
+@keyframes kb-inject-lock-fade {
+  0%, 38%   { opacity: 1; }
+  50%, 88%  { opacity: 0; }
+  100%      { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kb-inject-lock-pad   { animation: none; opacity: 1; }
+  .kb-inject-lock-text  { animation: none; opacity: 0; }
 }
 
-/* Body wrapper + arrow — sit above the shine layer */
+/* Body wrapper + arrow — sit above background layers in overclock/inject */
 .kb-rp-body { position: relative; z-index: 2; }
-.kb-run-primary .kb-rp-top { font-size: 10px; color: var(--accent-cyan); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 4px; }
-.kb-run-primary .kb-rp-label {
+.kb-inject-slot .kb-rp-top { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 4px; color: var(--fg-2); }
+.kb-inject-slot .kb-rp-label {
   font-weight: 700; font-size: 18px; letter-spacing: .02em;
-  color: var(--accent-cyan); text-shadow: 0 0 8px rgba(34,211,238,.5);
   text-transform: uppercase;
 }
-.kb-run-primary .kb-rp-sub { font-size: 11px; color: var(--fg-1); margin-top: 4px; }
-.kb-run-primary .kb-rp-arrow {
+.kb-inject-slot .kb-rp-sub { font-size: 11px; color: var(--fg-1); margin-top: 4px; }
+.kb-inject-slot .kb-rp-arrow {
   position: relative; z-index: 2;
-  font-size: 28px; color: var(--accent-cyan);
-  text-shadow: 0 0 8px rgba(34,211,238,.55);
+  font-size: 28px;
   transition: transform var(--dur-fast) var(--ease-snap),
               text-shadow var(--dur-fast) var(--ease-snap);
 }
-@media (hover: hover) {
-  .kb-run-primary:hover .kb-rp-arrow {
-    transform: translateX(4px);
-    text-shadow: 0 0 14px rgba(34,211,238,.85);
-  }
-}
-.kb-run-primary.is-disabled {
-  opacity: .55; border-color: var(--line-bright); box-shadow: none; background: var(--bg-1);
-  cursor: default;
-}
-.kb-run-primary.is-disabled .kb-rp-label { color: var(--fg-1); text-shadow: none; }
-.kb-run-primary.is-disabled .kb-rp-top { color: var(--fg-2); }
-.kb-run-primary.is-disabled .kb-rp-arrow { color: var(--fg-2); text-shadow: none; }
-.kb-run-primary.is-disabled::after { display: none; }
 
 /* Overclock — post-quota extra sortie. Deliberately under-powered: the HOT
    challenge tile should read as the bigger reward after the daily is done,
    so this stays dim and buzzy rather than headlining. */
-.kb-run-primary.is-overachiever {
+.kb-inject-slot.is-overachiever {
   opacity: .52;
   border-color: var(--accent-magenta-dim);
   background: linear-gradient(180deg, rgba(255,61,255,.05), transparent 70%);
@@ -757,7 +569,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   overflow: visible;
   cursor: pointer;
 }
-.kb-run-primary.is-overachiever::before {
+.kb-inject-slot.is-overachiever::before {
   content: '';
   position: absolute;
   inset: -2px;
@@ -771,7 +583,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   animation: kb-oc-arc 1.1s steps(7, end) infinite;
   opacity: .55;
 }
-.kb-run-primary.is-overachiever::after {
+.kb-inject-slot.is-overachiever::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -784,24 +596,24 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   animation: kb-oc-scan 3.2s linear infinite;
   opacity: .35;
 }
-.kb-run-primary.is-overachiever .kb-rp-top   {
+.kb-inject-slot.is-overachiever .kb-rp-top   {
   color: var(--accent-amber);
   letter-spacing: .22em;
   font-weight: var(--fw-bold);
   text-shadow: 0 0 6px rgba(245,165,36,.45);
 }
-.kb-run-primary.is-overachiever .kb-rp-label {
+.kb-inject-slot.is-overachiever .kb-rp-label {
   color: var(--accent-magenta-dim);
   text-shadow: 0 0 4px rgba(255,61,255,.4), 0 0 10px rgba(255,61,255,.18);
   animation: kb-oc-flicker 2.1s ease-in-out infinite;
 }
-.kb-run-primary.is-overachiever .kb-rp-sub   { color: var(--fg-3); }
-.kb-run-primary.is-overachiever .kb-rp-arrow {
+.kb-inject-slot.is-overachiever .kb-rp-sub   { color: var(--fg-3); }
+.kb-inject-slot.is-overachiever .kb-rp-arrow {
   color: var(--accent-magenta-dim);
   text-shadow: 0 0 5px rgba(255,61,255,.35);
 }
 @media (hover: hover) {
-  .kb-run-primary.is-overachiever:hover {
+  .kb-inject-slot.is-overachiever:hover {
     opacity: .9;
     border-color: var(--accent-magenta);
     box-shadow:
@@ -810,15 +622,15 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
     transform: none;
     animation-play-state: paused;
   }
-  .kb-run-primary.is-overachiever:hover .kb-rp-top,
-  .kb-run-primary.is-overachiever:hover .kb-rp-label,
-  .kb-run-primary.is-overachiever:hover .kb-rp-arrow {
+  .kb-inject-slot.is-overachiever:hover .kb-rp-top,
+  .kb-inject-slot.is-overachiever:hover .kb-rp-label,
+  .kb-inject-slot.is-overachiever:hover .kb-rp-arrow {
     color: var(--accent-magenta);
   }
-  .kb-run-primary.is-overachiever:hover .kb-rp-label { animation-play-state: paused; opacity: 1; }
-  .kb-run-primary.is-overachiever:hover .kb-rp-arrow { transform: translateX(4px); }
+  .kb-inject-slot.is-overachiever:hover .kb-rp-label { animation-play-state: paused; opacity: 1; }
+  .kb-inject-slot.is-overachiever:hover .kb-rp-arrow { transform: translateX(4px); }
 }
-.kb-run-primary.is-overachiever:active { transform: scale(.98); }
+.kb-inject-slot.is-overachiever:active { transform: scale(.98); }
 
 @keyframes kb-oc-tremble {
   0%, 100% { transform: translate(0, 0) rotate(0deg); }
@@ -857,10 +669,10 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kb-run-primary.is-overachiever,
-  .kb-run-primary.is-overachiever::before,
-  .kb-run-primary.is-overachiever::after,
-  .kb-run-primary.is-overachiever .kb-rp-label {
+  .kb-inject-slot.is-overachiever,
+  .kb-inject-slot.is-overachiever::before,
+  .kb-inject-slot.is-overachiever::after,
+  .kb-inject-slot.is-overachiever .kb-rp-label {
     animation: none;
   }
 }
@@ -873,7 +685,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
    amplitude than the void-rank chips because this is a button you can
    actually press, not just decoration.
    ───────────────────────────────────────────────────────────────────── */
-.kb-run-primary.is-inject {
+.kb-inject-slot.is-inject {
   border: 2px solid var(--danger);
   background:
     linear-gradient(180deg, rgba(255,92,106,.10), transparent 60%),
@@ -888,7 +700,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   cursor: pointer;
   position: relative;
 }
-.kb-run-primary.is-inject::before {
+.kb-inject-slot.is-inject::before {
   content: '';
   position: absolute; inset: -2px;
   pointer-events: none;
@@ -900,7 +712,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   animation: kb-inj-arc .9s steps(5, end) infinite;
   opacity: .65;
 }
-.kb-run-primary.is-inject::after {
+.kb-inject-slot.is-inject::after {
   content: '';
   position: absolute; inset: 0;
   pointer-events: none;
@@ -920,7 +732,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   opacity: .55;
   mix-blend-mode: screen;
 }
-.kb-run-primary.is-inject .kb-rp-top {
+.kb-inject-slot.is-inject .kb-rp-top {
   color: var(--danger);
   letter-spacing: .22em;
   font-weight: var(--fw-bold);
@@ -930,7 +742,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
     0 0 6px rgba(255,92,106,.55);
   animation: kb-inj-flicker 1.6s ease-in-out infinite;
 }
-.kb-run-primary.is-inject .kb-rp-label {
+.kb-inject-slot.is-inject .kb-rp-label {
   color: var(--danger);
   font-weight: var(--fw-bold);
   letter-spacing: .14em;
@@ -941,16 +753,16 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
     0 0 18px rgba(255,92,106,.28);
   animation: kb-inj-jitter 1.2s steps(13, end) infinite;
 }
-.kb-run-primary.is-inject .kb-rp-sub {
+.kb-inject-slot.is-inject .kb-rp-sub {
   color: var(--fg-1);
   text-shadow: 0 0 4px rgba(255,92,106,.25);
 }
-.kb-run-primary.is-inject .kb-rp-arrow {
+.kb-inject-slot.is-inject .kb-rp-arrow {
   color: var(--danger);
   text-shadow: 0 0 6px rgba(255,92,106,.55);
   animation: kb-inj-flicker 1.1s ease-in-out infinite;
 }
-.kb-run-primary.is-inject .kb-rp-corner.inj {
+.kb-inject-slot.is-inject .kb-rp-corner.inj {
   position: absolute;
   font-size: 12px;
   color: var(--danger);
@@ -958,11 +770,11 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   pointer-events: none;
   animation: kb-inj-flicker 1.4s ease-in-out infinite;
 }
-.kb-run-primary.is-inject .kb-rp-corner.inj.tl { top: 4px; left: 6px; }
-.kb-run-primary.is-inject .kb-rp-corner.inj.tr { top: 4px; right: 6px; }
-.kb-run-primary.is-inject .kb-rp-corner.inj.bl { bottom: 4px; left: 6px; }
-.kb-run-primary.is-inject .kb-rp-corner.inj.br { bottom: 4px; right: 6px; }
-.kb-run-primary.is-inject .kb-rp-skull {
+.kb-inject-slot.is-inject .kb-rp-corner.inj.tl { top: 4px; left: 6px; }
+.kb-inject-slot.is-inject .kb-rp-corner.inj.tr { top: 4px; right: 6px; }
+.kb-inject-slot.is-inject .kb-rp-corner.inj.bl { bottom: 4px; left: 6px; }
+.kb-inject-slot.is-inject .kb-rp-corner.inj.br { bottom: 4px; right: 6px; }
+.kb-inject-slot.is-inject .kb-rp-skull {
   position: absolute;
   top: 50%;
   right: 14px;
@@ -978,20 +790,20 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   animation: kb-inj-skull 2.3s ease-in-out infinite;
   z-index: 0;
 }
-.kb-run-primary.is-inject .kb-rp-body { position: relative; z-index: 1; }
-.kb-run-primary.is-inject .kb-rp-arrow { position: relative; z-index: 1; }
+.kb-inject-slot.is-inject .kb-rp-body { position: relative; z-index: 1; }
+.kb-inject-slot.is-inject .kb-rp-arrow { position: relative; z-index: 1; }
 
 @media (hover: hover) {
-  .kb-run-primary.is-inject:hover {
+  .kb-inject-slot.is-inject:hover {
     border-color: var(--danger);
     box-shadow:
       0 0 28px rgba(255,92,106,.55),
       inset 0 0 0 1px var(--danger);
     animation-play-state: paused;
   }
-  .kb-run-primary.is-inject:hover .kb-rp-skull { opacity: .45; }
+  .kb-inject-slot.is-inject:hover .kb-rp-skull { opacity: .45; }
 }
-.kb-run-primary.is-inject:active { transform: scale(.97); }
+.kb-inject-slot.is-inject:active { transform: scale(.97); }
 
 @keyframes kb-inj-jitter {
   0%, 100% { transform: translate(0, 0); }
@@ -1038,14 +850,14 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kb-run-primary.is-inject,
-  .kb-run-primary.is-inject::before,
-  .kb-run-primary.is-inject::after,
-  .kb-run-primary.is-inject .kb-rp-top,
-  .kb-run-primary.is-inject .kb-rp-label,
-  .kb-run-primary.is-inject .kb-rp-arrow,
-  .kb-run-primary.is-inject .kb-rp-corner.inj,
-  .kb-run-primary.is-inject .kb-rp-skull {
+  .kb-inject-slot.is-inject,
+  .kb-inject-slot.is-inject::before,
+  .kb-inject-slot.is-inject::after,
+  .kb-inject-slot.is-inject .kb-rp-top,
+  .kb-inject-slot.is-inject .kb-rp-label,
+  .kb-inject-slot.is-inject .kb-rp-arrow,
+  .kb-inject-slot.is-inject .kb-rp-corner.inj,
+  .kb-inject-slot.is-inject .kb-rp-skull {
     animation: none;
   }
 }
@@ -1284,23 +1096,6 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 /* =========================================================
    VARIANT: CALM (v1) — minimal, no glows on idle, no hero
    ========================================================= */
-.variant-calm .kb-hero::before { display: none; }
-.variant-calm .kb-run-primary {
-  border-width: 1px;
-  background: var(--bg-1);
-  box-shadow: none;
-}
-@media (hover: hover) {
-  .variant-calm .kb-run-primary:hover { box-shadow: 0 0 12px rgba(34,211,238,.3); }
-}
-.variant-calm .kb-hero-kanji::before { display: none; }
-.variant-calm .kb-countdown-time { text-shadow: none; }
-.variant-calm .kb-boot { display: none; }
-
-/* =========================================================
-   VARIANT: HUD (v2) — balanced, the default
-   ========================================================= */
-
 /* =========================================================
    VARIANT: GAME (v3) — full game HUD, XP bar, rank badge
    ========================================================= */
@@ -1308,10 +1103,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   background: linear-gradient(180deg, var(--accent-magenta-bg), var(--bg-1) 80%);
 }
 .variant-game .kb-hero-kanji { font-size: 160px; }
-.variant-game .kb-run-primary {
-  background: linear-gradient(135deg, var(--accent-cyan-bg), var(--accent-magenta-bg));
-}
-.variant-game .kb-run-primary.is-overachiever {
+.variant-game .kb-inject-slot.is-overachiever {
   background: linear-gradient(135deg, var(--accent-magenta-bg), rgba(255,61,255,.18));
 }
 .variant-xp {
@@ -1689,70 +1481,6 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
     transform: none !important;
   }
 }
-
-/* =========================================================
-   FORECAST PANEL — replaces the old ring-and-tier progress
-   reading with a 7-day review-load sparkline. Reuses the
-   .kb-progress chassis; `.is-forecast` swaps the ring slot.
-   ========================================================= */
-.kb-progress.is-forecast .kb-progress-ring-wrap.is-forecast {
-  width: 52px; height: 40px;
-  right: 8px; top: 8px;
-}
-/* Sparkline is absolute at top:8–48px; sub text starts at ~62px — no overlap,
-   so no right padding needed. Allow wrapping so long sluglines never ellipsis. */
-.kb-progress.is-forecast .kb-progress-sub {
-  padding-right: 0;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
-}
-/* Slide container — React remounts it via key={frame} so the enter
-   animation replays on every frame transition. */
-.kb-forecast-slide {
-  display: flex; flex-direction: column; gap: 4px;
-}
-.kb-forecast-slide .kb-progress-val {
-  animation: kb-forecast-val-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.kb-forecast-slide .kb-progress-sub {
-  animation: kb-forecast-sub-in 0.3s 0.09s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@keyframes kb-forecast-val-in {
-  0%   { opacity: 0; transform: translateY(12px); filter: brightness(1); }
-  22%  { opacity: 1; transform: translateY(0);    filter: brightness(2.2); }
-  50%  { filter: brightness(1); }
-  100% { opacity: 1; transform: translateY(0);    filter: brightness(1); }
-}
-@keyframes kb-forecast-sub-in {
-  0%   { opacity: 0; transform: translateX(-8px); }
-  100% { opacity: 1; transform: translateX(0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .kb-forecast-slide .kb-progress-val,
-  .kb-forecast-slide .kb-progress-sub { animation: none; }
-}
-.kb-forecast-spark {
-  display: block;
-  overflow: visible;
-}
-.kb-forecast-spark-base {
-  stroke: var(--line-med);
-  stroke-width: 1;
-  opacity: .6;
-}
-.kb-forecast-spark-bar {
-  fill: currentColor;
-  transition: height var(--dur-base) var(--ease-snap),
-              y      var(--dur-base) var(--ease-snap),
-              fill   var(--dur-base) var(--ease-snap);
-}
-.kb-forecast-spark-bar.is-empty {
-  fill: var(--line-med);
-}
-.kb-progress.is-forecast.tier-cyan    .kb-forecast-spark { color: var(--accent-cyan);    filter: drop-shadow(0 0 3px rgba(34,211,238,.55)); }
-.kb-progress.is-forecast.tier-amber   .kb-forecast-spark { color: var(--accent-amber);   filter: drop-shadow(0 0 3px rgba(245,165,36,.55)); }
-.kb-progress.is-forecast.tier-magenta .kb-forecast-spark { color: var(--accent-magenta); filter: drop-shadow(0 0 3px rgba(255,61,255,.55)); }
 
 /* =========================================================
    JŌYŌ LADDER — segmented progress bar below challenge modes.
@@ -2146,72 +1874,6 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 @media (prefers-reduced-motion: reduce) {
   .kb-main-staggered > * { animation: none; }
 }
-
-/* =========================================================
-   FORECAST tone ribbon — C3
-   Animates width on mount whenever the tone changes (key={tone}
-   in JSX forces remount). The accent color tracks the panel's
-   tier-* class.
-   ========================================================= */
-.kb-progress-ribbon {
-  position: absolute;
-  left: 0; bottom: 0;
-  height: 2px;
-  width: 0;
-  pointer-events: none;
-  background: var(--accent-cyan);
-  box-shadow: 0 0 8px rgba(34,211,238,.6);
-  animation: kb-progress-ribbon 720ms cubic-bezier(.2,.8,.2,1) forwards;
-}
-.kb-progress.tier-amber .kb-progress-ribbon   { background: var(--accent-amber);   box-shadow: 0 0 8px rgba(245,165,36,.6); }
-.kb-progress.tier-magenta .kb-progress-ribbon { background: var(--accent-magenta); box-shadow: 0 0 8px rgba(255,61,255,.6); }
-@keyframes kb-progress-ribbon {
-  from { width: 0; }
-  to   { width: 100%; }
-}
-.kb-progress { position: relative; }
-@media (prefers-reduced-motion: reduce) {
-  .kb-progress-ribbon { animation: none; width: 100%; }
-}
-
-/* =========================================================
-   RUN-PRIMARY ambient particles — C5
-   Three slow-drifting cyan dots inside the run button when
-   today is not yet done. Swap to magenta on overclock.
-   ========================================================= */
-.kb-run-primary:not(.is-disabled):not(.is-overachiever)::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle 2px at 18% 70%, rgba(34,211,238,.55), transparent 60%),
-    radial-gradient(circle 1.5px at 62% 30%, rgba(34,211,238,.45), transparent 60%),
-    radial-gradient(circle 1px at 88% 60%, rgba(34,211,238,.4), transparent 60%);
-  opacity: 0;
-  animation: kb-rp-particles 5.4s ease-in-out infinite;
-  z-index: 0;
-}
-@keyframes kb-rp-particles {
-  0%, 100% { opacity: 0; transform: translateY(8px); }
-  20%      { opacity: .9; }
-  60%      { opacity: .6; transform: translateY(-12px); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .kb-run-primary:not(.is-disabled):not(.is-overachiever)::before { animation: none; opacity: 0; }
-}
-
-/* =========================================================
-   LADDER tier segments — tap affordance (B7)
-   ========================================================= */
-.kb-ladder-seg.is-tappable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
-@media (hover: hover) {
-  .kb-ladder-seg.is-tappable:hover {
-    filter: brightness(1.18);
-    box-shadow: inset 0 0 0 1px currentColor;
-  }
-}
-.kb-ladder-seg.is-tappable:active { transform: scale(.985); }
 
 /* =========================================================
    POPOVER SHELL — shared by every B-series modal + C8.
@@ -2676,67 +2338,231 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 }
 
 /* =========================================================
-   EXPLORE — Dictionary nav (temporary placement)
-   Lives at the bottom of Home so the new dataset is easy to
-   poke at while we figure out the production-quality UI.
+   TOPBAR · Dictionary nav icon — sized to match .kb-top-cog
+   so the right-cluster reads as a row of icon buttons.
    ========================================================= */
-.kb-dict-nav {
+.kb-top-dict {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  color: var(--fg-2);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: color var(--dur-fast) var(--ease-snap),
+              border-color var(--dur-fast) var(--ease-snap);
+}
+@media (hover: hover) {
+  .kb-top-dict:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); }
+}
+
+/* =========================================================
+   DAILY STRIP — daily-run launcher + status row.
+   READY state: tap-target button, icon cross-fades between ○
+   and today's hero kanji, N empty cells coloured by bucket.
+   DONE state:  non-interactive, ✓ glyph, midnight countdown,
+   all cells filled solid cyan.
+   ========================================================= */
+.kb-daily-strip {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 56px 1fr auto;
   align-items: center;
   gap: var(--sp-3);
   padding: var(--sp-3);
-  background: var(--bg-1);
-  border: 1px solid var(--line-dim);
-  border-left: 2px solid var(--accent-cyan);
-  color: var(--fg-0);
-  text-decoration: none;
-  cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-snap);
-  -webkit-tap-highlight-color: transparent;
-}
-.kb-dict-nav:hover,
-.kb-dict-nav:focus-visible {
-  outline: none;
-  border-color: var(--accent-cyan);
+  border: 1px solid var(--accent-cyan-dim);
   background:
     linear-gradient(180deg, rgba(34,211,238,.06), transparent 60%),
     var(--bg-1);
-  box-shadow: 0 0 16px rgba(34,211,238,.18);
-}
-.kb-dict-nav-k {
-  font-family: var(--font-jp-serif);
-  font-weight: var(--fw-bold);
-  font-size: 32px;
-  line-height: 1;
-  color: var(--accent-cyan);
-  text-shadow: 0 0 10px rgba(34,211,238,.45);
-  width: 40px; height: 40px;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: var(--bg-0);
-  border: 1px solid var(--line-dim);
-}
-.kb-dict-nav-body {
-  display: flex; flex-direction: column; gap: 2px; min-width: 0;
-}
-.kb-dict-nav-title {
   font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: var(--fw-bold);
-  letter-spacing: .08em;
   color: var(--fg-0);
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-snap);
+  box-shadow: inset 0 0 0 1px rgba(34,211,238,.18);
 }
-.kb-dict-nav-sub {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: .02em;
-  color: var(--fg-2);
+button.kb-daily-strip { width: 100%; }
+.kb-daily-strip.is-loading,
+.kb-daily-strip.is-done {
+  cursor: default;
+  border-color: var(--line-dim);
+  background: var(--bg-1);
+  box-shadow: none;
 }
-.kb-dict-nav-arrow {
+.kb-daily-strip.is-done {
+  background: linear-gradient(180deg, rgba(34,211,238,.04), transparent 70%);
+}
+@media (hover: hover) {
+  button.kb-daily-strip:hover:not(.is-loading):not(.is-done) {
+    border-color: var(--accent-cyan);
+    box-shadow:
+      0 0 14px rgba(34,211,238,.25),
+      inset 0 0 0 1px var(--accent-cyan);
+  }
+}
+button.kb-daily-strip:active:not(.is-loading):not(.is-done) { transform: scale(.995); }
+
+.kb-daily-strip-icon {
+  position: relative;
+  width: 48px; height: 48px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-jp-serif);
+  font-size: 28px;
   color: var(--accent-cyan);
-  font-size: 14px;
+  text-shadow: 0 0 8px rgba(34,211,238,.45);
+  border: 1px solid var(--line-dim);
+  background: var(--bg-0);
+}
+.kb-daily-strip-icon-circle,
+.kb-daily-strip-icon-k {
+  position: absolute;
+  inset: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.kb-daily-strip-icon-circle { animation: kb-daily-strip-fade-a 4s ease-in-out infinite; }
+.kb-daily-strip-icon-k      { animation: kb-daily-strip-fade-b 4s ease-in-out infinite; }
+@keyframes kb-daily-strip-fade-a {
+  0%, 42%   { opacity: 1; }
+  50%, 92%  { opacity: 0; }
+  100%      { opacity: 1; }
+}
+@keyframes kb-daily-strip-fade-b {
+  0%, 42%   { opacity: 0; }
+  50%, 92%  { opacity: 1; }
+  100%      { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kb-daily-strip-icon-circle { animation: none; opacity: 1; }
+  .kb-daily-strip-icon-k      { animation: none; opacity: 0; }
+}
+.kb-daily-strip.is-done .kb-daily-strip-icon {
+  color: var(--fg-1);
+  text-shadow: none;
+  font-family: var(--font-mono);
+  font-size: 22px;
+}
+.kb-daily-strip-icon-check { font-weight: 700; }
+
+.kb-daily-strip-body {
+  min-width: 0;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.kb-daily-strip-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  color: var(--accent-cyan);
+  text-shadow: 0 0 6px rgba(34,211,238,.4);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+.kb-daily-strip.is-done .kb-daily-strip-label {
+  color: var(--fg-1);
+  text-shadow: none;
+}
+.kb-daily-strip-sub {
+  font-size: 10px;
+  color: var(--fg-2);
+  letter-spacing: .04em;
+}
+.kb-daily-strip-cells {
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
+  height: 8px;
+}
+.kb-daily-strip-cell {
+  flex: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--line-dim);
+  transition: background var(--dur-fast) var(--ease-snap),
+              border-color var(--dur-fast) var(--ease-snap),
+              box-shadow var(--dur-fast) var(--ease-snap);
+}
+.kb-daily-strip-cell.is-done {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 6px rgba(34,211,238,.55);
+}
+.kb-daily-strip-cell.is-new {
+  background: var(--bg-2);
+  border-color: var(--accent-cyan-dim);
+  box-shadow: inset 0 0 4px rgba(34,211,238,.18);
+}
+.kb-daily-strip-cell.is-due {
+  background: rgba(245,165,36,.10);
+  border-color: var(--accent-amber);
+}
+.kb-daily-strip-cell.is-leech {
+  background: var(--accent-magenta-bg);
+  border-color: var(--accent-magenta);
+  box-shadow: 0 0 6px rgba(255,61,255,.35);
+}
+.kb-daily-strip-cell.is-pending {
+  background: var(--bg-2);
+  border-color: var(--line-dim);
+}
+
+.kb-daily-strip-arrow {
+  font-size: 22px;
+  color: var(--accent-cyan);
+  text-shadow: 0 0 6px rgba(34,211,238,.5);
+  align-self: center;
   transition: transform var(--dur-fast) var(--ease-snap);
 }
-.kb-dict-nav:hover .kb-dict-nav-arrow {
-  transform: translateX(3px);
+@media (hover: hover) {
+  button.kb-daily-strip:hover:not(.is-loading):not(.is-done) .kb-daily-strip-arrow {
+    transform: translateX(3px);
+  }
 }
+
+/* =========================================================
+   JŌYŌ LADDER chips — explicit-size tap targets below the
+   segmented bar. Fixes the issue where thin tiers (N5 at
+   ~5% of the bar) were unreachable as click targets.
+   ========================================================= */
+.kb-ladder-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.kb-ladder-chip {
+  flex: 1 1 56px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--bg-1);
+  border: 1px solid var(--line-dim);
+  color: var(--fg-1);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-snap),
+              background var(--dur-fast) var(--ease-snap),
+              box-shadow var(--dur-fast) var(--ease-snap),
+              color var(--dur-fast) var(--ease-snap);
+  -webkit-tap-highlight-color: transparent;
+}
+.kb-ladder-chip-lbl { font-weight: 700; letter-spacing: .12em; }
+.kb-ladder-chip-pct { color: var(--fg-2); font-size: 10px; }
+.kb-ladder-chip.tier-cyan    { border-color: var(--accent-cyan-dim); }
+.kb-ladder-chip.tier-amber   { border-color: rgba(245,165,36,.45); }
+.kb-ladder-chip.tier-magenta { border-color: var(--accent-magenta-dim); }
+.kb-ladder-chip.tier-extra   { border-color: var(--line-dim); color: var(--fg-2); }
+.kb-ladder-chip.is-full.tier-cyan    { background: rgba(34,211,238,.10);  box-shadow: 0 0 8px rgba(34,211,238,.35); }
+.kb-ladder-chip.is-full.tier-amber   { background: rgba(245,165,36,.10);  box-shadow: 0 0 8px rgba(245,165,36,.35); }
+.kb-ladder-chip.is-full.tier-magenta { background: rgba(255,61,255,.10);  box-shadow: 0 0 8px rgba(255,61,255,.35); }
+@media (hover: hover) {
+  .kb-ladder-chip:hover {
+    border-color: var(--accent-cyan);
+    box-shadow: inset 0 0 0 1px var(--accent-cyan);
+    color: var(--fg-0);
+  }
+  .kb-ladder-chip.tier-amber:hover   { border-color: var(--accent-amber);   box-shadow: inset 0 0 0 1px var(--accent-amber); }
+  .kb-ladder-chip.tier-magenta:hover { border-color: var(--accent-magenta); box-shadow: inset 0 0 0 1px var(--accent-magenta); }
+}
+.kb-ladder-chip:active { transform: scale(.985); }
