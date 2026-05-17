@@ -9,6 +9,7 @@ const CHALLENGES = [
   { id: 'streak',   glyph: '忘', name: 'STREAK GUARD',  sub: '12 cards about to leak',    ascii: '▮▮▮▮▯▯ 12',    xp: 90  },
   { id: 'leech',    glyph: '蛭', name: 'LEECH HUNT',    sub: '3 worst + 1 stretch bounty', ascii: '☠ × 4',        xp: 100 },
   { id: 'match',    glyph: '合', name: 'MATCH',         sub: '60s · pair kanji ↔ meaning', ascii: '[字]→[char]',  xp: 90  },
+  { id: 'decipher', glyph: '解', name: 'DECIPHER',      sub: 'key the word · 5 lives',     ascii: '□ □ □ → 解',   xp: 110 },
 ];
 
 // HOT tile uses Daily.HOT_GOLD / HOT_SILVER directly for the badge math so the

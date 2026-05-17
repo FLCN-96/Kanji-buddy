@@ -17,6 +17,7 @@ const LOCAL_ASSETS = [
   './StreakInject.html',
   './LeechHunt.html',
   './Match.html',
+  './Decipher.html',
   './Settings.html',
   './Diagnostics.html',
   './Dictionary.html',
@@ -28,6 +29,7 @@ const LOCAL_ASSETS = [
   './streakinject.css',
   './leechhunt.css',
   './match.css',
+  './decipher.css',
   './settings.css',
   './diagnostics.css',
   './dictionary.css',
@@ -81,6 +83,9 @@ const LOCAL_ASSETS = [
   './components/Match.jsx',
   './components/MTLanes.jsx',
   './components/MTScreens.jsx',
+  './components/Decipher.jsx',
+  './components/DCPlay.jsx',
+  './components/DCScreens.jsx',
   './components/Dictionary.jsx',
 ];
 

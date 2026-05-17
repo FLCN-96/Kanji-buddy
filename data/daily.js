@@ -2,7 +2,7 @@
 // the daily HOT pick (and its 3× XP multiplier) agree across screens.
 
 (function () {
-  const CHALLENGE_ORDER = ['time', 'survival', 'streak', 'leech', 'match'];
+  const CHALLENGE_ORDER = ['time', 'survival', 'streak', 'leech', 'match', 'decipher'];
 
   function daySeed(d) {
     const date = d || new Date();
