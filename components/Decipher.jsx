@@ -181,6 +181,44 @@ function buildBank(word, cards, statesMap) {
   return shuffle([...answerCards, ...distractors]);
 }
 
+// Wordle-style classification. For each pick position, returns 'green' (right
+// kanji, right slot), 'yellow' (kanji is in the word, but not at this slot),
+// or 'gray' (kanji is not in the word at all). Implements the standard
+// duplicate-aware pass: greens consume their targets first, then yellows
+// only count each remaining target instance once. Matters for words like
+// 佐々木 where 々 appears once but a user could pick it twice.
+function classifyPicks(picks, bank, word) {
+  const status = new Array(picks.length).fill('gray');
+  const remaining = word.idxs.slice();
+  const pickIdxs = picks.map(p => bank[p].idx);
+  for (let i = 0; i < picks.length; i++) {
+    if (pickIdxs[i] === remaining[i]) {
+      status[i] = 'green';
+      remaining[i] = null;
+    }
+  }
+  for (let i = 0; i < picks.length; i++) {
+    if (status[i] !== 'gray') continue;
+    const j = remaining.indexOf(pickIdxs[i]);
+    if (j !== -1) {
+      status[i] = 'yellow';
+      remaining[j] = null;
+    }
+  }
+  return status;
+}
+
+// First non-locked, non-filled slot — i.e., the next blank the operator's
+// pick will land in. Returns -1 when every blank is either locked or already
+// holds a pick (i.e., the round is ready for auto-check).
+function nextOpenSlot(picks, locks) {
+  for (let i = 0; i < picks.length; i++) {
+    if (locks.has(i)) continue;
+    if (picks[i] == null) return i;
+  }
+  return -1;
+}
+
 // ────────────────────────────────────────────────────────────────────
 // Topbar — abort · DECIPHER label · lives · depth
 // ────────────────────────────────────────────────────────────────────
@@ -291,7 +329,15 @@ const DecipherApp = ({ cards, words }) => {
     const word = pickWordForDepth(buckets, nextDepth, used);
     if (!word) return null; // run out of words — treated as game-over upstream
     const bank = buildBank(word, cards, statesMapRef.current);
-    return { word, bank, picks: [], feedback: null };
+    return {
+      word, bank,
+      // Slot-indexed: picks[i] is the bank idx chosen for slot i, or null.
+      picks:      new Array(word.length).fill(null),
+      locks:      new Set(),  // slot indices the operator has already nailed
+      eliminated: new Set(),  // bank tile idxs ruled out (dummy in last commit)
+      status:     null,       // per-slot Wordle status during 'bad' feedback
+      feedback:   null,
+    };
   }, [cards]);
 
   // 3-2-1 countdown → first round
@@ -380,16 +426,22 @@ const DecipherApp = ({ cards, words }) => {
       .catch(() => {});
   }, [phase, depth, lives, pb]);
 
-  // Tile pick: append to picks → if blanks fill, auto-check.
+  // Tile pick: drop into the next open (non-locked, empty) slot. If every
+  // slot is now occupied, auto-check. Refuses re-picks (the same bank tile
+  // already in `picks`) and eliminated tiles (ruled out by a prior commit).
   const onPickTile = (tileIdx) => {
     if (phase !== 'play' || !round || lockedRef.current) return;
     if (round.feedback) return;
-    if (round.picks.length >= round.word.length) return;
+    if (round.eliminated.has(tileIdx)) return;
+    if (round.picks.includes(tileIdx)) return;
+    const slot = nextOpenSlot(round.picks, round.locks);
+    if (slot === -1) return;
 
-    const nextPicks = [...round.picks, tileIdx];
-    const filled = nextPicks.length >= round.word.length;
+    const nextPicks = round.picks.slice();
+    nextPicks[slot] = tileIdx;
+    const allFilled = nextPicks.every(p => p != null);
 
-    if (!filled) {
+    if (!allFilled) {
       setRound({ ...round, picks: nextPicks });
       return;
     }
@@ -398,9 +450,9 @@ const DecipherApp = ({ cards, words }) => {
     const guessKanji = nextPicks.map(i => round.bank[i].k).join('');
     const ok = guessKanji === round.word.w;
     lockedRef.current = true;
-    setRound({ ...round, picks: nextPicks, feedback: ok ? 'ok' : 'bad' });
 
     if (ok) {
+      setRound({ ...round, picks: nextPicks, feedback: 'ok' });
       const nextDepth = depth + 1;
       setDepth(nextDepth);
       setHistory(h => [...h, {
@@ -420,29 +472,54 @@ const DecipherApp = ({ cards, words }) => {
         lockedRef.current = false;
       }, 620);
     } else {
+      // Wordle-style triage: greens lock into their slots permanently,
+      // yellow tiles flash and clear (kanji is somewhere else), grays get
+      // pulled from the bank (kanji isn't in the word at all).
+      const status = classifyPicks(nextPicks, round.bank, round.word);
+      const newLocks = new Set(round.locks);
+      const newEliminated = new Set(round.eliminated);
+      for (let i = 0; i < status.length; i++) {
+        if (status[i] === 'green') newLocks.add(i);
+        else if (status[i] === 'gray') newEliminated.add(nextPicks[i]);
+      }
+
       const nextLives = lives - 1;
       setHistory(h => [...h, {
         w: round.word.w, r: round.word.r, m: round.word.m,
         ok: false, lives: nextLives, depth,
       }]);
       setLives(nextLives);
+      setRound({
+        ...round,
+        picks: nextPicks,
+        feedback: 'bad',
+        status,
+        locks: newLocks,
+        eliminated: newEliminated,
+      });
+
       setTimeout(() => {
-        if (nextLives <= 0) {
-          setPhase('end');
-          return;
-        }
-        // Reset blanks; same word, same bank (operator gets another swing).
-        setRound(r => r ? { ...r, picks: [], feedback: null } : r);
+        if (nextLives <= 0) { setPhase('end'); return; }
+        // Drop non-locked picks so the operator gets another swing with the
+        // locked greens already in place and the dummies removed from the
+        // bank. Locks/eliminated persist across attempts on the same word.
+        setRound(r => {
+          if (!r) return r;
+          const cleared = r.picks.map((p, i) => newLocks.has(i) ? p : null);
+          return { ...r, picks: cleared, feedback: null, status: null };
+        });
         lockedRef.current = false;
-      }, 760);
+      }, 1100);
     }
   };
 
   const onClear = () => {
     if (phase !== 'play' || !round || lockedRef.current) return;
     if (round.feedback) return;
-    if (!round.picks.length) return;
-    setRound({ ...round, picks: [] });
+    const cleared = round.picks.map((p, i) => round.locks.has(i) ? p : null);
+    // Bail if there's nothing to clear (everything is either empty or locked).
+    if (cleared.every((p, i) => p === round.picks[i])) return;
+    setRound({ ...round, picks: cleared });
   };
 
   // Skip current word — burns a life. Gives the operator an out when a word
@@ -521,6 +598,9 @@ const DecipherApp = ({ cards, words }) => {
               word={round.word}
               bank={round.bank}
               picks={round.picks}
+              locks={round.locks}
+              eliminated={round.eliminated}
+              status={round.status}
               feedback={round.feedback}
               depth={depth}
               lives={lives}
@@ -561,4 +641,5 @@ const DecipherApp = ({ cards, words }) => {
 Object.assign(window, {
   DecipherApp,
   buildWordPool, scoreWord, bucketPoolByScore, pickWordForDepth, buildBank,
+  classifyPicks, nextOpenSlot,
 });

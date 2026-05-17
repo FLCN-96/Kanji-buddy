@@ -46,15 +46,15 @@ const DCPre = ({ pb, onStart }) => {
         </div>
         <div className="dc-pre-rule">
           <span className="dc-rk dc-rk-ok">▲</span>
-          <span>correct = depth+1, bank gets sharper, xp tics up</span>
+          <span>solve to push depth · bank tilts harder the deeper you go</span>
         </div>
         <div className="dc-pre-rule">
           <span className="dc-rk dc-rk-bad">♥−</span>
-          <span>wrong commit = lose a life · 5 lives, game ends at zero</span>
+          <span>wrong commit costs a life · <b className="dc-rk-mark dc-rk-mark-green">greens lock in</b>, <b className="dc-rk-mark dc-rk-mark-yellow">yellows flash</b> (right kanji, wrong slot), <b className="dc-rk-mark dc-rk-mark-gray">grays vanish</b> from the bank</span>
         </div>
         <div className="dc-pre-rule">
           <span className="dc-rk dc-rk-neutral">⟳</span>
-          <span><b>CLEAR</b> resets the current word for free · <b>SKIP</b> burns a life and deals next</span>
+          <span><b>CLEAR</b> resets unlocked picks · <b>SKIP</b> burns a life and deals next</span>
         </div>
       </div>
 

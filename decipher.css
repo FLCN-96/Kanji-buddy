@@ -157,6 +157,14 @@
 .dc-rk-bad     { color: var(--accent-magenta); }
 .dc-rk-neutral { color: var(--fg-1); }
 
+/* Inline color-coded markers used inside the wrong-commit rule line. Same
+   palette as the in-play blank statuses so the operator's read of the pre-
+   screen matches what they'll see during a bad-commit flash. */
+.dc-rk-mark { font-style: normal; }
+.dc-rk-mark-green  { color: var(--accent-cyan);    text-shadow: 0 0 6px rgba(34,211,238,.45); }
+.dc-rk-mark-yellow { color: #f5c84a;               text-shadow: 0 0 6px rgba(245,200,74,.45); }
+.dc-rk-mark-gray   { color: var(--accent-magenta); text-shadow: 0 0 6px rgba(255,61,255,.4); }
+
 /* meta */
 .dc-pre-meta {
   display: grid; gap: 6px;
@@ -289,6 +297,30 @@
   0%,100% { box-shadow: 0 0 4px rgba(34,211,238,.35); }
   50%     { box-shadow: 0 0 14px rgba(34,211,238,.85); }
 }
+
+/* ── Locked-green: persistent committed-correct slot ── */
+.dc-blank.is-locked {
+  background: linear-gradient(180deg, rgba(34,211,238,.10), transparent 70%);
+  border-color: rgba(34,211,238,.35);
+}
+.dc-blank.is-locked .dc-blank-k {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 10px rgba(34,211,238,.55);
+}
+.dc-blank.is-locked .dc-blank-underline {
+  background: var(--accent-cyan);
+  box-shadow: 0 0 10px rgba(34,211,238,.65);
+  opacity: 1;
+}
+.dc-blank-lock {
+  position: absolute; top: 3px; right: 4px;
+  font-family: var(--font-mono); font-size: 7px;
+  letter-spacing: .04em;
+  color: var(--accent-cyan); opacity: .7;
+  line-height: 1;
+}
+
+/* ── 'ok' (full match): all blanks flash cyan ── */
 .dc-blanks.is-flash .dc-blank.is-filled {
   color: var(--accent-cyan);
   text-shadow: 0 0 14px rgba(34,211,238,.7);
@@ -298,16 +330,10 @@
   0%   { background: rgba(34,211,238,.18); }
   100% { background: transparent; }
 }
+
+/* ── 'bad' shake + per-slot Wordle colors ── */
 .dc-blanks.is-shake {
   animation: dc-shake .42s var(--ease-snap);
-}
-.dc-blanks.is-shake .dc-blank.is-filled {
-  color: var(--accent-magenta);
-  text-shadow: 0 0 12px rgba(255,61,255,.7);
-}
-.dc-blanks.is-shake .dc-blank.is-filled .dc-blank-underline {
-  background: var(--accent-magenta);
-  box-shadow: 0 0 12px rgba(255,61,255,.7);
 }
 @keyframes dc-shake {
   0%,100% { transform: translateX(0); }
@@ -315,6 +341,44 @@
   40% { transform: translateX(6px); }
   60% { transform: translateX(-4px); }
   80% { transform: translateX(4px); }
+}
+.dc-blank.is-green {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 14px rgba(34,211,238,.85);
+  animation: dc-pop-green .55s var(--ease-snap);
+}
+.dc-blank.is-green .dc-blank-underline {
+  background: var(--accent-cyan);
+  box-shadow: 0 0 14px rgba(34,211,238,.85);
+  opacity: 1;
+}
+@keyframes dc-pop-green {
+  0%   { background: rgba(34,211,238,.22); }
+  100% { background: transparent; }
+}
+.dc-blank.is-yellow {
+  color: #f5c84a;
+  text-shadow: 0 0 12px rgba(245,200,74,.75);
+  animation: dc-pop-yellow .9s var(--ease-snap);
+}
+.dc-blank.is-yellow .dc-blank-underline {
+  background: #f5c84a;
+  box-shadow: 0 0 12px rgba(245,200,74,.75);
+  opacity: 1;
+}
+@keyframes dc-pop-yellow {
+  0%,30%   { background: rgba(245,200,74,.20); }
+  100%     { background: transparent; }
+}
+.dc-blank.is-gray {
+  color: var(--accent-magenta);
+  text-shadow: 0 0 10px rgba(255,61,255,.55);
+  opacity: .9;
+}
+.dc-blank.is-gray .dc-blank-underline {
+  background: var(--accent-magenta);
+  box-shadow: 0 0 10px rgba(255,61,255,.55);
+  opacity: 1;
 }
 
 /* 3x3 bank */
@@ -361,15 +425,36 @@
 }
 .dc-tile:not(:disabled):active { transform: scale(.96); }
 .dc-tile.is-used {
-  opacity: .35;
+  opacity: .42;
+  color: var(--accent-cyan);
+  border-color: rgba(34,211,238,.35);
+  border-style: dashed;
+  cursor: not-allowed;
+}
+/* Eliminated: kanji wasn't in the word on a prior commit. Removed from play
+   for the rest of this round — visually struck out so the operator can still
+   read what they ruled out without being able to retap it. */
+.dc-tile.is-eliminated {
+  opacity: .18;
   color: var(--fg-3);
   border-color: var(--line-dim);
   border-style: dashed;
   cursor: not-allowed;
+  position: relative;
+  filter: grayscale(1);
+}
+.dc-tile.is-eliminated::after {
+  content: '';
+  position: absolute; inset: 50% 8% auto 8%;
+  height: 1px;
+  background: var(--accent-magenta);
+  opacity: .55;
+  transform: rotate(-12deg);
+  transform-origin: center;
 }
 .dc-tile:disabled { cursor: not-allowed; }
-.dc-play.is-bad .dc-tile { border-color: rgba(255,61,255,.35); }
-.dc-play.is-ok  .dc-tile { border-color: rgba(34,211,238,.35); }
+.dc-play.is-bad .dc-tile:not(.is-eliminated):not(.is-used) { border-color: rgba(255,61,255,.35); }
+.dc-play.is-ok  .dc-tile:not(.is-eliminated):not(.is-used) { border-color: rgba(34,211,238,.35); }
 
 /* controls */
 .dc-controls {
