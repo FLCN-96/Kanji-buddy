@@ -128,6 +128,7 @@ const TimeAttackApp = ({ cards }) => {
 
   React.useEffect(() => {
     if (!window.DB) return;
+    window.DB.recordModeStart('time_attack').catch(() => {});
     window.DB.open()
       .then(() => window.DB.getAllCardStates())
       .then(s => {
@@ -267,6 +268,13 @@ const TimeAttackApp = ({ cards }) => {
     const answerMs = Math.round(performance.now() - questionStart.current);
     setTileFeedback({ picked: tileIdx, correct: question.correctIdx, ok });
     setHistory(h => [...h, { card: question.card, ok, ms: answerMs }]);
+    if (window.DB && question.card) {
+      window.DB.recordCardEvent({
+        idx: question.card.idx, mode: 'time_attack',
+        outcome: ok ? 'hit' : 'miss',
+        meta: { response_ms: answerMs },
+      }).catch(() => {});
+    }
 
     if (ok) {
       // speed bonus: full 3 pts up to 1s, scales down to 1 pt at 3s+

@@ -302,6 +302,7 @@ const DecipherApp = ({ cards, words }) => {
 
   React.useEffect(() => {
     if (!window.DB) return;
+    window.DB.recordModeStart('decipher').catch(() => {});
     window.DB.open()
       .then(() => window.DB.getAllCardStates())
       .then(s => {
@@ -462,6 +463,17 @@ const DecipherApp = ({ cards, words }) => {
         w: round.word.w, r: round.word.r, m: round.word.m,
         ok: true, lives, depth: nextDepth,
       }]);
+      // Decipher operates on multi-kanji words — log one 'hit' per kanji
+      // in the committed word so the evidence log captures word-spelling
+      // wins at the kanji level.
+      if (window.DB && Array.isArray(round.word.idxs)) {
+        for (const kIdx of round.word.idxs) {
+          window.DB.recordCardEvent({
+            idx: kIdx, mode: 'decipher', outcome: 'hit',
+            meta: { word: round.word.w, depth: nextDepth },
+          }).catch(() => {});
+        }
+      }
       const newUsed = new Set(usedWords); newUsed.add(round.word.w);
       setUsedWords(newUsed);
       setTimeout(() => {
@@ -491,6 +503,16 @@ const DecipherApp = ({ cards, words }) => {
         w: round.word.w, r: round.word.r, m: round.word.m,
         ok: false, lives: nextLives, depth,
       }]);
+      // Wrong commit — log a 'miss' per kanji in the word. Same level of
+      // detail as the ok branch so per-kanji hit-rates compute symmetrically.
+      if (window.DB && Array.isArray(round.word.idxs)) {
+        for (const kIdx of round.word.idxs) {
+          window.DB.recordCardEvent({
+            idx: kIdx, mode: 'decipher', outcome: 'miss',
+            meta: { word: round.word.w, depth },
+          }).catch(() => {});
+        }
+      }
       setLives(nextLives);
       setRound({
         ...round,

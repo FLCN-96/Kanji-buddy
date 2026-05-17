@@ -151,6 +151,7 @@ const SurvivalApp = ({ cards }) => {
 
   React.useEffect(() => {
     if (!window.DB) return;
+    window.DB.recordModeStart('survival').catch(() => {});
     window.DB.open()
       .then(() => window.DB.getAllCardStates())
       .then(s => {
@@ -269,6 +270,13 @@ const SurvivalApp = ({ cards }) => {
     const entry = { card: question.card, prompt: question.prompt, correct: question.correct, picked: question.tiles[tileIdx], ok, ms };
     setFeedback({ picked: tileIdx, correct: question.correctIdx, ok });
     setHistory(h => [...h, entry]);
+    if (window.DB && question.card) {
+      window.DB.recordCardEvent({
+        idx: question.card.idx, mode: 'survival',
+        outcome: ok ? 'hit' : 'miss',
+        meta: { depth, response_ms: ms, prompt_mode: question.mode || null },
+      }).catch(() => {});
+    }
 
     if (ok) {
       const nextDepth = depth + 1;

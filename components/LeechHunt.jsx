@@ -219,6 +219,7 @@ const LeechHuntApp = ({ cards }) => {
 
   React.useEffect(() => {
     if (!window.DB) return;
+    window.DB.recordModeStart('leech_hunt').catch(() => {});
     window.DB.open()
       .then(() => window.DB.getAllCardStates())
       .then(s => {
@@ -318,6 +319,13 @@ const LeechHuntApp = ({ cards }) => {
     // Snapshot the active leech. These fields aren't mutated between now
     // and the end-of-turn dispatch, so the closure reference is safe.
     const leech = roster[activeIdx];
+    if (window.DB && leech?.card) {
+      window.DB.recordCardEvent({
+        idx: leech.card.idx, mode: 'leech_hunt',
+        outcome: ok ? 'hit' : 'miss',
+        meta: { stage: stageIdx, lapses: leech.card._state?.lapses || null },
+      }).catch(() => {});
+    }
     const idxAtAnswer = activeIdx;
     const newMisses = ok ? misses : misses + 1;
     if (!ok) setMisses(newMisses);

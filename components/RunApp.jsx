@@ -77,6 +77,12 @@ const RunApp = ({ cards }) => {
   const [undoState, setUndoState] = React.useState(null);
   const undoTimerRef = React.useRef(null);
 
+  // Funnel: log a mode-entry event the moment we mount. Pairs with the
+  // session save at end-of-run so we can compute start-vs-complete rates.
+  React.useEffect(() => {
+    if (window.DB) window.DB.recordModeStart('run').catch(() => {});
+  }, []);
+
   // Build the weighted deck once, after DB + cards are ready.
   React.useEffect(() => {
     let cancelled = false;
@@ -218,6 +224,14 @@ const RunApp = ({ cards }) => {
     const card = quizOrder[quizIdx];
     const priorCombo = combo;
     const priorQuizIdx = quizIdx;
+    // Cross-mode evidence log — keep the literal Run verdict so downstream
+    // views can distinguish hard/ok/easy without losing fidelity.
+    if (window.DB && card) {
+      window.DB.recordCardEvent({
+        idx: card.idx, mode: 'run', outcome: v,
+        meta: { bucket: card._bucket || null },
+      }).catch(() => {});
+    }
     if (window.DB && window.Srs && card) {
       window.DB.getCardState(card.idx).then(existing => {
         const next = window.Srs.schedule(existing, v);

@@ -3,8 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>kanji-buddy · home</title>
+<title>kanji-buddy · mastery</title>
+<link rel="stylesheet" href="design_system/colors_and_type.css">
 <link rel="stylesheet" href="home.css">
+<link rel="stylesheet" href="mastery.css">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#00e5ff">
@@ -12,36 +14,30 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="KB">
 </head>
-<body data-scanlines="off" data-hero="on">
+<body data-scanlines="off">
 <div id="root"></div>
 
 <script src="data/rank.js"></script>
-<script src="data/streak.js"></script>
 <script src="data/version.js"></script>
 <script src="data/db.js"></script>
 <script src="data/load-cards.js"></script>
-<script src="data/daily.js"></script>
 <script src="data/mastery.js"></script>
-<script src="data/romaji.js"></script>
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-<script type="text/babel" src="components/Popovers.jsx"></script>
-<script type="text/babel" src="components/Dashboard.jsx"></script>
-<script type="text/babel" src="components/Modes.jsx"></script>
-<script type="text/babel" src="components/RankUp.jsx"></script>
-<script type="text/babel" src="components/RankLadderModal.jsx"></script>
-<script type="text/babel" src="components/StreakMilestoneModal.jsx"></script>
-<script type="text/babel" src="components/MasterySummary.jsx"></script>
-<script type="text/babel" src="components/App.jsx"></script>
+<script type="text/babel" src="components/MasteryCore.jsx"></script>
+<script type="text/babel" src="components/MasteryConstellation.jsx"></script>
+<script type="text/babel" src="components/MasteryInstrument.jsx"></script>
+<script type="text/babel" src="components/MasteryDossier.jsx"></script>
+<script type="text/babel" src="components/Mastery.jsx"></script>
 
 <script type="text/babel">
 (async () => {
   const cards = await window.loadCards();
   const root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(<App cards={cards} />);
+  root.render(<Mastery cards={cards} />);
 })();
 </script>
 

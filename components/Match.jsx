@@ -192,6 +192,7 @@ const MatchApp = ({ cards }) => {
 
   React.useEffect(() => {
     if (!window.DB) return;
+    window.DB.recordModeStart('match').catch(() => {});
     window.DB.open()
       .then(() => window.DB.getAllCardStates())
       .then(s => {
@@ -372,6 +373,13 @@ const MatchApp = ({ cards }) => {
     // So a match is simply: kSel === vSel ? Already handled. Real pairs are by entry id.
 
     const ok = kSel === vSel;
+    if (window.DB && kPair.card) {
+      window.DB.recordCardEvent({
+        idx: kPair.card.idx, mode: 'match',
+        outcome: ok ? 'hit' : 'miss',
+        meta: { side: kPair.side, axis: tweaks.axis },
+      }).catch(() => {});
+    }
     if (ok) {
       // MATCH
       const now = performance.now();

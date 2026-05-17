@@ -1,7 +1,12 @@
 // IndexedDB persistence layer — exposed as window.DB
 
 const DB_NAME = 'kanji-buddy-db';
-const DB_VERSION = 3;
+// v4 (2026-05-17): added `card_events` (per-card evidence log written by
+// every mode, not just Run) and `mode_starts` (mode-entry funnel for
+// abandon-vs-complete diagnostics). Also a new `hour` column written by
+// saveSession for hour-of-day retention analysis. No data migration needed —
+// existing card_states / sessions / scores records remain readable.
+const DB_VERSION = 4;
 
 let _db = null;
 
@@ -34,6 +39,24 @@ function openDB() {
 
       if (db.objectStoreNames.contains('imported_cards')) {
         db.deleteObjectStore('imported_cards');
+      }
+
+      // v4: per-card evidence log. All modes append here — decoupled from
+      // SM-2 scheduling (which stays Run-only on card_states). Indexes on
+      // `idx` (per-kanji lookup), `mode`, and `date` for the obvious slices.
+      if (!db.objectStoreNames.contains('card_events')) {
+        const ce = db.createObjectStore('card_events', { keyPath: 'id', autoIncrement: true });
+        ce.createIndex('idx',  'idx',  { unique: false });
+        ce.createIndex('mode', 'mode', { unique: false });
+        ce.createIndex('date', 'date', { unique: false });
+      }
+
+      // v4: mode-entry funnel. One row per mode page mount, lets us compare
+      // start vs. complete (sessions table) to spot abandonment hotspots.
+      if (!db.objectStoreNames.contains('mode_starts')) {
+        const ms = db.createObjectStore('mode_starts', { keyPath: 'id', autoIncrement: true });
+        ms.createIndex('mode', 'mode', { unique: false });
+        ms.createIndex('date', 'date', { unique: false });
       }
     };
 
@@ -166,7 +189,11 @@ const DB = {
   // ── sessions ──────────────────────────────────────────────────────
 
   saveSession(session) {
-    const record = { ...session, date: session.date || new Date().toISOString() };
+    const date = session.date || new Date().toISOString();
+    // Hour-of-day (local) — feeds retention-vs-time-of-day analyses without
+    // re-parsing every date downstream. Callers can override by passing hour.
+    const hour = (typeof session.hour === 'number') ? session.hour : new Date(date).getHours();
+    const record = { ...session, date, hour };
     return rw('sessions', 'readwrite', s => s.add(record));
   },
 
@@ -211,6 +238,103 @@ const DB = {
     }));
   },
 
+  // ── card events (cross-mode evidence log) ────────────────────────
+  //
+  // Every mode writes one row per per-card interaction here. This is
+  // *evidence*, not *scheduling* — SM-2 still only reacts to Run. Lets
+  // downstream views (Home stat tiles, future adaptive sequencing) treat
+  // a Match hit and a Run "ok" as both being signal that the user knows
+  // the card, without needing to touch card_states from every mode.
+  //
+  // Shape: { idx, mode, outcome, date, meta? }
+  //   idx     — card index (matches card_states.idx and cards.json idx)
+  //   mode    — same mode string the sessions table uses ('run', 'match', …)
+  //   outcome — 'hit' | 'miss' | 'hard' | 'easy' | 'skip'
+  //   meta    — optional bag for mode-specific extras (response_ms, tier, …)
+
+  recordCardEvent(evt) {
+    if (!evt || evt.idx == null || !evt.mode || !evt.outcome) return Promise.resolve(null);
+    const record = {
+      idx:     evt.idx,
+      mode:    evt.mode,
+      outcome: evt.outcome,
+      date:    evt.date || new Date().toISOString(),
+      meta:    evt.meta || null,
+    };
+    return rw('card_events', 'readwrite', s => s.add(record));
+  },
+
+  getCardEvents(idx, limit = 100) {
+    return openDB().then(db => new Promise((resolve, reject) => {
+      const t = db.transaction('card_events', 'readonly');
+      const i = t.objectStore('card_events').index('idx');
+      const req = i.getAll(idx, limit);
+      req.onsuccess = (e) => resolve(e.target.result || []);
+      req.onerror   = (e) => reject(e.target.error);
+    }));
+  },
+
+  // ── mode-entry funnel ─────────────────────────────────────────────
+
+  recordModeStart(mode) {
+    if (!mode) return Promise.resolve(null);
+    const record = { mode, date: new Date().toISOString() };
+    return rw('mode_starts', 'readwrite', s => s.add(record));
+  },
+
+  // Start vs complete funnel for the last n days. Returns map keyed by mode:
+  // { run: { starts, completes }, time_attack: {…}, … }. Modes without
+  // either signal are omitted. Used by future Home diagnostics tiles.
+  getModeFunnel(days = 7) {
+    return openDB().then(db => new Promise((resolve, reject) => {
+      const cutoff = Date.now() - days * 86400000;
+      const t = db.transaction(['mode_starts', 'sessions'], 'readonly');
+      const startsReq = t.objectStore('mode_starts').getAll();
+      const sessReq   = t.objectStore('sessions').getAll();
+      let starts, sess;
+      const done = () => {
+        if (starts === undefined || sess === undefined) return;
+        const acc = {};
+        const ensure = (m) => (acc[m] = acc[m] || { starts: 0, completes: 0 });
+        for (const r of starts) {
+          if (!r.date || new Date(r.date).getTime() < cutoff) continue;
+          ensure(r.mode).starts++;
+        }
+        for (const r of sess) {
+          if (!r.date || new Date(r.date).getTime() < cutoff) continue;
+          ensure(r.mode).completes++;
+        }
+        resolve(acc);
+      };
+      startsReq.onsuccess = (e) => { starts = e.target.result || []; done(); };
+      sessReq.onsuccess   = (e) => { sess   = e.target.result || []; done(); };
+      t.onerror = (e) => reject(e.target.error);
+    }));
+  },
+
+  // Inter-session gap distribution (D-bucket UI helper). Returns the
+  // distribution of consecutive-session gaps in days. Pure derive over
+  // existing `sessions` records — no new capture.
+  getSessionGaps() {
+    return openDB().then(db => new Promise((resolve, reject) => {
+      const req = db.transaction('sessions', 'readonly').objectStore('sessions').getAll();
+      req.onsuccess = (e) => {
+        const sessions = (e.target.result || [])
+          .filter(s => s && s.date)
+          .sort((a, b) => a.date.localeCompare(b.date));
+        const gaps = [];
+        for (let i = 1; i < sessions.length; i++) {
+          const a = new Date(sessions[i - 1].date);
+          const b = new Date(sessions[i].date);
+          if (isNaN(a.getTime()) || isNaN(b.getTime())) continue;
+          gaps.push((b.getTime() - a.getTime()) / 86400000);
+        }
+        resolve(gaps);
+      };
+      req.onerror = (e) => reject(e.target.error);
+    }));
+  },
+
   // ── XP ────────────────────────────────────────────────────────────
 
   grantXp(amount) {
@@ -232,7 +356,7 @@ const DB = {
 
   resetAllData() {
     return openDB().then(db => new Promise((resolve, reject) => {
-      const stores = ['user_profile', 'card_states', 'sessions', 'scores'];
+      const stores = ['user_profile', 'card_states', 'sessions', 'scores', 'card_events', 'mode_starts'];
       const t = db.transaction(stores, 'readwrite');
       stores.forEach(s => t.objectStore(s).clear());
       t.oncomplete = () => resolve();

@@ -119,6 +119,26 @@
     if (nextInterval === 0) due.setTime(due.getTime() + LAPSE_HOURS * 3600 * 1000);
     else                    due.setDate(due.getDate() + nextInterval);
 
+    // Mastery breadcrumbs — sticky once stamped so we can chart progress.
+    // first_correct_at: first non-miss verdict on this card.
+    // first_mature_at:  first time the card's interval crosses 21 days.
+    const prevFirstCorrect = state && state.first_correct_at;
+    const prevFirstMature  = state && state.first_mature_at;
+    const firstCorrectAt   = prevFirstCorrect || (q >= 3 ? now.toISOString() : null);
+    const firstMatureAt    = prevFirstMature  || (nextInterval >= MATURE_DAYS ? now.toISOString() : null);
+
+    // days_overdue_at_lapse: only stamped on a lapse, only meaningful when
+    // there was a prior due_date to overshoot. Lets us check whether SM-2
+    // intervals are calibrated to *this* user — if cards systematically
+    // lapse 10d past due, intervals are too short; 5d before, too long.
+    let daysOverdueAtLapse = (state && state.days_overdue_at_lapse) || null;
+    if (q < 3 && state && state.due_date) {
+      const dueT = new Date(state.due_date).getTime();
+      if (!isNaN(dueT)) {
+        daysOverdueAtLapse = Math.round((now.getTime() - dueT) / 86400000);
+      }
+    }
+
     return {
       interval_days:         nextInterval,
       ease_factor:           nextEf,
@@ -127,6 +147,9 @@
       due_date:              due.toISOString(),
       last_reviewed:         now.toISOString(),
       lapsed_from_interval:  nextLapsedFrom,
+      first_correct_at:      firstCorrectAt,
+      first_mature_at:       firstMatureAt,
+      days_overdue_at_lapse: daysOverdueAtLapse,
     };
   }
 

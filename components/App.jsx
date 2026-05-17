@@ -8,6 +8,7 @@ const TWEAK_DEFAULTS = {
   scanlines: 'off',
   hero: 'on',
   romaji: 'off',
+  masteryView: 'core',
 };
 
 // ───── Watermark typewriter greeting ─────────────────────────────────
@@ -685,6 +686,14 @@ const App = ({ cards }) => {
             todayKanji={todayKanji}
             onRun={onRun}
           />
+
+          {window.MasterySummary && (
+            <MasterySummary
+              cards={cards}
+              states={cardStates}
+              onTap={() => { window.location.href = 'Mastery.html'; }}
+            />
+          )}
 
           {leechCount > 0 && (
             <div className="kb-pane-wrap" onClick={() => openPanePop('leech')} title="tap for the full leech list">

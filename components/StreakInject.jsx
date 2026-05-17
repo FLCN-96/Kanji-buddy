@@ -383,6 +383,7 @@ const StreakInjectApp = ({ cards }) => {
   // Load card states + bounce out if no snapshot or out of attempts.
   React.useEffect(() => {
     if (!window.DB) return;
+    window.DB.recordModeStart('streak_inject').catch(() => {});
     window.DB.open()
       .then(() => window.DB.getAllCardStates())
       .then(s => { cardStatesRef.current = s || []; })
@@ -414,6 +415,12 @@ const StreakInjectApp = ({ cards }) => {
 
   const verdict = (v) => {
     if (!revealed) return;
+    const card = deck[idx];
+    if (window.DB && card) {
+      window.DB.recordCardEvent({
+        idx: card.idx, mode: 'streak_inject', outcome: v,
+      }).catch(() => {});
+    }
     const next = [...results, v];
     setResults(next);
     setTimeout(() => {

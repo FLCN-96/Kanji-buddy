@@ -2,7 +2,7 @@
 // land on next visit without forcing cache-version bumps. Cache-first
 // for heavy/stable assets (cards.json, icons, manifest, fonts).
 
-const CACHE = 'kb-v26';
+const CACHE = 'kb-v27';
 const CDN_CACHE = 'kb-cdn-v2';
 const NAV_FALLBACK = './Home.html';
 
@@ -18,6 +18,7 @@ const LOCAL_ASSETS = [
   './LeechHunt.html',
   './Match.html',
   './Decipher.html',
+  './Mastery.html',
   './Settings.html',
   './Diagnostics.html',
   './Dictionary.html',
@@ -30,6 +31,7 @@ const LOCAL_ASSETS = [
   './leechhunt.css',
   './match.css',
   './decipher.css',
+  './mastery.css',
   './settings.css',
   './diagnostics.css',
   './dictionary.css',
@@ -52,6 +54,7 @@ const LOCAL_ASSETS = [
   './data/srs.js',
   './data/rank.js',
   './data/streak.js',
+  './data/mastery.js',
   './data/romaji.js',
   './data/version.js',
   './components/App.jsx',
@@ -87,6 +90,12 @@ const LOCAL_ASSETS = [
   './components/DCPlay.jsx',
   './components/DCScreens.jsx',
   './components/Dictionary.jsx',
+  './components/Mastery.jsx',
+  './components/MasteryCore.jsx',
+  './components/MasteryConstellation.jsx',
+  './components/MasteryInstrument.jsx',
+  './components/MasteryDossier.jsx',
+  './components/MasterySummary.jsx',
 ];
 
 const CDN_ASSETS = [

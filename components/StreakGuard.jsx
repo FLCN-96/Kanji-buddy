@@ -103,6 +103,7 @@ const StreakGuardApp = ({ cards }) => {
 
   React.useEffect(() => {
     if (!window.DB) return;
+    window.DB.recordModeStart('streak_guard').catch(() => {});
     window.DB.open()
       .then(() => window.DB.getAllCardStates())
       .then(s => {
@@ -236,6 +237,13 @@ const StreakGuardApp = ({ cards }) => {
     lockRef.current = true;
     const ok = tileIdx === cell.correctIdx;
     setFeedback({ picked: tileIdx, correct: cell.correctIdx, ok });
+    if (window.DB && cell.card) {
+      window.DB.recordCardEvent({
+        idx: cell.card.idx, mode: 'streak_guard',
+        outcome: ok ? 'hit' : 'miss',
+        meta: { remain_ms: Math.round(cell.remainMs) },
+      }).catch(() => {});
+    }
     setTimeout(() => {
       setDeck(prev => prev.map(c => c.id === activeId
         ? { ...c, status: ok ? 'saved' : 'leaked', remainMs: ok ? c.totalMs : 0 }

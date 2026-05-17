@@ -4,6 +4,7 @@ const TWEAK_DEFAULTS = {
   scanlines: 'off',
   hero: 'on',
   romaji: 'off',
+  masteryView: 'core',
 };
 
 const readTweaks = () => {
@@ -281,6 +282,13 @@ const HardResetSwitch = () => {
 const DECK_SIZES = (typeof window !== 'undefined' && window.Daily?.DECK_SIZES) || [3, 5, 7, 10];
 const DECK_SIZE_DEFAULT = (typeof window !== 'undefined' && window.Daily?.DECK_SIZE) || 5;
 
+const MASTERY_VIEW_OPTS = [
+  { id: 'core',          label: 'core'    },
+  { id: 'constellation', label: 'constel' },
+  { id: 'instrument',    label: 'instr'   },
+  { id: 'dossier',       label: 'dossier' },
+];
+
 const Settings = () => {
   const [tweaks, setTweaks] = React.useState(readTweaks);
   const [user, setUser] = React.useState(null);
@@ -304,6 +312,16 @@ const Settings = () => {
     setDeckSizeState(n);
     if (window.DB && user) {
       window.DB.updateSettings({ deckSize: n }).catch(() => {});
+    }
+  };
+
+  // Mastery view also persists to DB so the Mastery page reads it on next
+  // load. The tweaks-mirror write below the appearance section handles the
+  // localStorage path; this just keeps the user.settings record in sync.
+  const setMasteryView = (id) => {
+    setTweaks(t => ({ ...t, masteryView: id }));
+    if (window.DB && user) {
+      window.DB.updateSettings({ masteryView: id }).catch(() => {});
     }
   };
 
@@ -385,6 +403,19 @@ const Settings = () => {
             options={[{id:'on',label:'on'},{id:'off',label:'off'}]} />
           <OptRow label="ROMAJI · DAILY RUN" value={tweaks.romaji} onSet={setKey('romaji')}
             options={[{id:'off',label:'off'},{id:'on',label:'on'}]} />
+        </section>
+
+        <section className="kb-set-section">
+          <div className="kb-set-section-head">▸ MASTERY</div>
+          <OptRow
+            label="DEFAULT VIEW"
+            value={tweaks.masteryView}
+            onSet={setMasteryView}
+            options={MASTERY_VIEW_OPTS}
+          />
+          <div className="kb-set-hint">
+            opens with this view · in-page tabs still let you flip between core · constellation · instrument · dossier
+          </div>
         </section>
 
         <div className="kb-set-foot">
