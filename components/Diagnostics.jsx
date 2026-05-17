@@ -56,12 +56,44 @@ const Pass = ({ ok, msg }) => (
   </span>
 );
 
+// Pull every record from an object store via raw IDB. Diagnostics intentionally
+// avoids paginating — we want the totals, not the last-N slice db.js exposes.
+// Returns [] on any error so the caller can render "(0)" rather than crash.
+const dumpStore = (storeName) => new Promise((resolve) => {
+  try {
+    if (!window.DB) return resolve([]);
+    window.DB.open().then(db => {
+      if (!db.objectStoreNames.contains(storeName)) return resolve([]);
+      const t = db.transaction(storeName, 'readonly');
+      const req = t.objectStore(storeName).getAll();
+      req.onsuccess = (e) => resolve(e.target.result || []);
+      req.onerror   = () => resolve([]);
+    }).catch(() => resolve([]));
+  } catch (e) { resolve([]); }
+});
+
+// Probe DB version + present store names. Driven off the open handle that
+// db.js maintains so we read the same connection the rest of the app uses.
+const probeSchema = () => new Promise((resolve) => {
+  try {
+    if (!window.DB) return resolve(null);
+    window.DB.open().then(db => {
+      const stores = [];
+      for (let i = 0; i < db.objectStoreNames.length; i++) stores.push(db.objectStoreNames.item(i));
+      resolve({ version: db.version, stores });
+    }).catch(() => resolve(null));
+  } catch (e) { resolve(null); }
+});
+
 const Diagnostics = () => {
   const [user, setUser] = React.useState(null);
   const [cardStates, setCardStates] = React.useState([]);
   const [sessions, setSessions] = React.useState([]);
   const [sessionsByDay, setSessionsByDay] = React.useState([]);
   const [scores, setScores] = React.useState([]);
+  const [cardEvents, setCardEvents] = React.useState([]);
+  const [modeStarts, setModeStarts] = React.useState([]);
+  const [schema, setSchema] = React.useState(null);
   const [loaded, setLoaded] = React.useState(false);
   const [tick, setTick] = React.useState(0);
   const [repairResult, setRepairResult] = React.useState(null);
@@ -99,11 +131,22 @@ const Diagnostics = () => {
           });
         } catch (e) { resolve([]); }
       });
+      // v4 stores added 2026-05-17 — capture-layer probe. Both arrays will
+      // be empty for users running on the old schema or before any events
+      // were recorded, which is fine and informative.
+      const [ce, ms, sch] = await Promise.all([
+        dumpStore('card_events'),
+        dumpStore('mode_starts'),
+        probeSchema(),
+      ]);
       setUser(u || null);
       setCardStates(cs || []);
       setSessions(ss || []);
       setSessionsByDay(sd || []);
       setScores(sc || []);
+      setCardEvents(ce || []);
+      setModeStarts(ms || []);
+      setSchema(sch || null);
       setLoaded(true);
     } catch (e) {
       setLoaded(true);
@@ -371,6 +414,65 @@ const Diagnostics = () => {
           <Row k="states w/ 0 reviews" v={String(newButTouched)} tone="dim" />
         </Section>
 
+        <Section
+          title="MASTERY // compute + stamps"
+          status={(() => {
+            if (!window.Mastery) return { label: 'Mastery global MISSING', tone: 'fail' };
+            return { label: 'OK', tone: 'ok' };
+          })()}
+        >
+          {(() => {
+            // masteryView config — db record is authoritative, localStorage
+            // mirror is fallback. Diagnostics surfaces both so a setting
+            // out-of-sync between the two is visible at a glance.
+            const dbView = user?.settings?.masteryView || '(unset)';
+            let lsView = '(unset)';
+            try {
+              const t = JSON.parse(localStorage.getItem('kb-tweaks') || '{}');
+              if (t.masteryView) lsView = t.masteryView;
+            } catch (e) {}
+            // Field-stamp coverage on card_states — counts how many records
+            // carry each of the new optional fields stamped by Srs.schedule.
+            // first_correct_at should match reviews >= 1; first_mature_at
+            // should match any card whose interval ever crossed 21d.
+            const firstCorrectCount = cardStates.filter(s => !!s.first_correct_at).length;
+            const firstMatureCount  = cardStates.filter(s => !!s.first_mature_at).length;
+            const daysOverdueCount  = cardStates.filter(s => s.days_overdue_at_lapse != null).length;
+            const reviewedCount     = cardStates.filter(s => (s.reviews || 0) >= 1).length;
+            const currentMatureCount = cardStates.filter(s => (s.interval_days || 0) >= 21).length;
+            const lapsedCount       = cardStates.filter(s => (s.lapses || 0) >= 1).length;
+            const stampLag = reviewedCount - firstCorrectCount;
+            const summary = window.Mastery
+              ? window.Mastery.computeMastery(window._kbDeck || [], cardStates, sessions)
+              : null;
+            return (
+              <>
+                <Row k="masteryView (db)" v={dbView} tone={dbView === '(unset)' ? 'dim' : 'ok'} />
+                <Row k="masteryView (ls)" v={lsView} tone={lsView === '(unset)' ? 'dim' : 'ok'} />
+                {summary && (
+                  <>
+                    <Row k="cleared (≥1 review)" v={String(summary.cleared)} tone="ok" />
+                    <Row k="mature (sticky 21d)" v={String(summary.mature)} tone="ok" />
+                    <Row k="stable (current 90d)" v={String(summary.stable)} tone="ok" />
+                    <Row k="elite (current 365d)" v={String(summary.elite)} tone="ok" />
+                    <Row k="longest interval" v={`${summary.longest}d`} tone="dim" />
+                    <Row k="hours studied" v={summary.hoursStudied == null ? '—' : `${summary.hoursStudied}h`} tone="dim" />
+                  </>
+                )}
+                <Row k="field: first_correct_at" v={`${firstCorrectCount}/${reviewedCount}`}
+                     tone={stampLag === 0 ? 'ok' : stampLag > 0 ? 'warn' : 'ok'}
+                     hint={stampLag > 0 ? `${stampLag} reviewed cards predate the stamp — will fill in as they're re-reviewed` : null} />
+                <Row k="field: first_mature_at" v={`${firstMatureCount}/${currentMatureCount}`}
+                     tone={firstMatureCount >= currentMatureCount ? 'ok' : 'warn'}
+                     hint={firstMatureCount < currentMatureCount ? 'some currently-mature cards lack the stamp — pre-stamp lifetime' : null} />
+                <Row k="field: days_overdue_at_lapse" v={`${daysOverdueCount}/${lapsedCount}`}
+                     tone={daysOverdueCount > 0 ? 'ok' : 'dim'}
+                     hint={lapsedCount > 0 && daysOverdueCount === 0 ? 'no lapse has been re-stamped yet — fires on next lapse' : null} />
+              </>
+            );
+          })()}
+        </Section>
+
         <Section title="STREAK INJECT // gates">
           <Row k="passesNewUserGates" v={passesGates ? 'YES' : 'NO'} tone={passesGates ? 'ok' : 'fail'} />
           <Row k="MIN_ACCOUNT_AGE_DAYS" v={String(minAge)} tone="dim" />
@@ -544,6 +646,116 @@ const Diagnostics = () => {
           ).sort(([,a],[,b]) => b - a).map(([m, n]) => (
             <Row key={m} k={`  · ${m}`} v={String(n)} tone="dim" />
           ))}
+        </Section>
+
+        <Section
+          title="CAPTURE LAYER // v4 schema"
+          status={(() => {
+            if (!schema) return { label: 'no schema probe', tone: 'fail' };
+            const expected = ['user_profile','card_states','sessions','scores','card_events','mode_starts'];
+            const missing = expected.filter(s => !schema.stores.includes(s));
+            if (schema.version < 4) return { label: `v${schema.version} (expected 4)`, tone: 'fail' };
+            if (missing.length)    return { label: `missing: ${missing.join(',')}`, tone: 'fail' };
+            return { label: `v${schema.version} OK`, tone: 'ok' };
+          })()}
+        >
+          {(() => {
+            const oneDay = 86400000;
+            const sevenDays = oneDay * 7;
+            const cutoff7  = Date.now() - sevenDays;
+            const cutoff24 = Date.now() - oneDay;
+            const eventsLast7d  = cardEvents.filter(e => e.date && new Date(e.date).getTime() >= cutoff7);
+            const eventsLast24h = cardEvents.filter(e => e.date && new Date(e.date).getTime() >= cutoff24);
+            const startsLast7d  = modeStarts.filter(m => m.date && new Date(m.date).getTime() >= cutoff7);
+            const eventsByMode = eventsLast7d.reduce((acc, e) => {
+              const m = e.mode || 'unknown';
+              acc[m] = (acc[m] || 0) + 1;
+              return acc;
+            }, {});
+            const startsByMode = startsLast7d.reduce((acc, m) => {
+              const k = m.mode || 'unknown';
+              acc[k] = (acc[k] || 0) + 1;
+              return acc;
+            }, {});
+            // Funnel: pair starts vs completes (sessions) per mode over the
+            // same 7-day window. A start without a complete is an abandon.
+            const sessionsLast7d = sessions.filter(s => s.date && new Date(s.date).getTime() >= cutoff7);
+            const completesByMode = sessionsLast7d.reduce((acc, s) => {
+              const m = s.mode || 'unknown';
+              acc[m] = (acc[m] || 0) + 1;
+              return acc;
+            }, {});
+            const funnelModes = Array.from(new Set([
+              ...Object.keys(startsByMode),
+              ...Object.keys(completesByMode),
+            ])).sort();
+            // hour-stamp coverage — saveSession started writing `hour` at
+            // v4. Pre-v4 sessions won't have it. This count tells the user
+            // how many of their recent sessions carry the new field.
+            const hourCovered = sessionsLast7d.filter(s => typeof s.hour === 'number').length;
+            return (
+              <>
+                {schema && (
+                  <>
+                    <Row k="DB_VERSION" v={String(schema.version)} tone={schema.version >= 4 ? 'ok' : 'fail'} />
+                    <Row k="stores" v={schema.stores.join(', ')} tone="dim" />
+                  </>
+                )}
+                <Row k="card_events total" v={String(cardEvents.length)} tone={cardEvents.length > 0 ? 'ok' : 'dim'} />
+                <Row k="card_events (24h)" v={String(eventsLast24h.length)} tone="dim" />
+                <Row k="card_events (7d)" v={String(eventsLast7d.length)} tone="dim" />
+                {Object.entries(eventsByMode).sort(([,a],[,b]) => b - a).map(([m, n]) => (
+                  <Row key={`ce-${m}`} k={`  · ${m}`} v={String(n)} tone="dim" />
+                ))}
+                <Row k="mode_starts total" v={String(modeStarts.length)} tone={modeStarts.length > 0 ? 'ok' : 'dim'} />
+                <Row k="mode_starts (7d)" v={String(startsLast7d.length)} tone="dim" />
+                <Row k="sessions (7d) w/ hour" v={`${hourCovered}/${sessionsLast7d.length}`}
+                     tone={sessionsLast7d.length === 0 ? 'dim' : hourCovered === sessionsLast7d.length ? 'ok' : 'warn'}
+                     hint={sessionsLast7d.length > 0 && hourCovered < sessionsLast7d.length
+                       ? 'some sessions predate the hour stamp — fills in for new sessions'
+                       : null} />
+                {funnelModes.length > 0 && (
+                  <div className="dx-block">
+                    <div className="dx-block-row">
+                      <span className="dx-block-k" style={{fontWeight: 700}}>mode · funnel (7d)</span>
+                      <span className="dx-block-v">starts → completes</span>
+                    </div>
+                    {funnelModes.map(m => {
+                      const st = startsByMode[m] || 0;
+                      const co = completesByMode[m] || 0;
+                      const abandon = st > co;
+                      return (
+                        <div key={`f-${m}`} className="dx-block-row">
+                          <span className={`dx-block-k${abandon ? ' tone-warn' : ''}`}>{m}</span>
+                          <span className="dx-block-v">
+                            {st} → {co}
+                            {abandon && <span style={{color:'var(--accent-amber, #f5a524)', marginLeft: 6}}>·  {st - co} abandoned</span>}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {cardEvents.length > 0 && (
+                  <>
+                    <div className="dx-block-divider" />
+                    <div className="dx-block">
+                      <div className="dx-block-row">
+                        <span className="dx-block-k" style={{fontWeight: 700}}>latest 8 events</span>
+                        <span className="dx-block-v">mode · outcome · when</span>
+                      </div>
+                      {cardEvents.slice(-8).reverse().map((e, i) => (
+                        <div key={`evt-${i}`} className="dx-block-row">
+                          <span className="dx-block-k">idx={e.idx}</span>
+                          <span className="dx-block-v">{e.mode} · {e.outcome} · {fmtIso(e.date)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            );
+          })()}
         </Section>
 
         <Section title="LOCAL STORAGE">

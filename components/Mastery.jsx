@@ -137,33 +137,86 @@ const Mastery = ({ cards }) => {
           <div className="kb-mastery-loading">▸ MOUNTING READOUT...</div>
         )}
 
-        {!loading && view === 'core' && window.MasteryCore && (
-          <MasteryCore
-            roster={roster}
-            breakdown={breakdown}
-            milestones={milestones}
-          />
-        )}
+        {!loading && (
+          <MasteryViewBoundary key={view} viewKey={view}>
+            {view === 'core' && window.MasteryCore && (
+              <MasteryCore
+                roster={roster}
+                breakdown={breakdown}
+                milestones={milestones}
+              />
+            )}
 
-        {!loading && view === 'constellation' && window.MasteryConstellation && (
-          <MasteryConstellation roster={roster} />
-        )}
+            {view === 'constellation' && window.MasteryConstellation && (
+              <MasteryConstellation roster={roster} />
+            )}
 
-        {!loading && view === 'instrument' && window.MasteryInstrument && (
-          <MasteryInstrument
-            summary={summary}
-            calendar={calendar}
-            velocity={velocity}
-            milestones={milestones}
-          />
-        )}
+            {view === 'instrument' && window.MasteryInstrument && (
+              <MasteryInstrument
+                summary={summary}
+                calendar={calendar}
+                velocity={velocity}
+                milestones={milestones}
+              />
+            )}
 
-        {!loading && view === 'dossier' && window.MasteryDossier && (
-          <MasteryDossier roster={roster} />
+            {view === 'dossier' && window.MasteryDossier && (
+              <MasteryDossier roster={roster} />
+            )}
+          </MasteryViewBoundary>
         )}
       </main>
     </div>
   );
 };
 
-Object.assign(window, { Mastery, MASTERY_VIEWS, MASTERY_VIEW_DEFAULT });
+// Render-time error boundary — function components can't catch their own
+// render exceptions. Wrap each view so a thrown invariant surfaces as a
+// readable panel inside the page shell instead of blanking it.
+class MasteryViewBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { err: null }; }
+  static getDerivedStateFromError(err) { return { err }; }
+  componentDidCatch(err, info) {
+    try { console.error('[mastery] view render failed', err, info); } catch (e) {}
+  }
+  // The parent passes `key={view}` so this boundary remounts on a view
+  // switch — that guarantees a poisoned view doesn't bleed into the next
+  // one without us having to reset state imperatively.
+  render() {
+    if (this.state.err) {
+      const e = this.state.err;
+      const detail = (e && e.stack) || (e && e.message) || String(e);
+      return (
+        <section style={{
+          background: 'rgba(0,0,0,.32)',
+          border: '1px solid var(--accent-magenta)',
+          padding: 14,
+          marginTop: 12,
+          fontFamily: 'var(--font-mono)',
+        }}>
+          <div style={{
+            color: 'var(--accent-magenta)',
+            fontSize: 12,
+            letterSpacing: '.14em',
+            marginBottom: 8,
+          }}>
+            ▸ VIEW RENDER FAILED · {this.props.viewKey || '?'}
+          </div>
+          <pre style={{
+            whiteSpace: 'pre-wrap',
+            color: 'var(--fg-1)',
+            fontSize: 12,
+            lineHeight: 1.5,
+            margin: 0,
+          }}>{detail}</pre>
+          <div style={{ marginTop: 10, color: 'var(--fg-2)', fontSize: 11, letterSpacing: '.1em' }}>
+            try a different view via the tabs above, or check Diagnostics for the capture-layer state
+          </div>
+        </section>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+Object.assign(window, { Mastery, MasteryViewBoundary, MASTERY_VIEWS, MASTERY_VIEW_DEFAULT });

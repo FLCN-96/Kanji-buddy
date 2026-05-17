@@ -34,11 +34,53 @@
 <script type="text/babel" src="components/Mastery.jsx"></script>
 
 <script type="text/babel">
-(async () => {
-  const cards = await window.loadCards();
-  const root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(<Mastery cards={cards} />);
-})();
+  // Mirror Diagnostics.html's defensive mount: blank-page silence is the
+  // worst possible failure mode for a stats page, so surface load and
+  // render exceptions inline with a terminal-style fallback. Same skeleton
+  // as Diagnostics so the user can copy/paste the error verbatim.
+  const mount = document.getElementById('root');
+  const showFallback = (title, detail) => {
+    mount.innerHTML =
+      '<div class="kb-shell variant-game kb-mastery-shell">' +
+        '<header class="kb-mastery-top">' +
+          '<a href="Home.html" class="kb-mastery-back">◂ home</a>' +
+          '<div class="kb-mastery-title">▸ MASTERY <span class="kb-mastery-title-meta">// load failure</span></div>' +
+        '</header>' +
+        '<main class="kb-mastery-main">' +
+          '<section style="background:rgba(0,0,0,.32);border:1px solid var(--accent-magenta);padding:14px;margin-top:12px">' +
+            '<div style="color:var(--accent-magenta);font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;margin-bottom:8px">' +
+              '▸ ' + title +
+            '</div>' +
+            '<pre style="white-space:pre-wrap;color:var(--fg-1);font:12px/1.5 var(--font-mono);margin:0">' +
+              String(detail).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])) +
+            '</pre>' +
+            '<div style="margin-top:14px;color:var(--fg-2);font-family:var(--font-mono);font-size:11px;letter-spacing:.1em">' +
+              'hint · pull-to-refresh, or Settings → diagnostics for the full readout' +
+            '</div>' +
+          '</section>' +
+        '</main>' +
+      '</div>';
+  };
+  // Capture errors as early as possible so a parse/init error in one of the
+  // jsx files (which Babel can fail asynchronously) surfaces visibly.
+  window.addEventListener('error', (ev) => {
+    if (mount.children.length === 0) {
+      showFallback('uncaught error', (ev.error && ev.error.stack) || ev.message || String(ev));
+    }
+  });
+
+  (async () => {
+    try {
+      if (typeof window.Mastery !== 'function') {
+        throw new Error('window.Mastery component is not defined — one of the components/Mastery*.jsx files failed to load or parse. Most often a stale service worker. Try the version-update banner on Home, or hard-refresh.');
+      }
+      const cards = await window.loadCards();
+      const root = ReactDOM.createRoot(mount);
+      root.render(<Mastery cards={cards} />);
+    } catch (e) {
+      showFallback('mount failed', (e && e.stack) || (e && e.message) || String(e));
+    }
+  })();
 </script>
 
 <script>
