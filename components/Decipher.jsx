@@ -111,14 +111,17 @@ function pickWordForDepth(buckets, depth, usedWords) {
   for (const s of order) {
     const arr = buckets.get(s);
     if (!arr || !arr.length) continue;
-    // Weighted pick from the top of the bucket — earlier (higher-pri) words
-    // are more likely. Bias decays exponentially so rare-word picks are
-    // still possible deep in.
     const fresh = arr.filter(w => !usedWords.has(w.w));
     if (!fresh.length) continue;
-    const headSize = Math.min(fresh.length, 12 + depth);
-    const head = fresh.slice(0, headSize);
-    return head[Math.floor(Math.random() * head.length)];
+    // Sample from a generous window so back-to-back runs don't loop on the
+    // same dozen top-pri words. The window is at least 80 entries (or the
+    // whole bucket if smaller), and a soft top-bias keeps common words more
+    // likely without locking out the long tail — `Math.random()²` skews
+    // toward 0, so ≈50% of picks land in the top 1/4 of the window while
+    // every position is still reachable.
+    const window = Math.min(fresh.length, Math.max(80, Math.floor(fresh.length * 0.4)));
+    const skew = Math.random() * Math.random();
+    return fresh[Math.floor(skew * window)];
   }
   // Last-ditch fallback: any unused word, anywhere.
   for (const arr of buckets.values()) {
