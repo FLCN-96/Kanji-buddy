@@ -31,7 +31,13 @@
   grid-template-rows: auto auto;
   gap: 4px 12px;
   align-items: center;
-  padding: 10px 14px 10px;
+  /* iOS PWA: the viewport extends under the Dynamic Island / notch — pad
+     by env(safe-area-inset-top) so the back link and title stay below it.
+     Mirrors the .kb-top pattern in home.css that already handles this on
+     the Home shell. */
+  padding:
+    calc(10px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right))
+    10px calc(14px + env(safe-area-inset-left));
   background: linear-gradient(180deg, var(--bg-1, #0e131c) 0%, var(--bg-1, #0e131c) 70%, rgba(14,19,28,.0) 100%);
   border-bottom: 1px solid rgba(0,229,255,.15);
 }
