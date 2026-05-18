@@ -3,6 +3,44 @@
   "entries": [
     {
       "v": "current",
+      "date": "2026-05-17",
+      "title": "Mastery readout + Home consolidation",
+      "notes": [
+        "New Mastery page with four views: core (JLPT-banded glyph wall), constellation (SVG scatter by maturity), instrument (HUD with XP velocity + maturation calendar), dossier (per-kanji codex cards)",
+        "Home gains a 4-cell mastery summary strip (cleared / mature / stable / longest) above the leech panel — tap to open the Mastery page",
+        "Home: Countdown + DuePanel + Forecast + RunPrimary collapsed into a single DailyStrip pane",
+        "SRS schedule now stamps mastery breadcrumbs onto card states (first_correct_at, first_mature_at, days_overdue_at_lapse) for downstream views",
+        "Every mode now writes cross-mode evidence to a new card_events store (Run/TA/Survival/Match/StreakGuard/LeechHunt/Decipher), and each App mount writes a mode_starts row for funnel analysis",
+        "Home ambient animations (streak breathe/flicker/shimmer, daily-strip fade, hot-tile glimmer, xp-slide, ladder pulse, void-jitter) share one --kb-beat (1.8s) so they realign on a common downbeat instead of drifting chaotically",
+        "iOS PWA fixes: Mastery topbar padded by env(safe-area-inset-top) so Dynamic Island doesn't eat it; visible error fallback + Diagnostics MASTERY + CAPTURE LAYER sections"
+      ]
+    },
+    {
+      "v": "previous",
+      "date": "2026-05-16",
+      "title": "Decipher mode + Dictionary page",
+      "notes": [
+        "New Decipher minigame: key a hidden word kanji-by-kanji with Wordle-style commit feedback (per-position correct / present / absent)",
+        "Decipher writes per-kanji card_events on every commit (correct AND wrong) so word-level wins still produce symmetric per-kanji evidence",
+        "Word-pick window widened so back-to-back runs vary instead of repeating the same target",
+        "Dictionary page: JMdict-derived top-25 example words per kanji, browseable from any kanji surface"
+      ]
+    },
+    {
+      "v": "previous",
+      "date": "2026-05-07",
+      "title": "Streak Inject hardening + SRS leech recovery",
+      "notes": [
+        "Streak Inject: snapshot now self-invalidates when stale + CLEAR SNAPSHOT button in Diagnostics; patched gaps no longer retrigger the inject tile or get confused with real sessions",
+        "Streak Inject: calendar key mismatch fixed (was double-counting some days as both patched and real), production odds restored after troubleshooting bypass, unicode checkmark on patched calendar days",
+        "Full-gap recovery — INJECT can now patch a multi-day hole, not just yesterday",
+        "SRS: weighted leech recovery + centralized leech threshold (lapses ≥ 3)",
+        "Settings: deck size selection now reflects saved value on load (was always rendering default)",
+        "Diagnostics: gap analysis section, raw detection probe, attempt history; fixed crash from stale Rank.fromXp reference"
+      ]
+    },
+    {
+      "v": "previous",
       "date": "2026-05-02",
       "title": "Streak Inject — recover a lost chain",
       "notes": [
