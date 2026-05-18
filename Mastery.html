@@ -71,12 +71,15 @@
 
   (async () => {
     try {
-      if (typeof window.Mastery !== 'function') {
-        throw new Error('window.Mastery component is not defined — one of the components/Mastery*.jsx files failed to load or parse. Most often a stale service worker. Try the version-update banner on Home, or hard-refresh.');
+      if (typeof window.MasteryApp !== 'function') {
+        throw new Error('window.MasteryApp component is not defined — one of the components/Mastery*.jsx files failed to load or parse. Most often a stale service worker. Try the version-update banner on Home, or hard-refresh.');
+      }
+      if (!window.Mastery || typeof window.Mastery.computeMastery !== 'function') {
+        throw new Error('window.Mastery (data namespace from data/mastery.js) is missing or shadowed — check that data/mastery.js is loaded BEFORE any components/Mastery*.jsx scripts and that no component assigns to window.Mastery.');
       }
       const cards = await window.loadCards();
       const root = ReactDOM.createRoot(mount);
-      root.render(<Mastery cards={cards} />);
+      root.render(<MasteryApp cards={cards} />);
     } catch (e) {
       showFallback('mount failed', (e && e.stack) || (e && e.message) || String(e));
     }

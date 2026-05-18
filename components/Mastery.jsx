@@ -57,7 +57,11 @@ const MasteryTopbar = ({ view, onView, summary }) => {
   );
 };
 
-const Mastery = ({ cards }) => {
+// NOTE: named MasteryApp to avoid colliding with window.Mastery — that name
+// is the data namespace defined in data/mastery.js (computeMastery,
+// getMasteryRoster, …). Clobbering it with the component made every
+// useMemo call in this orchestrator throw `undefined.computeMastery`.
+const MasteryApp = ({ cards }) => {
   const [user, setUser]         = React.useState(null);
   const [states, setStates]     = React.useState(null);
   const [sessions, setSessions] = React.useState(null);
@@ -219,4 +223,4 @@ class MasteryViewBoundary extends React.Component {
   }
 }
 
-Object.assign(window, { Mastery, MasteryViewBoundary, MASTERY_VIEWS, MASTERY_VIEW_DEFAULT });
+Object.assign(window, { MasteryApp, MasteryViewBoundary, MASTERY_VIEWS, MASTERY_VIEW_DEFAULT });
