@@ -93,7 +93,8 @@ body[data-scanlines="on"]::after {
 .kb-wm::after {
   content: ''; display: inline-block; width: 7px; height: 12px;
   background: var(--accent-cyan); margin-left: 4px;
-  animation: blink 1s steps(2) infinite;
+  animation: blink var(--kb-beat) steps(2) infinite;
+  animation-delay: 0s;
 }
 /* During a greeting the caret tracks the cursor at a typewriter cadence —
    kill the idle blink so the eye follows the character being typed. */
@@ -197,14 +198,16 @@ body[data-scanlines="on"]::after {
   box-shadow:
     0 0 10px rgba(245,165,36,.28),
     inset 0 -6px 12px rgba(255,120,30,.15);
-  animation: kb-streak-breathe 2.8s ease-in-out infinite;
+  animation: kb-streak-breathe calc(var(--kb-beat) * 2) ease-in-out infinite;
+  animation-delay: 0s;
 }
 .kb-streak-chip.is-hot .kb-streak-chip-icon {
   color: var(--accent-amber);
   text-shadow:
     0 0 8px rgba(245,165,36,.9),
     0 0 16px rgba(255,120,30,.5);
-  animation: kb-streak-flicker 1.6s ease-in-out infinite;
+  animation: kb-streak-flicker var(--kb-beat) ease-in-out infinite;
+  animation-delay: 0s;
 }
 .kb-streak-chip.is-hot .kb-streak-chip-lbl {
   color: var(--accent-amber);
@@ -234,7 +237,8 @@ body[data-scanlines="on"]::after {
   );
   background-size: 300% 100%;
   pointer-events: none;
-  animation: kb-streak-shimmer 3.6s ease-in-out infinite;
+  animation: kb-streak-shimmer calc(var(--kb-beat) * 2) ease-in-out infinite;
+  animation-delay: 0s;
   mix-blend-mode: screen;
 }
 
@@ -254,7 +258,8 @@ body[data-scanlines="on"]::after {
   border-color: var(--danger);
   background: rgba(255,92,106,.06);
   text-shadow: 0 0 6px rgba(255,92,106,.55);
-  animation: kb-streak-error 2.4s ease-in-out infinite;
+  animation: kb-streak-error calc(var(--kb-beat) * 2) ease-in-out infinite;
+  animation-delay: 0s;
 }
 .kb-streak-chip.is-broken .kb-streak-chip-lbl { color: var(--danger); opacity: .85; }
 .kb-streak-chip.is-broken .kb-streak-chip-num {
@@ -316,7 +321,7 @@ body[data-scanlines="on"]::after {
   pointer-events: none;
   opacity: 0;
   will-change: transform, opacity;
-  animation: kb-streak-spark 2.8s ease-out infinite;
+  animation: kb-streak-spark calc(var(--kb-beat) * 2) ease-out infinite;
   animation-delay: var(--sd, 0s);
 }
 @keyframes kb-streak-spark {
@@ -994,7 +999,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   transform: translate3d(-180%, 0, 0) rotate(25deg);
   transform-origin: center;
   will-change: transform;
-  animation: kb-hot-glimmer 9s cubic-bezier(.3,.7,.4,1) infinite;
+  animation: kb-hot-glimmer calc(var(--kb-beat) * 5) cubic-bezier(.3,.7,.4,1) infinite;
+  animation-delay: 0s;
   z-index: 1;
 }
 .kb-chal-grid.is-done .kb-chal.is-hot.is-gold::after {
@@ -1008,7 +1014,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
     0 0 5px rgba(255,210,120,.7),
     0 0 12px rgba(245,165,36,.45);
   opacity: 0;
-  animation: kb-hot-twinkle 9s ease-out infinite;
+  animation: kb-hot-twinkle calc(var(--kb-beat) * 5) ease-out infinite;
+  animation-delay: 0s;
   pointer-events: none;
   z-index: 2;
 }
@@ -1034,7 +1041,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   transform: translate3d(-180%, 0, 0) rotate(25deg);
   transform-origin: center;
   will-change: transform;
-  animation: kb-hot-glimmer 14s cubic-bezier(.3,.7,.4,1) infinite;
+  animation: kb-hot-glimmer calc(var(--kb-beat) * 8) cubic-bezier(.3,.7,.4,1) infinite;
+  animation-delay: 0s;
   z-index: 1;
 }
 
@@ -1133,7 +1141,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .variant-xp-fill::after {
   content: ''; position: absolute; inset: 0;
   background: repeating-linear-gradient(-45deg, transparent 0 4px, rgba(255,255,255,.15) 4px 6px);
-  animation: xp-slide 1.5s linear infinite;
+  animation: xp-slide var(--kb-beat) linear infinite;
+  animation-delay: 0s;
 }
 @keyframes xp-slide {
   from { transform: translateX(0); }
@@ -1171,7 +1180,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
     1px 0 0 rgba(255,61,255,.6),
     -1px 0 0 rgba(34,211,238,.6),
     0 0 14px rgba(180,200,255,.35);
-  animation: kb-void-jitter 5.5s steps(11) infinite;
+  animation: kb-void-jitter calc(var(--kb-beat) * 3) steps(11) infinite;
+  animation-delay: 0s;
 }
 
 .variant-xp.tier-cyan .variant-xp-fill      { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta)); }
@@ -1553,7 +1563,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   transition: box-shadow var(--dur-base) var(--ease-snap);
 }
 .kb-ladder-seg.is-loading {
-  animation: kb-ladder-pulse 1.4s ease-in-out infinite;
+  animation: kb-ladder-pulse var(--kb-beat) ease-in-out infinite;
+  animation-delay: 0s;
 }
 @keyframes kb-ladder-pulse {
   0%, 100% { background: var(--bg-2); }
@@ -1788,7 +1799,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 /* A6 — cold state passive nudge: gentle border pulse so the user
    notices that today's session hasn't been logged yet. */
 .kb-streak-chip.is-cold {
-  animation: kb-streak-cold-pulse 5.4s ease-in-out infinite;
+  animation: kb-streak-cold-pulse calc(var(--kb-beat) * 3) ease-in-out infinite;
+  animation-delay: 0s;
 }
 @keyframes kb-streak-cold-pulse {
   0%, 88%, 100% { box-shadow: 0 0 0 rgba(160,180,210,0); border-color: var(--line-bright); }
@@ -2119,7 +2131,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   text-shadow: 1px 0 0 rgba(255,61,255,.6), -1px 0 0 rgba(34,211,238,.6);
 }
 .kb-pop-ladder-row.tier-void.is-current .kb-pop-ladder-name b {
-  animation: kb-void-jitter 4s steps(9) infinite;
+  animation: kb-void-jitter calc(var(--kb-beat) * 2) steps(9) infinite;
+  animation-delay: 0s;
 }
 .kb-pop-ladder-rom { font-weight: 700; color: var(--fg-1); font-size: 12px; }
 .kb-pop-ladder-name { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
@@ -2416,8 +2429,8 @@ button.kb-daily-strip:active:not(.is-loading):not(.is-done) { transform: scale(.
   inset: 0;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.kb-daily-strip-icon-circle { animation: kb-daily-strip-fade-a 4s ease-in-out infinite; }
-.kb-daily-strip-icon-k      { animation: kb-daily-strip-fade-b 4s ease-in-out infinite; }
+.kb-daily-strip-icon-circle { animation: kb-daily-strip-fade-a calc(var(--kb-beat) * 2) ease-in-out infinite; animation-delay: 0s; }
+.kb-daily-strip-icon-k      { animation: kb-daily-strip-fade-b calc(var(--kb-beat) * 2) ease-in-out infinite; animation-delay: 0s; }
 @keyframes kb-daily-strip-fade-a {
   0%, 42%   { opacity: 1; }
   50%, 92%  { opacity: 0; }

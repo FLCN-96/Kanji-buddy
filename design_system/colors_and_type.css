@@ -121,6 +121,12 @@
   --dur-base:   200ms;
   --dur-slow:   320ms;
 
+  /* Shared "symphony" beat for ambient infinite animations.
+     Tune all looping ambient durations to integer multiples of this
+     (1×, 2×, 3×, 5×) so Home's breathing/flicker/glimmer share meter
+     and realign on a common downbeat every LCM seconds. */
+  --kb-beat:    1.8s;
+
   /* ---------- Type: families ---------- */
   --font-mono:       'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
   --font-jp-serif:   'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
