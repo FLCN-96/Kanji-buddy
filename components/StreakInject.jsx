@@ -382,6 +382,7 @@ const StreakInjectApp = ({ cards }) => {
 
   // Load card states + bounce out if no snapshot or out of attempts.
   React.useEffect(() => {
+    if (window.AudioManager) window.AudioManager.setBedForMode('streakinject');
     if (!window.DB) return;
     window.DB.recordModeStart('streak_inject').catch(() => {});
     window.DB.open()
@@ -421,6 +422,8 @@ const StreakInjectApp = ({ cards }) => {
         idx: card.idx, mode: 'streak_inject', outcome: v,
       }).catch(() => {});
     }
+    if (v === 'hit') window.AudioManager && window.AudioManager.correct();
+    else window.AudioManager && window.AudioManager.wrong();
     const next = [...results, v];
     setResults(next);
     setTimeout(() => {

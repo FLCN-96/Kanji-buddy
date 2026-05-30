@@ -150,6 +150,7 @@ const SurvivalApp = ({ cards }) => {
   const seenSetRef = React.useRef(new Set());
 
   React.useEffect(() => {
+    if (window.AudioManager) window.AudioManager.setBedForMode('survival');
     if (!window.DB) return;
     window.DB.recordModeStart('survival').catch(() => {});
     window.DB.open()
@@ -279,6 +280,7 @@ const SurvivalApp = ({ cards }) => {
     }
 
     if (ok) {
+      window.AudioManager && window.AudioManager.correct();
       const nextDepth = depth + 1;
       setDepth(nextDepth);
       // layer breach (every 10 depth) — JLPT escalates here too
@@ -300,6 +302,7 @@ const SurvivalApp = ({ cards }) => {
         dealNext(nu, nextDepth);
       }, nextDepth % 10 === 0 ? 900 : 280);
     } else {
+      window.AudioManager && window.AudioManager.wrong();
       setHeartBreak(true);
       setTimeout(() => finish(depth, question.card), 1400);
     }

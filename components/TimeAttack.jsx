@@ -127,6 +127,7 @@ const TimeAttackApp = ({ cards }) => {
   const seenSetRef = React.useRef(new Set());
 
   React.useEffect(() => {
+    if (window.AudioManager) window.AudioManager.setBedForMode('time');
     if (!window.DB) return;
     window.DB.recordModeStart('time_attack').catch(() => {});
     window.DB.open()
@@ -264,6 +265,7 @@ const TimeAttackApp = ({ cards }) => {
   const onTilePick = (tileIdx) => {
     if (phase !== 'play' || !question || lockedRef.current) return;
     lockedRef.current = true;
+    window.AudioManager && window.AudioManager.tick();
     const ok = tileIdx === question.correctIdx;
     const answerMs = Math.round(performance.now() - questionStart.current);
     setTileFeedback({ picked: tileIdx, correct: question.correctIdx, ok });
@@ -277,6 +279,7 @@ const TimeAttackApp = ({ cards }) => {
     }
 
     if (ok) {
+      window.AudioManager && window.AudioManager.correct();
       // speed bonus: full 3 pts up to 1s, scales down to 1 pt at 3s+
       const base = 1;
       const speed = answerMs <= 1000 ? 2 : answerMs <= 2000 ? 1 : 0;
@@ -288,6 +291,7 @@ const TimeAttackApp = ({ cards }) => {
       setMaxCombo(m => Math.max(m, nc));
       if (nc > 0 && nc % 3 === 0) setComboBurst({ n: nc, t: Date.now() });
     } else {
+      window.AudioManager && window.AudioManager.wrong();
       setMisses(m => m + 1);
       setCombo(0);
       setGlitch(true);

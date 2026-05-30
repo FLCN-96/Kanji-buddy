@@ -191,6 +191,7 @@ const MatchApp = ({ cards }) => {
   const roundRef = React.useRef(0);
 
   React.useEffect(() => {
+    if (window.AudioManager) window.AudioManager.setBedForMode('match');
     if (!window.DB) return;
     window.DB.recordModeStart('match').catch(() => {});
     window.DB.open()
@@ -352,7 +353,7 @@ const MatchApp = ({ cards }) => {
     if (phase !== 'play') return;
     if (resolved[id]) return;
 
-    if (!selected) { setSelected({ col, id }); return; }
+    if (!selected) { window.AudioManager && window.AudioManager.tick(); setSelected({ col, id }); return; }
     if (selected.col === col && selected.id === id) { setSelected(null); return; }
     if (selected.col === col) {
       // clicked same column twice → switch selection
@@ -382,6 +383,7 @@ const MatchApp = ({ cards }) => {
     }
     if (ok) {
       // MATCH
+      window.AudioManager && window.AudioManager.correct();
       const now = performance.now();
       const dt = now - lastMatchAtRef.current;
       lastMatchAtRef.current = now;
@@ -414,6 +416,7 @@ const MatchApp = ({ cards }) => {
       if (vEl) popAt(vEl.getBoundingClientRect(), colorK);
     } else {
       // WRONG
+      window.AudioManager && window.AudioManager.wrong();
       setMisses(m => m + 1);
       setCombo(0);
       penaltyAccumRef.current += 2000; // -2s

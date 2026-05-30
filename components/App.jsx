@@ -9,6 +9,8 @@ const TWEAK_DEFAULTS = {
   hero: 'on',
   romaji: 'off',
   masteryView: 'core',
+  sound: 'full',   // 'off' | 'sfx' | 'full' — AudioManager reads/writes this
+  volume: 0.8,     // 0..1
 };
 
 // ───── Watermark typewriter greeting ─────────────────────────────────
@@ -415,9 +417,10 @@ const App = ({ cards }) => {
   const [inject, setInject] = React.useState(null);
 
   React.useEffect(() => {
+    if (window.AudioManager) window.AudioManager.init();
     if (window.Rank) {
       const p = window.Rank.consumePromotion();
-      if (p) setPromotion(p);
+      if (p) { setPromotion(p); if (window.AudioManager) window.AudioManager.rankUp(); }
     }
     if (window.Streak) {
       const cont = window.Streak.consumeContinued();
@@ -425,7 +428,7 @@ const App = ({ cards }) => {
       const best = window.Streak.consumeBest();
       const milestone = window.Streak.consumeMilestone();
       if (cont || brok || best) setStreakBurst({ continued: cont, broken: brok, best: best });
-      if (milestone) setStreakMilestone(milestone);
+      if (milestone) { setStreakMilestone(milestone); if (window.AudioManager) window.AudioManager.milestone(); }
     }
   }, []);
 

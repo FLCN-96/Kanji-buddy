@@ -5,6 +5,8 @@ const TWEAK_DEFAULTS = {
   hero: 'on',
   romaji: 'off',
   masteryView: 'core',
+  sound: 'full',   // 'off' | 'sfx' | 'full'
+  volume: 0.8,     // 0..1
 };
 
 const readTweaks = () => {
@@ -330,7 +332,23 @@ const Settings = () => {
     try { localStorage.setItem('kb-tweaks', JSON.stringify(tweaks)); } catch(e) {}
   }, [tweaks]);
 
+  // Arm audio so the AUDIO toggles can preview sound on this page.
+  React.useEffect(() => { if (window.AudioManager) window.AudioManager.init(); }, []);
+
   const setKey = (k) => (v) => setTweaks(t => ({ ...t, [k]: v }));
+
+  // Audio settings persist to tweaks AND apply live via AudioManager (so the
+  // change is heard immediately, not just on the next page load). The nav()
+  // blip is audible confirmation and doubles as the first-gesture unlock.
+  const setSound = (v) => {
+    setKey('sound')(v);
+    if (window.AudioManager) { window.AudioManager.setMode(v); window.AudioManager.nav(); }
+  };
+  const setVolume = (v) => {
+    const f = parseFloat(v);
+    setKey('volume')(f);
+    if (window.AudioManager) { window.AudioManager.setVolume(f); window.AudioManager.nav(); }
+  };
 
   const saveName = async () => {
     const n = nameDraft.trim();
@@ -403,6 +421,14 @@ const Settings = () => {
             options={[{id:'on',label:'on'},{id:'off',label:'off'}]} />
           <OptRow label="ROMAJI · DAILY RUN" value={tweaks.romaji} onSet={setKey('romaji')}
             options={[{id:'off',label:'off'},{id:'on',label:'on'}]} />
+        </section>
+
+        <section className="kb-set-section">
+          <div className="kb-set-section-head">▸ AUDIO LAYER</div>
+          <OptRow label="SOUND" value={tweaks.sound} onSet={setSound}
+            options={[{id:'full',label:'full'},{id:'sfx',label:'sfx'},{id:'off',label:'off'}]} />
+          <OptRow label="VOLUME" value={String(tweaks.volume)} onSet={setVolume}
+            options={[{id:'0.4',label:'low'},{id:'0.6',label:'med'},{id:'0.8',label:'high'},{id:'1',label:'max'}]} />
         </section>
 
         <section className="kb-set-section">

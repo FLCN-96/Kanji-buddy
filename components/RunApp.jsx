@@ -81,6 +81,7 @@ const RunApp = ({ cards }) => {
   // session save at end-of-run so we can compute start-vs-complete rates.
   React.useEffect(() => {
     if (window.DB) window.DB.recordModeStart('run').catch(() => {});
+    if (window.AudioManager) window.AudioManager.setBedForMode('run');
   }, []);
 
   // Build the weighted deck once, after DB + cards are ready.
@@ -203,7 +204,10 @@ const RunApp = ({ cards }) => {
     setPhase('quiz');
   };
 
-  const reveal = () => setRevealed(true);
+  const reveal = () => {
+    window.AudioManager && window.AudioManager.tick();
+    setRevealed(true);
+  };
 
   // Drop any pending undo snapshot — called when it expires, when the user
   // hits undo, or when a new verdict replaces it.
@@ -252,6 +256,13 @@ const RunApp = ({ cards }) => {
         undoTimerRef.current = setTimeout(() => setUndoState(null), 3000);
         return window.DB.upsertCardState({ idx: card.idx, ...next });
       }).catch(() => {});
+    }
+
+    // Run verdicts are SFX-only: miss → wrong(), hard/ok/easy → correct().
+    if (v === 'miss') {
+      window.AudioManager && window.AudioManager.wrong();
+    } else {
+      window.AudioManager && window.AudioManager.correct();
     }
 
     if (v === 'ok' || v === 'easy') {

@@ -2,7 +2,7 @@
 // land on next visit without forcing cache-version bumps. Cache-first
 // for heavy/stable assets (cards.json, icons, manifest, fonts).
 
-const CACHE = 'kb-v27';
+const CACHE = 'kb-v28';
 const CDN_CACHE = 'kb-cdn-v2';
 const NAV_FALLBACK = './Home.html';
 
@@ -18,6 +18,7 @@ const LOCAL_ASSETS = [
   './LeechHunt.html',
   './Match.html',
   './Decipher.html',
+  './Trace.html',
   './Mastery.html',
   './Settings.html',
   './Diagnostics.html',
@@ -31,6 +32,7 @@ const LOCAL_ASSETS = [
   './leechhunt.css',
   './match.css',
   './decipher.css',
+  './trace.css',
   './mastery.css',
   './settings.css',
   './diagnostics.css',
@@ -47,6 +49,14 @@ const LOCAL_ASSETS = [
   './data/cards.json',
   './data/kanji-words.json',
   './data/changelog.json',
+  './audio/sfx_tick.wav',
+  './audio/sfx_correct.wav',
+  './audio/sfx_wrong.wav',
+  './audio/sfx_nav.wav',
+  './audio/sfx_rankup.wav',
+  './audio/sfx_hot.wav',
+  './audio/sfx_milestone.wav',
+  './audio/amb_challenge.wav',
   './data/db.js',
   './data/load-cards.js',
   './data/load-words.js',
@@ -57,6 +67,7 @@ const LOCAL_ASSETS = [
   './data/mastery.js',
   './data/romaji.js',
   './data/version.js',
+  './data/audio.js',
   './components/App.jsx',
   './components/ConfirmModal.jsx',
   './components/Dashboard.jsx',
@@ -89,6 +100,9 @@ const LOCAL_ASSETS = [
   './components/Decipher.jsx',
   './components/DCPlay.jsx',
   './components/DCScreens.jsx',
+  './components/Trace.jsx',
+  './components/TracePlay.jsx',
+  './components/TraceScreens.jsx',
   './components/Dictionary.jsx',
   './components/Mastery.jsx',
   './components/MasteryCore.jsx',
@@ -108,7 +122,7 @@ const CDN_ASSETS = [
 // change whenever we deploy and we want that to land immediately).
 const REVALIDATE_RX = /\.(jsx?|css|html)$/;
 // Heavy/rarely-changing assets: cache-first is fine.
-const CACHE_FIRST_RX = /\.(json|svg|png|ico|webp|woff2?)$/;
+const CACHE_FIRST_RX = /\.(json|svg|png|ico|webp|woff2?|ogg|m4a|mp3|aac|wav)$/;
 
 self.addEventListener('install', (e) => {
   e.waitUntil(

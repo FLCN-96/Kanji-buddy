@@ -218,6 +218,7 @@ const LeechHuntApp = ({ cards }) => {
   const nearPoolRef = React.useRef(null);
 
   React.useEffect(() => {
+    if (window.AudioManager) window.AudioManager.setBedForMode('leech');
     if (!window.DB) return;
     window.DB.recordModeStart('leech_hunt').catch(() => {});
     window.DB.open()
@@ -315,6 +316,7 @@ const LeechHuntApp = ({ cards }) => {
     lockRef.current = true;
     const ok = tileIdx === stage.correctIdx;
     setFeedback({ picked: tileIdx, correct: stage.correctIdx, ok });
+    if (window.AudioManager) { ok ? window.AudioManager.correct() : window.AudioManager.wrong(); }
 
     // Snapshot the active leech. These fields aren't mutated between now
     // and the end-of-turn dispatch, so the closure reference is safe.

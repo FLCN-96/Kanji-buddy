@@ -102,6 +102,7 @@ const StreakGuardApp = ({ cards }) => {
   const nearPoolRef = React.useRef(cards);
 
   React.useEffect(() => {
+    if (window.AudioManager) window.AudioManager.setBedForMode('streak');
     if (!window.DB) return;
     window.DB.recordModeStart('streak_guard').catch(() => {});
     window.DB.open()
@@ -223,6 +224,7 @@ const StreakGuardApp = ({ cards }) => {
     if (phase !== 'play' || activeId || lockRef.current) return;
     const cell = deck.find(c => c.id === id);
     if (!cell || cell.status !== 'live') return;
+    window.AudioManager && window.AudioManager.tick();
     const { tiles, correctIdx } = dealQuiz(cell.card, nearPoolRef.current);
     setDeck(prev => prev.map(c => c.id === id ? { ...c, tiles, correctIdx, status: 'active' } : c));
     setActiveId(id);
@@ -236,6 +238,8 @@ const StreakGuardApp = ({ cards }) => {
     if (!cell) return;
     lockRef.current = true;
     const ok = tileIdx === cell.correctIdx;
+    if (ok) window.AudioManager && window.AudioManager.correct();
+    else window.AudioManager && window.AudioManager.wrong();
     setFeedback({ picked: tileIdx, correct: cell.correctIdx, ok });
     if (window.DB && cell.card) {
       window.DB.recordCardEvent({

@@ -20,6 +20,7 @@
 <script src="data/rank.js"></script>
 <script src="data/version.js"></script>
 <script src="data/db.js"></script>
+<script src="data/audio.js"></script>
 <script src="data/load-cards.js"></script>
 <script src="data/mastery.js"></script>
 
@@ -79,6 +80,7 @@
       }
       const cards = await window.loadCards();
       const root = ReactDOM.createRoot(mount);
+      if (window.AudioManager) window.AudioManager.init();
       root.render(<MasteryApp cards={cards} />);
     } catch (e) {
       showFallback('mount failed', (e && e.stack) || (e && e.message) || String(e));

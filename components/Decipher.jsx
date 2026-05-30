@@ -301,6 +301,7 @@ const DecipherApp = ({ cards, words }) => {
   const lockedRef     = React.useRef(false); // blocks taps during correct/wrong delay
 
   React.useEffect(() => {
+    if (window.AudioManager) window.AudioManager.setBedForMode('decipher');
     if (!window.DB) return;
     window.DB.recordModeStart('decipher').catch(() => {});
     window.DB.open()
@@ -446,6 +447,7 @@ const DecipherApp = ({ cards, words }) => {
     const allFilled = nextPicks.every(p => p != null);
 
     if (!allFilled) {
+      window.AudioManager && window.AudioManager.tick();
       setRound({ ...round, picks: nextPicks });
       return;
     }
@@ -456,6 +458,7 @@ const DecipherApp = ({ cards, words }) => {
     lockedRef.current = true;
 
     if (ok) {
+      window.AudioManager && window.AudioManager.correct();
       setRound({ ...round, picks: nextPicks, feedback: 'ok' });
       const nextDepth = depth + 1;
       setDepth(nextDepth);
@@ -487,6 +490,7 @@ const DecipherApp = ({ cards, words }) => {
         lockedRef.current = false;
       }, 620);
     } else {
+      window.AudioManager && window.AudioManager.wrong();
       // Wordle-style triage: greens lock into their slots permanently,
       // yellow tiles flash and clear (kanji is somewhere else), grays get
       // pulled from the bank (kanji isn't in the word at all).

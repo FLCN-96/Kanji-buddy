@@ -20,6 +20,7 @@
 <script src="data/db.js"></script>
 <script src="data/load-cards.js"></script>
 <script src="data/daily.js"></script>
+<script src="data/audio.js"></script>
 <script src="data/srs.js"></script>
 <script src="data/romaji.js"></script>
 
@@ -37,6 +38,7 @@
 (async () => {
   const cards = await window.loadCards();
   const root = ReactDOM.createRoot(document.getElementById('root'));
+  if (window.AudioManager) window.AudioManager.init();
   root.render(<RunApp cards={cards} />);
 })();
 </script>

@@ -104,7 +104,7 @@ const SVTile = ({ index, label, isKanji, state, onPick }) => {
   return (
     <button
       className={`sv-tile${isKanji ? ' is-kanji' : ''}${stateCls}`}
-      onClick={() => onPick(index)}
+      onClick={() => { window.AudioManager && window.AudioManager.tick(); onPick(index); }}
       disabled={!!state}
     >
       <span className="sv-corner sv-corner-tl" aria-hidden />
