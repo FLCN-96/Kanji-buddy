@@ -127,6 +127,13 @@ const TracePlay = ({ card, index, total, onKanjiDone, onStroke }) => {
   const doneRef    = React.useRef(false);       // guards the single onKanjiDone call
   const startedAt  = React.useRef(Date.now());
 
+  const stageRef     = React.useRef(null);
+  // Live mirrors so the imperatively-attached input handlers read current
+  // state/logic without re-binding on every stroke (no stale closures).
+  const completeRef  = React.useRef(false);
+  const strokeIdxRef = React.useRef(0);
+  const finalizeRef  = React.useRef(() => {});
+
   // Measure each stroke's start point once the ghost paths are in the DOM, so
   // we can drop a "begin here" dot on the next stroke (start point matters).
   React.useEffect(() => {
@@ -146,17 +153,6 @@ const TracePlay = ({ card, index, total, onKanjiDone, onStroke }) => {
       onKanjiDone({ idx: card.idx, clean: false, cleanStrokes: 0, strokeCount: 0, retries: 0, assisted: false, ms: 0, skipped: true });
     }
   }, [count, card.idx, onKanjiDone]);
-
-  const toViewBox = (clientX, clientY) => {
-    const svg = svgRef.current;
-    if (!svg) return null;
-    const r = svg.getBoundingClientRect();
-    if (!r.width || !r.height) return null;
-    return {
-      x: ((clientX - r.left) / r.width) * TR_VB,
-      y: ((clientY - r.top) / r.height) * TR_VB,
-    };
-  };
 
   const finishKanji = () => {
     if (doneRef.current) return;
@@ -201,30 +197,95 @@ const TracePlay = ({ card, index, total, onKanjiDone, onStroke }) => {
     }
   };
 
-  const onPointerDown = (e) => {
-    if (complete || strokeIdx >= count) return;
-    const pt = toViewBox(e.clientX, e.clientY);
-    if (!pt) return;
-    e.preventDefault();
-    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
-    drawingRef.current = true;
-    inkRef.current = [pt];
-    setInkPts([pt]);
-    setReason(null);
-  };
-  const onPointerMove = (e) => {
-    if (!drawingRef.current) return;
-    const pt = toViewBox(e.clientX, e.clientY);
-    if (!pt) return;
-    inkRef.current.push(pt);
-    setInkPts(inkRef.current.slice());
-  };
-  const onPointerUp = (e) => {
-    if (!drawingRef.current) return;
-    drawingRef.current = false;
-    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (err) {}
-    finalize(inkRef.current);
-  };
+  // Keep the imperative input handlers pointed at current state + logic.
+  React.useEffect(() => {
+    completeRef.current = complete;
+    strokeIdxRef.current = strokeIdx;
+    finalizeRef.current = finalize;
+  });
+
+  // Drawing input — attached as NATIVE listeners (not React synthetic) so we can
+  // preventDefault on move (React forces touch listeners passive), and we track
+  // move/up on `window` WITHOUT setPointerCapture. iOS Safari's pointer capture
+  // is broken: capture "succeeds" but pointermove/up then stop firing once the
+  // finger moves, and a touch frequently gets pointercancel — which silently
+  // killed every stroke. Window-level tracking + no capture is the reliable
+  // cross-platform pattern (with a touch-events fallback for legacy iOS). Re-
+  // binds when the stage element remounts on the `shake` key.
+  React.useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    let active = false;
+
+    const map = (cx, cy) => {
+      const svg = svgRef.current;
+      if (!svg) return null;
+      const r = svg.getBoundingClientRect();
+      if (!r.width || !r.height) return null;
+      return { x: ((cx - r.left) / r.width) * TR_VB, y: ((cy - r.top) / r.height) * TR_VB };
+    };
+    const begin = (cx, cy) => {
+      if (completeRef.current || strokeIdxRef.current >= count) return false;
+      const pt = map(cx, cy);
+      if (!pt) return false;
+      active = true; drawingRef.current = true;
+      inkRef.current = [pt]; setInkPts([pt]); setReason(null);
+      return true;
+    };
+    const extend = (cx, cy) => {
+      if (!active) return;
+      const pt = map(cx, cy);
+      if (!pt) return;
+      inkRef.current.push(pt); setInkPts(inkRef.current.slice());
+    };
+    const finish = () => {
+      if (!active) return;
+      active = false; drawingRef.current = false;
+      finalizeRef.current(inkRef.current);
+    };
+
+    const off = [];
+    if (window.PointerEvent) {
+      const down = (e) => { if (e.isPrimary === false) return; if (begin(e.clientX, e.clientY)) e.preventDefault(); };
+      const move = (e) => { if (!active) return; e.preventDefault(); extend(e.clientX, e.clientY); };
+      const up   = (e) => { if (!active) return; e.preventDefault(); finish(); };
+      stage.addEventListener('pointerdown', down, { passive: false });
+      window.addEventListener('pointermove', move, { passive: false });
+      window.addEventListener('pointerup', up, { passive: false });
+      window.addEventListener('pointercancel', up, { passive: false });
+      off.push(
+        () => stage.removeEventListener('pointerdown', down),
+        () => window.removeEventListener('pointermove', move),
+        () => window.removeEventListener('pointerup', up),
+        () => window.removeEventListener('pointercancel', up),
+      );
+    } else {
+      // Legacy iOS / no Pointer Events — native touch + mouse.
+      const ts = (e) => { const t = e.changedTouches[0]; if (t && begin(t.clientX, t.clientY)) e.preventDefault(); };
+      const tm = (e) => { if (!active) return; const t = e.changedTouches[0]; if (t) { e.preventDefault(); extend(t.clientX, t.clientY); } };
+      const te = (e) => { if (!active) return; e.preventDefault(); finish(); };
+      stage.addEventListener('touchstart', ts, { passive: false });
+      stage.addEventListener('touchmove', tm, { passive: false });
+      stage.addEventListener('touchend', te, { passive: false });
+      stage.addEventListener('touchcancel', te, { passive: false });
+      const md = (e) => { if (begin(e.clientX, e.clientY)) e.preventDefault(); };
+      const mm = (e) => { if (!active) return; extend(e.clientX, e.clientY); };
+      const mu = () => finish();
+      stage.addEventListener('mousedown', md);
+      window.addEventListener('mousemove', mm);
+      window.addEventListener('mouseup', mu);
+      off.push(
+        () => stage.removeEventListener('touchstart', ts),
+        () => stage.removeEventListener('touchmove', tm),
+        () => stage.removeEventListener('touchend', te),
+        () => stage.removeEventListener('touchcancel', te),
+        () => stage.removeEventListener('mousedown', md),
+        () => window.removeEventListener('mousemove', mm),
+        () => window.removeEventListener('mouseup', mu),
+      );
+    }
+    return () => off.forEach(fn => fn());
+  }, [count, shake]);
 
   // HINT — draw the next stroke on, once. Marks the stroke as assisted so it
   // can't count toward a clean trace. (Opt-in, never auto-played.)
@@ -266,13 +327,9 @@ const TracePlay = ({ card, index, total, onKanjiDone, onStroke }) => {
 
       {/* Stage — grid + ghost + live ink. Pointer events captured on the stage. */}
       <div
+        ref={stageRef}
         className={`tr-stage${complete ? ' is-complete' : ''}${reason ? ` is-bad is-${reason}` : ''}`}
         key={shake}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        onPointerLeave={onPointerUp}
       >
         <svg ref={svgRef} className="tr-svg" viewBox={`0 0 ${TR_VB} ${TR_VB}`} aria-hidden>
           {/* 田字格 frame + center cross, plus faint 米字格 diagonals */}

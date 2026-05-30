@@ -203,6 +203,9 @@
     var(--bg-0);
   box-shadow: inset 0 0 26px rgba(34,211,238,.06);
   touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
   cursor: crosshair;
   overflow: hidden;
@@ -219,7 +222,7 @@
   60% { transform: translateX(-4px); }
   80% { transform: translateX(4px); }
 }
-.tr-svg { display: block; width: 100%; height: 100%; }
+.tr-svg { display: block; width: 100%; height: 100%; pointer-events: none; touch-action: none; }
 
 /* 田字格 / 米字格 grid */
 .tr-grid-frame {
