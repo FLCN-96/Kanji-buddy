@@ -17,5 +17,9 @@ Thumbs.db
 # JMdict source cache for the kanji-words generator (regenerate from tools/build-kanji-words.py)
 tools/cache/
 
+# Python bytecode cache (created when running tools/*.py)
+__pycache__/
+*.pyc
+
 # Agent / local assistant state (never commit — contains host-specific paths)
 .claude/
