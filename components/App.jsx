@@ -166,6 +166,13 @@ const readTweaks = () => {
   } catch(e) { return { ...TWEAK_DEFAULTS }; }
 };
 
+// Guarded SFX dispatch — no-op if AudioManager (or the named method) isn't
+// loaded, so a stale-cached data/audio.js can never throw at a call site.
+const sfx = (method, arg) => {
+  const am = window.AudioManager;
+  if (am && typeof am[method] === 'function') { try { am[method](arg); } catch (e) {} }
+};
+
 const deriveState = (deck) => {
   if (!deck) return 'loading';
   if (deck.total === 0) return 'clear';
@@ -417,11 +424,13 @@ const App = ({ cards }) => {
   // without needing a hard refresh.
   const [inject, setInject] = React.useState(null);
 
+  const bootSoundRef = React.useRef('welcome'); // first-gesture boot tone
+
   React.useEffect(() => {
     if (window.AudioManager) window.AudioManager.init();
     if (window.Rank) {
       const p = window.Rank.consumePromotion();
-      if (p) { setPromotion(p); if (window.AudioManager) window.AudioManager.rankUp(); }
+      if (p) { setPromotion(p); bootSoundRef.current = 'levelup'; }
     }
     if (window.Streak) {
       const cont = window.Streak.consumeContinued();
@@ -429,8 +438,26 @@ const App = ({ cards }) => {
       const best = window.Streak.consumeBest();
       const milestone = window.Streak.consumeMilestone();
       if (cont || brok || best) setStreakBurst({ continued: cont, broken: brok, best: best });
-      if (milestone) { setStreakMilestone(milestone); if (window.AudioManager) window.AudioManager.milestone(); }
+      if (milestone) { setStreakMilestone(milestone); sfx('milestone'); }
     }
+  }, []);
+
+  // Audio can't autoplay before a gesture (iOS). Play the boot tone — welcome,
+  // or a level-up flourish if a rank promotion was just consumed — on the first
+  // tap/key on Home. The gesture also unlocks the AudioContext.
+  React.useEffect(() => {
+    if (!window.AudioManager) return;
+    const fire = () => {
+      sfx(bootSoundRef.current === 'levelup' ? 'levelUp' : 'welcome');
+      window.removeEventListener('pointerdown', fire, true);
+      window.removeEventListener('keydown', fire, true);
+    };
+    window.addEventListener('pointerdown', fire, { once: true, capture: true });
+    window.addEventListener('keydown', fire, { once: true, capture: true });
+    return () => {
+      window.removeEventListener('pointerdown', fire, true);
+      window.removeEventListener('keydown', fire, true);
+    };
   }, []);
 
   React.useEffect(() => {
@@ -647,7 +674,7 @@ const App = ({ cards }) => {
   };
 
   const onPick = (id) => {
-    const routes = { time: 'TimeAttack.html', survival: 'Survival.html', streak: 'StreakGuard.html', leech: 'LeechHunt.html', match: 'Match.html', decipher: 'Decipher.html' };
+    const routes = { time: 'TimeAttack.html', survival: 'Survival.html', streak: 'StreakGuard.html', leech: 'LeechHunt.html', match: 'Match.html', decipher: 'Decipher.html', trace: 'Trace.html', glyph: 'Glyph.html' };
     const target = CHALLENGES.find(c => c.id === id)?.name;
     const nodes = document.querySelectorAll('.kb-chal');
     nodes.forEach(n => {
@@ -664,7 +691,7 @@ const App = ({ cards }) => {
   };
 
   const variantClass = 'kb-shell variant-game';
-  const openPanePop = (kind, payload = null) => { setPopPayload(payload); setOpenPop(kind); };
+  const openPanePop = (kind, payload = null) => { sfx('ui'); setPopPayload(payload); setOpenPop(kind); };
   const closePop = () => { setOpenPop(null); setPopPayload(null); };
 
   const leechCount = React.useMemo(() => {
@@ -757,14 +784,14 @@ const App = ({ cards }) => {
             deck={deck}
             reviewedToday={reviewedToday}
             todayKanji={todayKanji}
-            onRun={onRun}
+            onRun={() => { sfx('dailyTap'); onRun(); }}
           />
 
           {window.MasterySummary && (
             <MasterySummary
               cards={cards}
               states={cardStates}
-              onTap={() => { window.location.href = 'Mastery.html'; }}
+              onTap={() => { sfx('ui'); window.location.href = 'Mastery.html'; }}
             />
           )}
 
@@ -782,8 +809,8 @@ const App = ({ cards }) => {
             <span className="kb-section-title">Challenge modes</span>
             <span className="kb-section-r">alt / bonus xp</span>
           </div>
-          <InjectSlot dailyDone={state === 'clear'} inject={inject} onInject={onInject} onRun={onRun} />
-          <ChallengeGrid onPick={onPick} hotId={hotChallengeId} hotTier={hotTier} dailyDone={state === 'clear'} />
+          <InjectSlot dailyDone={state === 'clear'} inject={inject} onInject={() => { sfx('injectTap'); onInject(); }} onRun={() => { sfx('overclockTap'); onRun(); }} />
+          <ChallengeGrid onPick={(id) => { sfx('ui'); onPick(id); }} hotId={hotChallengeId} hotTier={hotTier} dailyDone={state === 'clear'} />
 
           <div className="kb-section-head">
             <span className="kb-section-title">Jōyō ladder</span>

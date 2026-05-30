@@ -309,6 +309,15 @@
     else play('sfx_hot');
   }
   function milestone() { play('sfx_milestone'); }
+  // Home-screen / navigation vocabulary. All guarded via play() (no-op under
+  // mute / 'off'). ui() is the workhorse tap — kept a touch quieter than nav
+  // since it fires on every home-screen element touch.
+  function ui()          { play('sfx_ui',        { volume: 0.65 }); }
+  function welcome()     { play('sfx_welcome'); }
+  function levelUp()     { play('sfx_levelup'); }
+  function dailyTap()    { play('sfx_daily'); }
+  function overclockTap() { play('sfx_overclock'); }
+  function injectTap()   { play('sfx_inject'); }
 
   // ── panic distortion (the "end-of-the-line" warp) ───────────────────
   //
@@ -496,6 +505,8 @@
     play: play,
     tick: tick, correct: correct, wrong: wrong, nav: nav,
     rankUp: rankUp, hot: hot, milestone: milestone,
+    ui: ui, welcome: welcome, levelUp: levelUp,
+    dailyTap: dailyTap, overclockTap: overclockTap, injectTap: injectTap,
     // end-of-game result tones
     end: end,
     // beds + panic warp

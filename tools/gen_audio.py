@@ -42,7 +42,10 @@ Run from the repo root (or anywhere — paths resolve relative to this file):
 
 Outputs (over)written into <repo>/audio/:
     sfx_tick / sfx_correct / sfx_wrong / sfx_nav / sfx_rankup / sfx_hot /
-    sfx_milestone  (SFX, <= ~1 s each)
+    sfx_milestone  (core SFX, <= ~1 s each)
+    sfx_ui / sfx_welcome / sfx_levelup / sfx_daily / sfx_overclock / sfx_inject
+                   (home-screen / navigation SFX)
+    sfx_end_good / sfx_end_mid / sfx_end_bad  (end-of-game result stingers)
     amb_challenge  (7.2 s seamless dark bed)
 
 The convert step (tools/convert_audio.py) can later transcode these to
@@ -654,6 +657,197 @@ def sfx_milestone():
 
 
 # ─────────────────────────────────────────────────────────────────────────
+# HOME-SCREEN / NAVIGATION STINGERS — the everyday button vocabulary.
+#
+# sfx_ui is the workhorse tap; sfx_welcome / sfx_levelup are events; sfx_daily /
+# sfx_overclock / sfx_inject are the three primary home-screen action buttons.
+# Same dark palette: detuned dual-osc pulses, triangle/sine for weight, PWM
+# breathing, lowpass to kill chipper top, soft delay, mild crush. No bright
+# major thirds — the only "lift" is the harmonic-minor / Phrygian-dominant
+# ascent inside sfx_levelup.
+#
+# DESIGN NOTE (sfx_ui): the UI-micro-sound literature is consistent — a tap cue
+# should be ~30–60 ms, sharp attack + fast decay so it reads as "instant" (a
+# ~200 ms cue already feels late), single non-melodic timbre, and rolled-off top
+# end so rapid repeats don't fatigue. We go LOWER and SUBTLER than sfx_nav (E3,
+# 70 ms): a single E2-region triangle blip (~45 ms) through an ~850 Hz lowpass,
+# no detune beat, no glide melody — a felt "touch", not a bleep.
+# ─────────────────────────────────────────────────────────────────────────
+
+def sfx_ui():
+    """NEUTRAL UI tap — the home-screen workhorse. A single soft low filtered
+    click: one triangle blip at E2 (≈82 Hz, the neutral 5th an octave under
+    sfx_nav), ~45 ms, near-instant attack, fast decay, no melody and no detune
+    beat. An ~850 Hz lowpass rounds off the click transient so it stays felt and
+    un-fatiguing on rapid repeated taps. Lower and subtler than sfx_nav."""
+    # Mostly triangle for body; a whisper of sine to seat the fundamental.
+    body = mix(
+        osc(note("E2"), 0.045, "triangle", vol=0.85),
+        osc(note("E2"), 0.045, "sine",     vol=0.30),
+    )
+    # Sharp attack, quick decay to silence — tight, no ring.
+    body = adsr(body, a=0.001, d=0.018, s=0.25, r=0.020)
+    body = lowpass(body, 850.0)
+    return bitcrush(body, 12)
+
+
+def sfx_welcome():
+    """APP-LOAD "system online" tone — a dark minor swell that reads as boot-up,
+    not a fanfare. An ascending Am arpeggio (A2 · C3 · E3 · A3) fades in under a
+    swelling low pedal, lowpassed and given a soft delay tail so it "powers up"
+    and settles rather than announcing. ~1.1 s + tail."""
+    steps = [
+        (note("A2"), 0.20),
+        (note("C3"), 0.20),
+        (note("E3"), 0.20),
+        (note("A3"), 0.34),    # lands on the octave root, rings longest
+    ]
+    seq = []
+    for i, (f, dur) in enumerate(steps):
+        last = (i == len(steps) - 1)
+        v = detuned(f, dur, "pulse", vol=0.55, duty=0.30,
+                    det1=5.0, det2=-7.0,
+                    pwm_hz=1.6, pwm_lo=0.32, pwm_hi=0.46)
+        # Soft attacks (a swell, not a strike); the last note sustains.
+        v = adsr(v, a=0.030, d=0.06, s=0.6, r=0.22 if last else 0.06)
+        seq.extend(v)
+    # A slow low pedal swelling under the arpeggio for the "online" floor.
+    pedal = mix(
+        detuned(note("A1"), len(seq) / SAMPLE_RATE, "triangle",
+                vol=0.34, det1=4.0, det2=-6.0),
+        osc(note("A1"), len(seq) / SAMPLE_RATE, "sine", vol=0.18),
+    )
+    pedal = adsr(pedal, a=0.18, d=0.20, s=0.65, r=0.30)   # slow fade-in
+    body = mix(seq, pedal)
+    body = lowpass(body, 2400.0)                           # dark, no ice-pick top
+    body = delay(body, 0.30, feedback=0.26, mix_wet=0.26, octave_tap=False)
+    body = bitcrush(body, 12)
+    return trim_tail(body, max_dur=1.35, min_dur=1.05)
+
+
+def sfx_levelup():
+    """LEVEL-UP flourish — distinct from sfx_rankup, richer and longer. A rising
+    PHRYGIAN-DOMINANT / harmonic-minor ascent that crosses a threshold:
+    A3 · C4 · D4 · E4 · F4 · G#4 · A4 — the b6 (F) and harmonic-minor leading
+    tone (G#) build tension that RESOLVES UP onto the octave A4 (the only place
+    the line is allowed to land bright-ish). Wider detune + PWM than rankup, a
+    sustained low fifth pedal, and a longer delay tail. ~1.2 s + tail."""
+    steps = [
+        (note("A3"),  0.110),
+        (note("C4"),  0.105),
+        (note("D4"),  0.100),
+        (note("E4"),  0.105),
+        (note("F4"),  0.110),    # the b6 — leans into the leading tone
+        (note("G#4"), 0.120),    # harmonic-minor leading tone — maximum tension
+        (note("A4"),  0.300),    # threshold crossed: resolves UP onto the root
+    ]
+    seq = []
+    for i, (f, dur) in enumerate(steps):
+        last = (i == len(steps) - 1)
+        v = detuned(f, dur, "pulse", vol=0.78, duty=0.28,
+                    det1=8.0, det2=-11.0,
+                    pwm_hz=6.0, pwm_lo=0.22, pwm_hi=0.5,
+                    vib_hz=6.0, vib_cents=12.0 if last else 0.0, vib_delay=0.05)
+        v = adsr(v, a=0.005, d=0.025, s=0.72, r=0.32 if last else 0.04)
+        seq.extend(v)
+    # Sustained low fifth pedal (A2 + E3, no 3rd) so the ascent has a floor that
+    # also swells as the line climbs.
+    plen = len(seq) / SAMPLE_RATE
+    pedal = mix(
+        detuned(note("A2"), plen, "triangle", vol=0.34, det1=5.0, det2=-7.0),
+        detuned(note("E3"), plen, "triangle", vol=0.20, det1=5.0, det2=-5.0),
+    )
+    pedal = adsr(pedal, a=0.05, d=0.15, s=0.6, r=0.30)
+    body = mix(seq, pedal)
+    body = lowpass(body, 4200.0)
+    body = delay(body, 0.32, feedback=0.32, mix_wet=0.30, octave_tap=True)
+    body = bitcrush(body, 11)
+    return trim_tail(body, max_dur=1.45, min_dur=1.10)
+
+
+def sfx_daily():
+    """DAILY-RUN button — an inviting low "engage / begin" tone. A confident
+    minor TWO-NOTE that says session-start: the 5th E2 (82 Hz) steps UP to the
+    root A2 (110 Hz) — a rising perfect fourth that lands ON the tonic (an
+    arrival, not a question). Round low pulses, gentle PWM, a hint of delay so
+    it feels like a door opening. ~0.55 s."""
+    n1 = detuned(note("E2"), 0.16, "pulse", vol=0.7, duty=0.35,
+                 det1=6.0, det2=-8.0,
+                 pwm_hz=2.0, pwm_lo=0.34, pwm_hi=0.46)
+    n1 = adsr(n1, a=0.006, d=0.04, s=0.6, r=0.05)
+    n2 = mix(
+        detuned(note("A2"), 0.34, "pulse", vol=0.72, duty=0.35,
+                det1=6.0, det2=-8.0,
+                pwm_hz=2.0, pwm_lo=0.34, pwm_hi=0.46),
+        osc(note("A2"), 0.34, "triangle", vol=0.30),      # sub weight on arrival
+    )
+    n2 = adsr(n2, a=0.006, d=0.05, s=0.62, r=0.16)
+    body = concat(n1, n2)
+    body = lowpass(body, 1800.0)                          # warm, inviting, dark
+    body = delay(body, 0.26, feedback=0.20, mix_wet=0.18, octave_tap=False)
+    body = bitcrush(body, 12)
+    return trim_tail(body, max_dur=0.70, min_dur=0.50)
+
+
+def sfx_overclock():
+    """OVERCLOCK button — tenser, charged, "pushing past the limit". A buzzing
+    DETUNED/PWM swell on A2 that bends UP a whole step into B2 over its length
+    (rising instability), a fast PWM "electrical" flutter, an opening lowpass and
+    a touch of noise grit so it reads as a machine being pushed. No resolution —
+    it leaves you mid-strain. ~0.7 s."""
+    dur = 0.62
+    # Wide detune + glide A2 -> B2; aggressive PWM flutter for the buzz.
+    body = detuned(0, dur, "pulse", vol=0.7, duty=0.5,
+                   det1=11.0, det2=-14.0,
+                   pwm_hz=9.0, pwm_lo=0.16, pwm_hi=0.5,
+                   pitch_glide=(note("A2"), note("B2")))
+    # Octave reinforcement that bends with it (thicker charge).
+    body = mix(body, detuned(0, dur, "pulse", vol=0.34, duty=0.4,
+                             det1=9.0, det2=-12.0,
+                             pwm_hz=9.0, pwm_lo=0.16, pwm_hi=0.5,
+                             pitch_glide=(note("A3"), note("B3"))))
+    # Swell up, no decay to silence (held strain), short release.
+    body = adsr(body, a=0.04, d=0.05, s=0.85, r=0.10)
+    # A breath of noise grit on the front for the "overdrive" texture.
+    grit = osc(0, 0.18, "noise", vol=0.10)
+    grit = adsr(grit, a=0.004, d=0.05, s=0.35, r=0.08)
+    body = mix(body, grit)
+    # Lowpass that OPENS as it climbs (the limiter giving way).
+    n = len(body)
+    cutoff = [1200.0 + 2600.0 * (i / max(1, n - 1)) for i in range(n)]
+    body = lowpass(body, cutoff)
+    body = bitcrush(body, 10)
+    return trim_tail(body, max_dur=0.78, min_dur=0.58)
+
+
+def sfx_inject():
+    """STREAK-INJECT (recovery) button — ominous, risky, glitchy: a "dangerous
+    gamble". A dissonant stab on the Phrygian b2 over the root (A2 + Bb2, a
+    grinding minor-2nd cluster) plus a tritone bite (Eb3), hit hard with a short
+    NOISE BURST and heavy BIT-CRUSH grit. A fast downward pitch sag on the top
+    voice (the "glitch") and a closing lowpass so it collapses on itself. No
+    safety anywhere. ~0.55 s."""
+    # Minor-2nd cluster: root A2 + b2 Bb2 (beating, ugly) — the danger.
+    root = osc(note("A2"), 0.40, "pulse", vol=0.6, duty=0.16)
+    flat2 = osc(note("Bb2"), 0.40, "pulse", vol=0.5, duty=0.16)
+    # Tritone bite up top that GLITCHES down a semitone (Eb3 -> D3) as it dies.
+    bite = osc(0, 0.34, "pulse", vol=0.42, duty=0.125,
+               pitch_glide=(note("Eb3"), note("D3")))
+    body = mix(root, flat2, bite)
+    body = adsr(body, a=0.001, d=0.05, s=0.7, r=0.14)     # hard, immediate stab
+    # Short noise burst on the very front — the "injection" crackle.
+    burst = osc(0, 0.07, "noise", vol=0.30)
+    burst = adsr(burst, a=0.0005, d=0.02, s=0.3, r=0.04)
+    body = mix(body, burst)
+    body = lowpass(body, 2000.0)
+    # A little delay so the dissonance smears and feels unstable.
+    body = delay(body, 0.18, feedback=0.30, mix_wet=0.22, octave_tap=False)
+    # Heavy crush — this one is the grittiest of the set (machine sabotage).
+    body = bitcrush(body, 8)
+    return trim_tail(body, max_dur=0.62, min_dur=0.45)
+
+
+# ─────────────────────────────────────────────────────────────────────────
 # END-OF-GAME RESULT STINGERS — three short outcome tones (~1.0–1.6 s).
 # Same dark palette: detuned dual-osc pulses, triangle/sine sub for weight,
 # PWM breathing, lowpass to kill chipper top, soft feedback delay, mild crush.
@@ -962,6 +1156,12 @@ GENERATORS = {
     "sfx_rankup":    (sfx_rankup,    SFX_PEAK, True),
     "sfx_hot":       (sfx_hot,       SFX_PEAK, True),
     "sfx_milestone": (sfx_milestone, SFX_PEAK, True),
+    "sfx_ui":        (sfx_ui,        SFX_PEAK, True),
+    "sfx_welcome":   (sfx_welcome,   SFX_PEAK, True),
+    "sfx_levelup":   (sfx_levelup,   SFX_PEAK, True),
+    "sfx_daily":     (sfx_daily,     SFX_PEAK, True),
+    "sfx_overclock": (sfx_overclock, SFX_PEAK, True),
+    "sfx_inject":    (sfx_inject,    SFX_PEAK, True),
     "sfx_end_good":  (sfx_end_good,  SFX_PEAK, True),
     "sfx_end_mid":   (sfx_end_mid,   SFX_PEAK, True),
     "sfx_end_bad":   (sfx_end_bad,   SFX_PEAK, True),

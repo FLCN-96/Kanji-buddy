@@ -2,7 +2,7 @@
 // land on next visit without forcing cache-version bumps. Cache-first
 // for heavy/stable assets (cards.json, icons, manifest, fonts).
 
-const CACHE = 'kb-v30';
+const CACHE = 'kb-v31';
 const CDN_CACHE = 'kb-cdn-v2';
 const NAV_FALLBACK = './Home.html';
 
@@ -19,6 +19,7 @@ const LOCAL_ASSETS = [
   './Match.html',
   './Decipher.html',
   './Trace.html',
+  './Glyph.html',
   './Mastery.html',
   './Settings.html',
   './Diagnostics.html',
@@ -33,6 +34,7 @@ const LOCAL_ASSETS = [
   './match.css',
   './decipher.css',
   './trace.css',
+  './glyph.css',
   './mastery.css',
   './settings.css',
   './diagnostics.css',
@@ -49,6 +51,7 @@ const LOCAL_ASSETS = [
   './data/cards.json',
   './data/kanji-words.json',
   './data/changelog.json',
+  './data/glyph-components.json',
   './audio/sfx_tick.wav',
   './audio/sfx_correct.wav',
   './audio/sfx_wrong.wav',
@@ -59,6 +62,12 @@ const LOCAL_ASSETS = [
   './audio/sfx_end_good.wav',
   './audio/sfx_end_mid.wav',
   './audio/sfx_end_bad.wav',
+  './audio/sfx_ui.wav',
+  './audio/sfx_welcome.wav',
+  './audio/sfx_levelup.wav',
+  './audio/sfx_daily.wav',
+  './audio/sfx_overclock.wav',
+  './audio/sfx_inject.wav',
   './audio/amb_challenge.wav',
   './data/db.js',
   './data/load-cards.js',
@@ -106,6 +115,9 @@ const LOCAL_ASSETS = [
   './components/Trace.jsx',
   './components/TracePlay.jsx',
   './components/TraceScreens.jsx',
+  './components/Glyph.jsx',
+  './components/GlyphPlay.jsx',
+  './components/GlyphScreens.jsx',
   './components/Dictionary.jsx',
   './components/Mastery.jsx',
   './components/MasteryCore.jsx',
