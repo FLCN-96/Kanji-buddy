@@ -218,7 +218,6 @@ const LeechHuntApp = ({ cards }) => {
   const nearPoolRef = React.useRef(null);
 
   React.useEffect(() => {
-    if (window.AudioManager) window.AudioManager.setBedForMode('leech');
     if (!window.DB) return;
     window.DB.recordModeStart('leech_hunt').catch(() => {});
     window.DB.open()
@@ -280,6 +279,19 @@ const LeechHuntApp = ({ cards }) => {
     }
     setResult(res);
     setPhase('end');
+    // End tone: stop the bed and play a result tone tiered off the sweep.
+    // Mirror the LHEnd ribbon thresholds — purge rate over the full roster:
+    // a void contract or a sub-half sweep reads as 'bad', a cleared (≥75%)
+    // contract as 'good', anything in between as 'mid'.
+    if (window.AudioManager) {
+      const total = roster.length || 0;
+      const rate = total > 0 ? (purged / total) * 100 : 0;
+      const tier = res === 'fail' ? 'bad'
+        : rate >= 75 ? 'good'
+        : rate >= 50 ? 'mid'
+        : 'bad';
+      window.AudioManager.end(tier);
+    }
     if (window.DB && roster.length > 0) {
       const tierAtSave = window.Daily ? window.Daily.hotTier('leech') : null;
       const mult       = window.Daily ? window.Daily.hotMultiplier('leech') : 1;
@@ -394,7 +406,11 @@ const LeechHuntApp = ({ cards }) => {
     }, revealMs);
   };
 
-  const start = () => setPhase('ready');
+  const start = () => {
+    window.AudioManager && window.AudioManager.unlock();
+    window.AudioManager && window.AudioManager.setBedForMode('leech');
+    setPhase('ready');
+  };
   const restart = () => {
     setRoster([]); setActiveIdx(-1); setStageIdx(0); setStage(null);
     setFeedback(null); setMisses(0); setResult(null); setBeatPb(false); setPurgeFx(null);

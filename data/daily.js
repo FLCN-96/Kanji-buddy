@@ -257,6 +257,38 @@
     return new Set((cardStates || []).map(s => s.idx));
   }
 
+  // ──────────────────────────────────────────────────────────────
+  // Adaptive light-deleveling sweep (v-next). Runs once per local day from
+  // Home: gently retunes struggling cards' intervals DOWN via Srs.delevel,
+  // using SM-2 state + a cross-mode evidence map (built by the caller from
+  // card_events). Idempotent — a second pass the same day finds nothing new,
+  // and the localStorage day-marker short-circuits it entirely. Returns the
+  // list of CHANGED card_states; the caller persists them via upsertCardState.
+  // ──────────────────────────────────────────────────────────────
+  const DELEVEL_PREFIX = 'kb-delevel-pass:';
+
+  function delevelDoneToday(d) {
+    try { return localStorage.getItem(DELEVEL_PREFIX + localDateKey(d)) === '1'; }
+    catch (e) { return false; }
+  }
+  function markDelevelDone(d) {
+    try { localStorage.setItem(DELEVEL_PREFIX + localDateKey(d), '1'); } catch (e) {}
+  }
+
+  function runDelevelSweep(cardStates, evidenceMap, opts) {
+    if (!window.Srs || typeof window.Srs.delevel !== 'function') return [];
+    const o = opts || {};
+    const now = o.now || new Date();
+    const changed = [];
+    for (const st of (cardStates || [])) {
+      if (!st || st.idx == null) continue;
+      const ev = (evidenceMap && evidenceMap.get(st.idx)) || { recentHitRate: null, recentEvents: 0 };
+      const next = window.Srs.delevel(st, ev, { now });
+      if (next) changed.push(next);
+    }
+    return changed;
+  }
+
   window.Daily = {
     daySeed,
     hotChallengeId,
@@ -276,6 +308,9 @@
     LEECH_LAPSES,
     nearUserPool,
     seenIdxSet,
+    delevelDoneToday,
+    markDelevelDone,
+    runDelevelSweep,
     MIN_POOL_DEFAULT,
     FRONTIER_DEFAULT,
   };

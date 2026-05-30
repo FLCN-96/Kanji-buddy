@@ -37,7 +37,7 @@ function trAudio(method, arg) {
 // Build a focused set: prefer kanji the operator has actually met (reinforce the
 // writing of readings they're learning), top up with fresh frequency-ordered
 // glyphs, then ramp the chosen set by stroke count so it eases in.
-function selectTraceDeck(cards, statesMap, size) {
+function selectTraceDeck(cards, statesMap, size, prioritySet) {
   const traceable = (cards || []).filter(c => c && c.svg);
   const seen = [], fresh = [];
   for (const c of traceable) {
@@ -52,9 +52,15 @@ function selectTraceDeck(cards, statesMap, size) {
     }
     return out;
   };
-  let chosen = seen.length >= size
-    ? shuffle(seen).slice(0, size)
-    : [...shuffle(seen), ...fresh.slice(0, size - seen.length)];
+  // Deleveled cards (queued by Home's SRS recalibration) jump the seen pool so
+  // the motor pattern gets re-traced before it's demanded blind again.
+  const seenOrdered = (prioritySet && prioritySet.size)
+    ? [...shuffle(seen.filter(c => prioritySet.has(c.idx))),
+       ...shuffle(seen.filter(c => !prioritySet.has(c.idx)))]
+    : shuffle(seen);
+  let chosen = seenOrdered.length >= size
+    ? seenOrdered.slice(0, size)
+    : [...seenOrdered, ...fresh.slice(0, size - seenOrdered.length)];
   // Parse the stroke count only for the chosen handful (cheap) and ramp.
   return chosen
     .map(c => ({ card: c, n: (parseStrokes(c.svg).length || c.strokes || 99) }))
@@ -154,8 +160,19 @@ const TraceApp = ({ cards }) => {
       n -= 1;
       if (n <= 0) {
         setCountdown(0);
-        const d = selectTraceDeck(cards, statesMapRef.current, TR_DECK_SIZE);
+        // Re-expose deleveled cards (queued by Home's SRS recalibration) first,
+        // then consume the ones we actually dealt from the queue.
+        let priority = new Set();
+        try { priority = new Set(JSON.parse(localStorage.getItem('kb-delevel-trace-queue') || '[]')); } catch (e) {}
+        const d = selectTraceDeck(cards, statesMapRef.current, TR_DECK_SIZE, priority);
         setDeck(d);
+        if (priority.size) {
+          try {
+            const dealt = new Set(d.map(c => c.idx));
+            localStorage.setItem('kb-delevel-trace-queue',
+              JSON.stringify([...priority].filter(idx => !dealt.has(idx))));
+          } catch (e) {}
+        }
         setIdx(0);
         setResults([]);
         setBeatPb(false);
@@ -219,6 +236,13 @@ const TraceApp = ({ cards }) => {
     const totalStrokes = results.reduce((a, r) => a + (r.strokeCount || 0), 0);
     const cleanStrokes = results.reduce((a, r) => a + (r.cleanStrokes || 0), 0);
     const allClean = cleanKanji === kanjiDone && kanjiDone >= TR_DECK_SIZE;
+
+    // End tone: stop the bed and play a result chime keyed to the same accuracy
+    // ribbon the debrief shows (CALLIGRAPHER/STEADY HAND → good, WARMING UP →
+    // mid, SHAKY LINE → bad). Mirror TraceEnd's `acc` so tone matches ribbon.
+    const acc = totalStrokes > 0 ? Math.round((100 * cleanStrokes) / totalStrokes) : 0;
+    const endTier = acc >= 80 ? 'good' : acc >= 60 ? 'mid' : 'bad';
+    trAudio('end', endTier);
 
     const newBeatPb = cleanKanji > pb;
     if (newBeatPb) {

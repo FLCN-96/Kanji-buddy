@@ -401,6 +401,7 @@ const App = ({ cards }) => {
   const [reviewedToday, setReviewedToday] = React.useState(0); // intraday progress for the queue bar
   const [cardStates, setCardStates] = React.useState(null); // full card_states — leech list + ladder math
   const [promotion, setPromotion] = React.useState(null);
+  const [delevelCount, setDelevelCount] = React.useState(0); // ▸ SRS RECALIBRATED banner
   // One-shot streak event payloads consumed once on mount. The chip uses
   // these to render A1 (puff), A2 (shake), A4 (twinkle) effects; the
   // milestone payload triggers StreakMilestoneModal.
@@ -503,9 +504,55 @@ const App = ({ cards }) => {
 
   React.useEffect(() => {
     if (!window.DB || !window.Daily || !cards || !cards.length) return;
+    let cancelled = false;
+
+    // Adaptive light deleveling — once per local day. Builds a cross-mode
+    // evidence map from the last 21 days of card_events, gently retunes
+    // struggling cards' intervals DOWN via Srs.delevel, persists the changes,
+    // queues them for a TRACE re-exposure, and surfaces a one-line banner.
+    // Resolves to the (possibly updated) states so the rest of Home reflects
+    // the new schedule immediately.
+    const runDelevel = (states) => {
+      const Daily = window.Daily;
+      if (!Daily.runDelevelSweep || Daily.delevelDoneToday() || !window.DB.getRecentCardEvents) {
+        return Promise.resolve(states);
+      }
+      const since = new Date(Date.now() - 21 * 86400000).toISOString();
+      return window.DB.getRecentCardEvents(since).then(events => {
+        const agg = new Map(); // idx -> { hits, total }
+        for (const e of (events || [])) {
+          if (!e || e.idx == null) continue;
+          const a = agg.get(e.idx) || { hits: 0, total: 0 };
+          a.total += 1;
+          if (e.outcome !== 'miss') a.hits += 1; // success = any non-miss outcome
+          agg.set(e.idx, a);
+        }
+        const evidence = new Map();
+        for (const [idx, a] of agg) {
+          evidence.set(idx, { recentHitRate: a.total ? a.hits / a.total : null, recentEvents: a.total });
+        }
+        const changed = Daily.runDelevelSweep(states, evidence);
+        Daily.markDelevelDone();
+        if (!changed.length) return states;
+        Promise.all(changed.map(c => window.DB.upsertCardState(c))).catch(() => {});
+        // Queue the retuned cards so TRACE can re-expose the motor pattern
+        // before they're demanded blind again (pedagogy: re-trace before re-recall).
+        try {
+          const prev = JSON.parse(localStorage.getItem('kb-delevel-trace-queue') || '[]');
+          const merged = Array.from(new Set([...prev, ...changed.map(c => c.idx)]));
+          localStorage.setItem('kb-delevel-trace-queue', JSON.stringify(merged));
+        } catch (e) {}
+        if (!cancelled) setDelevelCount(changed.length);
+        const byIdx = new Map(changed.map(c => [c.idx, c]));
+        return states.map(s => byIdx.get(s.idx) || s);
+      }).catch(() => states);
+    };
+
     window.DB.open()
       .then(() => Promise.all([window.DB.getUser(), window.DB.getAllCardStates()]))
+      .then(([u, states0]) => runDelevel(states0).then(states => [u, states]))
       .then(([u, states]) => {
+        if (cancelled) return;
         setCardStates(states);
         const todayStr = new Date().toDateString();
         const reviewed = states.filter(s =>
@@ -527,6 +574,7 @@ const App = ({ cards }) => {
         });
       })
       .catch(() => {});
+    return () => { cancelled = true; };
   }, [cards]);
 
   React.useEffect(() => {
@@ -676,6 +724,28 @@ const App = ({ cards }) => {
         />
 
         <main className="kb-main kb-main-staggered" data-screen-label="home">
+          {delevelCount > 0 && (
+            <div
+              className="kb-recalib"
+              role="status"
+              onClick={() => setDelevelCount(0)}
+              title="dismiss"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '8px 12px',
+                border: '1px solid var(--accent-cyan)',
+                background: 'linear-gradient(180deg, rgba(34,211,238,.08), transparent), var(--bg-1)',
+                boxShadow: 'inset 0 0 18px rgba(34,211,238,.06)',
+                fontFamily: 'var(--font-mono)', cursor: 'pointer',
+              }}
+            >
+              <span style={{ fontSize: '10px', letterSpacing: '.16em', color: 'var(--accent-cyan)', textShadow: '0 0 6px rgba(34,211,238,.5)', whiteSpace: 'nowrap' }}>▸ SRS RECALIBRATED</span>
+              <span style={{ fontSize: '11px', color: 'var(--fg-1)', letterSpacing: '.02em', flex: 1 }}>
+                <b style={{ color: 'var(--accent-cyan)' }}>{delevelCount}</b> card{delevelCount === 1 ? '' : 's'} retuned to your recall curve
+              </span>
+              <span style={{ fontSize: '11px', color: 'var(--fg-3)' }} aria-hidden>✕</span>
+            </div>
+          )}
           {tweaks.hero === 'on' && (
             <div className="kb-pane-wrap" onClick={() => openPanePop('hero')} title="tap for stroke order + full examples">
               <Hero kanji={todayKanji} />

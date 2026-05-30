@@ -51,8 +51,17 @@
   var _loading = {};        // name -> Promise<AudioBuffer|null> (in-flight)
   var _missing = {};        // name -> true once all formats 404'd
 
-  var _bed = null;          // { name, source, gain } currently-playing bed
+  var _bed = null;          // { name, source, lowpass, wetGain, shaper, gain } currently-playing bed
   var _bedWanted = null;    // last name requested via playBed/setBedForMode
+  var _panic = false;       // true once setPanic(true) has warped the live bed
+  var _distCurve = null;    // memoized WaveShaper curve (built lazily)
+
+  // Panic-warp targets (the "end-of-the-line" dying/distorting feel).
+  var PANIC_LOWPASS_HZ = 700;     // close the lowpass toward this
+  var CLEAN_LOWPASS_HZ = 16000;   // wide-open lowpass (effectively bypass)
+  var PANIC_RATE = 0.92;          // sag the bed playbackRate to this
+  var PANIC_WET = 0.85;           // how much distorted (wet) signal to blend in
+  var PANIC_RAMP_S = 0.6;         // setTargetAtTime time-constant-ish window
 
   // ── tweaks persistence ──────────────────────────────────────────────
 
@@ -301,11 +310,67 @@
   }
   function milestone() { play('sfx_milestone'); }
 
+  // ── panic distortion (the "end-of-the-line" warp) ───────────────────
+  //
+  // makeDistortionCurve(amount) builds a soft-clip transfer curve for the
+  // WaveShaper. We use a tanh-style arctan blend so the overdrive saturates
+  // smoothly instead of hard-clipping (which would alias nastily on a loop).
+  function makeDistortionCurve(amount) {
+    var k = (typeof amount === 'number') ? amount : 40;
+    var n = 2048;
+    var curve = new Float32Array(n);
+    for (var i = 0; i < n; i++) {
+      var x = (i * 2) / n - 1;                 // -1 .. 1
+      // (1 + k) * x / (1 + k*|x|) is a classic soft-clip; arctan keeps the
+      // tails gentle so the loop doesn't shriek when fully wet.
+      curve[i] = ((3 + k) * Math.atan(x) * 0.5) / (1 + (k * Math.abs(x)) / 6);
+    }
+    return curve;
+  }
+
+  function _panicCurve() {
+    if (!_distCurve) _distCurve = makeDistortionCurve(60);
+    return _distCurve;
+  }
+
+  // Reset the live bed's panic nodes back to clean (no audible warp). Safe to
+  // call even if nothing is warped — it just re-asserts the clean targets.
+  function _clearPanic(immediate) {
+    _panic = false;
+    if (!_bed || !_ctx) return;
+    var now = _ctx.currentTime;
+    var tc = immediate ? 0.005 : (PANIC_RAMP_S / 3);
+    try { if (_bed.wetGain) _bed.wetGain.gain.setTargetAtTime(0.0001, now, tc); } catch (e) {}
+    try { if (_bed.lowpass) _bed.lowpass.frequency.setTargetAtTime(CLEAN_LOWPASS_HZ, now, tc); } catch (e) {}
+    try { if (_bed.source) _bed.source.playbackRate.setTargetAtTime(1.0, now, tc); } catch (e) {}
+  }
+
+  // setPanic(on) — warp/unwarp the currently-playing bed. No bed or non-'full'
+  // mode → no-op. on=true blends in WaveShaper overdrive, closes the lowpass
+  // toward ~700 Hz, and sags playbackRate to ~0.92. on=false ramps back clean.
+  function setPanic(on) {
+    on = !!on;
+    if (_mode !== 'full' || !_bed || !_ctx) { _panic = false; return; }
+    if (!_bed.lowpass || !_bed.wetGain || !_bed.source) return; // legacy/unrouted bed
+    if (!on) { _clearPanic(false); return; }
+    _panic = true;
+    var now = _ctx.currentTime;
+    var tc = PANIC_RAMP_S / 3;
+    try { _bed.wetGain.gain.setTargetAtTime(PANIC_WET, now, tc); } catch (e) {}
+    try { _bed.lowpass.frequency.setTargetAtTime(PANIC_LOWPASS_HZ, now, tc); } catch (e) {}
+    try { _bed.source.playbackRate.setTargetAtTime(PANIC_RATE, now, tc); } catch (e) {}
+  }
+
   // ── background bed ──────────────────────────────────────────────────
   //
   // Beds only ever run in 'full' mode and never under reduced-motion. They
   // loop seamlessly (the WAVs are built with a wrap crossfade). Starting the
   // same bed that's already playing is a no-op (avoids restart pops).
+  //
+  // Routing (so panic can warp it in place):
+  //   source ─> lowpass ─┬─> (dry)            ─┐
+  //                      └─> shaper ─> wetGain ┴─> bedGain ─> ambGain
+  // Panic off by default: wetGain≈0, lowpass wide-open, playbackRate=1.
 
   function playBed(name, opts) {
     name = name || DEFAULT_BED;
@@ -327,14 +392,33 @@
       var g = _ctx.createGain();
       var target = (typeof opts.volume === 'number') ? opts.volume : 1.0;
       g.gain.value = 0.0001;
+
+      // Panic chain — always wired, but inert until setPanic(true).
+      var lowpass = _ctx.createBiquadFilter();
+      lowpass.type = 'lowpass';
+      lowpass.frequency.value = CLEAN_LOWPASS_HZ;   // wide-open = clean
+      var shaper = _ctx.createWaveShaper();
+      shaper.curve = _panicCurve();
+      shaper.oversample = '2x';
+      var wetGain = _ctx.createGain();
+      wetGain.gain.value = 0.0001;                  // no distortion by default
+
+      // source -> lowpass -> { dry -> bedGain, shaper -> wetGain -> bedGain }
+      src.connect(lowpass);
+      lowpass.connect(g);                            // dry path
+      lowpass.connect(shaper);
+      shaper.connect(wetGain);
+      wetGain.connect(g);                            // wet path
       g.connect(_ambGain);
-      src.connect(g);
+
+      src.playbackRate.value = 1.0;                  // panic sags this toward 0.92
       try { src.start(0); } catch (e) {}
       // Fade in so it eases under the action.
       var fade = (opts.fadeMs != null ? opts.fadeMs : 350) / 1000;
       try { g.gain.setTargetAtTime(target, _ctx.currentTime, fade / 3); }
       catch (e) { g.gain.value = target; }
-      _bed = { name: name, source: src, gain: g };
+      _bed = { name: name, source: src, lowpass: lowpass, shaper: shaper, wetGain: wetGain, gain: g };
+      _panic = false;
     });
   }
 
@@ -342,6 +426,7 @@
     if (!_bed) return;
     var b = _bed;
     _bed = null;
+    _panic = false;                    // the bed carrying any warp is going away
     fadeMs = (fadeMs == null) ? 400 : fadeMs;
     if (!_ctx) { try { b.source.stop(); } catch (e) {} return; }
     var now = _ctx.currentTime;
@@ -351,10 +436,13 @@
     } catch (e) {
       try { b.gain.gain.value = 0; } catch (e2) {}
     }
-    // Stop the source after the fade so we free the node.
+    // Stop the source after the fade so we free the node (and the panic chain).
     setTimeout(function () {
       try { b.source.stop(); } catch (e) {}
       try { b.source.disconnect(); } catch (e) {}
+      try { if (b.lowpass) b.lowpass.disconnect(); } catch (e) {}
+      try { if (b.shaper) b.shaper.disconnect(); } catch (e) {}
+      try { if (b.wetGain) b.wetGain.disconnect(); } catch (e) {}
       try { b.gain.disconnect(); } catch (e) {}
     }, fadeMs + 60);
   }
@@ -364,13 +452,32 @@
   // strings the app already uses ('time','survival','streak','leech','match',
   // 'decipher','run','home','mastery',…).
   function setBedForMode(modeId) {
+    // Entering any mode resets the panic warp — each mode starts clean. (If a
+    // bed is already running and stays running, clear its warp in place;
+    // playBed/stopBed below also reset _panic, but a same-bed playBed is a
+    // no-op so we clear here too.)
+    _clearPanic(true);
     if (modeId && BED_MODES[modeId]) playBed(DEFAULT_BED);
     else stopBed();
+  }
+
+  // ── end-of-game result tones ────────────────────────────────────────
+  //
+  // end(tier) — called by every mode when it reaches its end/debrief screen.
+  // Halts the bed (so the loop doesn't bleed into the end screen), clears any
+  // panic warp, then plays the tier-shaped result tone. No-op under mute/off.
+  function end(tier) {
+    if (_silent()) return;
+    if (tier !== 'good' && tier !== 'mid' && tier !== 'bad') tier = 'mid';
+    stopBed(140);          // also resets _panic; bed must not continue into end
+    _clearPanic(true);     // belt-and-suspenders in case a bed lingers mid-fade
+    play('sfx_end_' + tier);
   }
 
   // ── diagnostics introspection ───────────────────────────────────────
   function _state() { return _ctx ? _ctx.state : 'none'; }
   function _loaded() { return Object.keys(_buffers); }
+  function _isPanic() { return _panic; }
 
   // ── export ──────────────────────────────────────────────────────────
   window.AudioManager = {
@@ -389,12 +496,17 @@
     play: play,
     tick: tick, correct: correct, wrong: wrong, nav: nav,
     rankUp: rankUp, hot: hot, milestone: milestone,
-    // beds
+    // end-of-game result tones
+    end: end,
+    // beds + panic warp
     playBed: playBed, stopBed: stopBed, setBedForMode: setBedForMode,
+    setPanic: setPanic,
     // diagnostics
     get _ctx() { return _ctx; },
     _state: _state,
     _loaded: _loaded,
+    _isPanic: _isPanic,
+    get _panic() { return _panic; },
     // expose the bed-mode whitelist so Diagnostics can render it
     BED_MODES: BED_MODES,
   };

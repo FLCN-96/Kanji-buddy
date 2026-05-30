@@ -274,6 +274,20 @@ const DB = {
     }));
   },
 
+  // All card_events on/after `sinceIso` (uses the `date` index). One bulk read
+  // so callers can build a cross-mode evidence map without N per-card queries
+  // (used by the daily deleveling sweep). Omit sinceIso to read the whole log.
+  getRecentCardEvents(sinceIso) {
+    return openDB().then(db => new Promise((resolve, reject) => {
+      const t = db.transaction('card_events', 'readonly');
+      const i = t.objectStore('card_events').index('date');
+      const range = sinceIso ? IDBKeyRange.lowerBound(sinceIso) : undefined;
+      const req = i.getAll(range);
+      req.onsuccess = (e) => resolve(e.target.result || []);
+      req.onerror   = (e) => reject(e.target.error);
+    }));
+  },
+
   // ── mode-entry funnel ─────────────────────────────────────────────
 
   recordModeStart(mode) {

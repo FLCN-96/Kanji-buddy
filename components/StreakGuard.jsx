@@ -102,7 +102,6 @@ const StreakGuardApp = ({ cards }) => {
   const nearPoolRef = React.useRef(cards);
 
   React.useEffect(() => {
-    if (window.AudioManager) window.AudioManager.setBedForMode('streak');
     if (!window.DB) return;
     window.DB.recordModeStart('streak_guard').catch(() => {});
     window.DB.open()
@@ -182,6 +181,11 @@ const StreakGuardApp = ({ cards }) => {
       finishedRef.current = true;
       const savedCount = deck.filter(c => c.status === 'saved').length;
       const leakedCount = deck.filter(c => c.status === 'leaked').length;
+      // Map save rate → end tone tier (mirrors SGEnd's ribbon thresholds):
+      // ≥80% saved → good, ≥50% → mid, otherwise → bad.
+      const saveRate = deck.length > 0 ? savedCount / deck.length : 0;
+      const endTier = saveRate >= 0.8 ? 'good' : saveRate >= 0.5 ? 'mid' : 'bad';
+      window.AudioManager && window.AudioManager.end(endTier);
       if (savedCount > pb) {
         setBeatPb(true);
         try { localStorage.setItem(PB_KEY_SG, String(savedCount)); } catch(e) {}
@@ -268,7 +272,11 @@ const StreakGuardApp = ({ cards }) => {
     lockRef.current = false;
   };
 
-  const start = () => { setPhase('ready'); };
+  const start = () => {
+    window.AudioManager && window.AudioManager.unlock();
+    window.AudioManager && window.AudioManager.setBedForMode('streak');
+    setPhase('ready');
+  };
   const restart = () => {
     finishedRef.current = false;
     setDeck([]); setActiveId(null); setFeedback(null); setBeatPb(false);

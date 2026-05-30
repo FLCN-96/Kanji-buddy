@@ -301,7 +301,6 @@ const DecipherApp = ({ cards, words }) => {
   const lockedRef     = React.useRef(false); // blocks taps during correct/wrong delay
 
   React.useEffect(() => {
-    if (window.AudioManager) window.AudioManager.setBedForMode('decipher');
     if (!window.DB) return;
     window.DB.recordModeStart('decipher').catch(() => {});
     window.DB.open()
@@ -415,6 +414,13 @@ const DecipherApp = ({ cards, words }) => {
     // or navigate away before saveSession/grantXp finish, leaving the flag
     // unwritten and every run stuck on gold). Matches the Match/TA pattern.
     if (tierAtSave && window.Daily) window.Daily.claimHot('decipher');
+
+    // End tone: map the depth ribbon (CRYPTANALYST/DEEP READER/SIGNAL LOCK/
+    // WARM TRACE/COLD START — see DCEnd) to an audio tier. Top two → good,
+    // middle → mid, bottom two → bad. Stops the bed so the loop doesn't bleed
+    // into the debrief screen.
+    const endTier = depth >= 12 ? 'good' : depth >= 6 ? 'mid' : 'bad';
+    window.AudioManager && window.AudioManager.end(endTier);
 
     window.DB.saveScore({ mode: 'decipher', score: depth }).catch(() => {});
     window.DB.saveSession({
@@ -574,7 +580,11 @@ const DecipherApp = ({ cards, words }) => {
     }, 420);
   };
 
-  const start = () => setPhase('ready');
+  const start = () => {
+    window.AudioManager && window.AudioManager.unlock();
+    window.AudioManager && window.AudioManager.setBedForMode('decipher');
+    setPhase('ready');
+  };
   const restart = () => {
     setLives(DC_LIVES_MAX); setDepth(0); setRound(null); setUsedWords(new Set());
     setHistory([]); setBeatPb(false); setXpGained(0); setHotTier(null);

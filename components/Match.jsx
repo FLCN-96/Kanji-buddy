@@ -179,6 +179,10 @@ const MatchApp = ({ cards }) => {
   // Guards the end-of-game save effect against re-firing when it sets state
   // (pb, beatPb, xpGained) during its own run.
   const finishedRef = React.useRef(false);
+  // Tracks whether the clock is currently inside the low-time 'panic' window
+  // (mirrors MTTopbar's `danger` threshold) so the audio distortion ramp fires
+  // once on each entry/exit transition rather than every clock tick.
+  const panicRef = React.useRef(false);
   // Ref (not state) so the ready-phase countdown effect doesn't restart when
   // card_states finish loading — Match only reads it at pool-build time.
   const cardStatesRef = React.useRef([]);
@@ -191,7 +195,6 @@ const MatchApp = ({ cards }) => {
   const roundRef = React.useRef(0);
 
   React.useEffect(() => {
-    if (window.AudioManager) window.AudioManager.setBedForMode('match');
     if (!window.DB) return;
     window.DB.recordModeStart('match').catch(() => {});
     window.DB.open()
@@ -254,8 +257,20 @@ const MatchApp = ({ cards }) => {
       const remain = total - elapsed - penaltyAccumRef.current;
       if (remain <= 0) {
         setTimeLeft(0);
+        // Leaving play — clear any panic warp before the end tone fires.
+        if (panicRef.current) {
+          panicRef.current = false;
+          window.AudioManager && window.AudioManager.setPanic(false);
+        }
         setPhase('end');
         return;
+      }
+      // Panic distortion: ramp on/off once as the clock crosses the low-time
+      // danger threshold (same 10s cutoff MTTopbar flips its UI on).
+      const inPanic = remain < 10000;
+      if (inPanic !== panicRef.current) {
+        panicRef.current = inPanic;
+        window.AudioManager && window.AudioManager.setPanic(inPanic);
       }
       setTimeLeft(remain);
       rafRef.current = requestAnimationFrame(loop);
@@ -296,6 +311,17 @@ const MatchApp = ({ cards }) => {
     const earned = Math.round(withMix * mult);
     setXpGained(earned);
     setHotTier(tierAtSave);
+    // End tone — stops the bed (so the loop doesn't bleed into the debrief) and
+    // plays a result sting tiered off this run's own stats. Accuracy mirrors
+    // the MTEnd readout (matches / (matches+misses)); a new PB always counts as
+    // 'good'. Thresholds align with MTEnd's accuracy styling (is-good ≥90 /
+    // is-bad <70).
+    const total = matches + misses;
+    const accPct = total > 0 ? (matches / total) * 100 : 0;
+    const endTier = (newBeatPb || accPct >= 90) ? 'good'
+                  : accPct >= 70 ? 'mid'
+                  : 'bad';
+    window.AudioManager && window.AudioManager.end(endTier);
     // Burn the gold synchronously — claim is just a localStorage write and
     // must not depend on the IDB chain below resolving (iOS PWA can suspend
     // or navigate away before saveSession/grantXp finish, leaving the flag
@@ -428,14 +454,30 @@ const MatchApp = ({ cards }) => {
     }
   };
 
-  const start = () => setPhase('ready');
+  const start = () => {
+    window.AudioManager && window.AudioManager.unlock();
+    window.AudioManager && window.AudioManager.setBedForMode('match');
+    setPhase('ready');
+  };
   const restart = () => {
+    // Defensively clear any lingering panic warp when leaving the end screen.
+    if (panicRef.current) {
+      panicRef.current = false;
+      window.AudioManager && window.AudioManager.setPanic(false);
+    }
     setPhase('ready');
     penaltyAccumRef.current = 0;
     finishedRef.current = false;
     roundRef.current = 0;
   };
-  const goHome = () => { window.location.href = 'Home.html'; };
+  const goHome = () => {
+    // Defensively clear any lingering panic warp on abort/exit.
+    if (panicRef.current) {
+      panicRef.current = false;
+      window.AudioManager && window.AudioManager.setPanic(false);
+    }
+    window.location.href = 'Home.html';
+  };
   const quit = () => {
     if (phase === 'play') { setConfirmQuit(true); return; }
     goHome();

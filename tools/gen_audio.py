@@ -654,6 +654,121 @@ def sfx_milestone():
 
 
 # ─────────────────────────────────────────────────────────────────────────
+# END-OF-GAME RESULT STINGERS — three short outcome tones (~1.0–1.6 s).
+# Same dark palette: detuned dual-osc pulses, triangle/sine sub for weight,
+# PWM breathing, lowpass to kill chipper top, soft feedback delay, mild crush.
+# No bright major jingles anywhere — good is REASSURING (plagal iv→i, lands on
+# the root), mid is UNRESOLVED (held minor dyad), bad is DREARY (descending
+# Phrygian fall). All resolve downward / inward, never up into the major.
+# ─────────────────────────────────────────────────────────────────────────
+
+def sfx_end_good():
+    """REASSURING but dark — "you made it out". A PLAGAL iv→i in A minor that
+    settles gently onto the root: a Dm dyad (D3 + F3, the minor subdominant iv)
+    swells in, then resolves DOWN into an Am chord (A2 root + C4 b3 + E3 faint
+    sustained 5th). Soft attack, long release, no triumphant rise. ~1.5 s."""
+    # — iv: Dm dyad (D3 + F3). Soft swell, no crush; triangle for warmth. —
+    d_iv = mix(
+        detuned(note("D3"), 0.55, "triangle", vol=0.42, det1=5.0, det2=-7.0),
+        detuned(note("F3"), 0.55, "pulse",    vol=0.30, duty=0.4,
+                det1=6.0, det2=-6.0,
+                pwm_hz=1.2, pwm_lo=0.40, pwm_hi=0.55),
+    )
+    d_iv = adsr(d_iv, a=0.06, d=0.10, s=0.65, r=0.22)
+
+    # — i: Am chord landing on the root. A2 carries the weight; C4 is the b3
+    #   that resolves the F→E motion's sibling; E3 is the FAINT sustained 5th. —
+    root = detuned(note("A2"), 0.95, "triangle", vol=0.55, det1=4.0, det2=-6.0)
+    root = mix(root, osc(note("A2"), 0.95, "sine", vol=0.22))
+    root = adsr(root, a=0.05, d=0.18, s=0.6, r=0.55)
+
+    third = detuned(note("C4"), 0.80, "pulse", vol=0.26, duty=0.35,
+                    det1=6.0, det2=-8.0,
+                    pwm_hz=1.0, pwm_lo=0.30, pwm_hi=0.50)
+    third = adsr(third, a=0.06, d=0.16, s=0.5, r=0.50)
+
+    fifth = detuned(note("E3"), 0.95, "triangle", vol=0.18, det1=5.0, det2=-5.0)
+    fifth = adsr(fifth, a=0.10, d=0.20, s=0.55, r=0.55)   # faint, slow swell
+    i_chord = mix(root, third, fifth)
+
+    # iv leads, then i lands ~0.40 s in (overlap so the cadence is connected).
+    body = place(silence(1.55), [
+        (d_iv, 0.0),
+        (i_chord, 0.40),
+    ])
+    body = lowpass(body, 2200.0)
+    body = delay(body, 0.32, feedback=0.24, mix_wet=0.22, octave_tap=False)
+    body = bitcrush(body, 12)
+    return trim_tail(body, max_dur=1.60, min_dur=1.10)
+
+
+def sfx_end_mid():
+    """MIDDLE-OF-THE-ROAD / unresolved — neither win nor loss. A bare held
+    MINOR DYAD: root + b3 (A3 + C4), plain and slightly hollow. No motion, no
+    cadence — it just sits there. Slow PWM breathing, gentle tremolo, narrow
+    pulses (hollow), one even fade. ~1.2 s."""
+    root = detuned(note("A3"), 1.05, "pulse", vol=0.55, duty=0.22,
+                   det1=6.0, det2=-8.0,
+                   pwm_hz=1.4, pwm_lo=0.18, pwm_hi=0.30)
+    third = detuned(note("C4"), 1.05, "pulse", vol=0.42, duty=0.20,
+                    det1=7.0, det2=-7.0,
+                    pwm_hz=1.1, pwm_lo=0.16, pwm_hi=0.28)
+    # A faint low A2 octave so it has a floor without picking a direction.
+    sub = osc(note("A2"), 1.05, "triangle", vol=0.22)
+    body = mix(root, third, sub)
+    body = adsr(body, a=0.04, d=0.12, s=0.62, r=0.40)
+    body = tremolo(body, 3.2, depth=0.30)        # slow unease, no resolution
+    body = lowpass(body, 1700.0)                 # hollow, dark
+    body = delay(body, 0.30, feedback=0.20, mix_wet=0.18, octave_tap=False)
+    body = bitcrush(body, 11)
+    return trim_tail(body, max_dur=1.30, min_dur=1.00)
+
+
+def sfx_end_bad():
+    """DREARY / defeated — "you didn't make it". A sinking DESCENDING Phrygian
+    fall A3 → G3 → F3 → E3 (natural-minor / Phrygian descent toward the E pedal),
+    each step LOWER, QUIETER and darker, the last note collapsing a semitone-
+    coloured tail (F3→E3 is the Phrygian b2→root over E). Hollow narrow pulses,
+    heavier crush, lowpass closing down, long fade to silence. ~1.5 s."""
+    steps = [
+        (note("A3"), 0.26, 0.60),
+        (note("G3"), 0.26, 0.48),
+        (note("F3"), 0.28, 0.38),
+        (note("E3"), 0.70, 0.30),    # lands on the dominant pedal, rings out
+    ]
+    seq = []
+    for i, (f, dur, vol) in enumerate(steps):
+        last = (i == len(steps) - 1)
+        v = detuned(f, dur, "pulse", vol=vol, duty=0.16,
+                    det1=6.0, det2=-10.0,
+                    pwm_hz=1.6, pwm_lo=0.14, pwm_hi=0.26,
+                    vib_hz=4.0, vib_cents=12.0 if last else 0.0, vib_delay=0.04)
+        # The final note sags a touch in pitch as it dies (a defeated droop).
+        if last:
+            v = mix(v, osc(0, dur, "triangle", vol=0.20,
+                           pitch_glide=(note("E3"), note("Eb3"))))
+        rel = 0.45 if last else 0.06
+        v = adsr(v, a=0.008, d=0.05, s=0.55, r=rel)
+        seq.extend(v)
+    # Low triangle sub trailing the fall for weight (drops with the line).
+    sub = osc(0, len(seq) / SAMPLE_RATE, "triangle", vol=0.20,
+              pitch_glide=(note("A2"), note("E2")))
+    sub = adsr(sub, a=0.02, d=0.20, s=0.5, r=0.40)
+    body = mix(seq, sub)
+    # A breath of noise wind low under it for hollow desolation.
+    wind = osc(0, len(body) / SAMPLE_RATE, "noise", vol=0.06)
+    wind = lowpass(wind, 600.0)
+    body = mix(body, wind)
+    # Lowpass that CLOSES toward the end (the lights going out).
+    n = len(body)
+    cutoff = [1800.0 - 1200.0 * (i / max(1, n - 1)) for i in range(n)]
+    body = lowpass(body, cutoff)
+    body = delay(body, 0.34, feedback=0.26, mix_wet=0.24, octave_tap=False)
+    body = bitcrush(body, 10)
+    return trim_tail(body, max_dur=1.60, min_dur=1.20)
+
+
+# ─────────────────────────────────────────────────────────────────────────
 # THE BED — amb_challenge. Dark hypnotic 7.2 s loop in 9/8 at 75 BPM
 # (9 × 0.8 s = 4 × the 1.8 s --kb-beat). Drone + sparse heartbeat bass +
 # half-loop eerie arp + lowpass-swept noise wind + one soft heartbeat thud.
@@ -847,6 +962,9 @@ GENERATORS = {
     "sfx_rankup":    (sfx_rankup,    SFX_PEAK, True),
     "sfx_hot":       (sfx_hot,       SFX_PEAK, True),
     "sfx_milestone": (sfx_milestone, SFX_PEAK, True),
+    "sfx_end_good":  (sfx_end_good,  SFX_PEAK, True),
+    "sfx_end_mid":   (sfx_end_mid,   SFX_PEAK, True),
+    "sfx_end_bad":   (sfx_end_bad,   SFX_PEAK, True),
     "amb_challenge": (amb_challenge, BED_PEAK, False),
 }
 

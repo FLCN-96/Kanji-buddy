@@ -150,7 +150,6 @@ const SurvivalApp = ({ cards }) => {
   const seenSetRef = React.useRef(new Set());
 
   React.useEffect(() => {
-    if (window.AudioManager) window.AudioManager.setBedForMode('survival');
     if (!window.DB) return;
     window.DB.recordModeStart('survival').catch(() => {});
     window.DB.open()
@@ -224,6 +223,10 @@ const SurvivalApp = ({ cards }) => {
 
   const finish = (depthAtDeath, killer) => {
     setPhase('end');
+    // Result tone — depth-based tier. end() also stops the bed so the loop
+    // doesn't bleed into the debrief; guarded no-op under mute/'off'/absent.
+    const endTier = depthAtDeath >= 25 ? 'good' : depthAtDeath >= 10 ? 'mid' : 'bad';
+    window.AudioManager && window.AudioManager.end(endTier);
     try {
       const prev = pb;
       if (depthAtDeath > prev) {
@@ -308,7 +311,11 @@ const SurvivalApp = ({ cards }) => {
     }
   };
 
-  const start = () => { setPhase('ready'); };
+  const start = () => {
+    window.AudioManager && window.AudioManager.unlock();
+    window.AudioManager && window.AudioManager.setBedForMode('survival');
+    setPhase('ready');
+  };
   const restart = () => {
     setDepth(0); setUsed(new Set()); setHistory([]);
     setFeedback(null); setHeartBreak(false); setBeatPb(false); setQuestion(null);

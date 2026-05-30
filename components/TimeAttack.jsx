@@ -125,9 +125,11 @@ const TimeAttackApp = ({ cards }) => {
   const cardStatesRef = React.useRef([]);
   const poolRef = React.useRef(null);
   const seenSetRef = React.useRef(new Set());
+  // Tracks whether the audio panic distortion is currently ramped on, so the
+  // clock loop fires setPanic() once on each threshold crossing (not per tick).
+  const panicOnRef = React.useRef(false);
 
   React.useEffect(() => {
-    if (window.AudioManager) window.AudioManager.setBedForMode('time');
     if (!window.DB) return;
     window.DB.recordModeStart('time_attack').catch(() => {});
     window.DB.open()
@@ -143,6 +145,15 @@ const TimeAttackApp = ({ cards }) => {
   React.useEffect(() => {
     if (phase !== 'end' || !window.DB) return;
     if (hits + misses === 0) return; // didn't actually play
+    // End-of-game audio: map the score tier to a result tone. end() stops the
+    // bed (so the play loop doesn't bleed into the debrief) and clears panic.
+    // DIAMOND/GOLD → 'good', SILVER → 'mid', BRONZE (incl. timed-out low score)
+    // → 'bad'. Guarded no-op under mute/'off'/absent.
+    const endTierId = pickTier(score).id;
+    const audioTier = (endTierId === 'DIAMOND' || endTierId === 'GOLD') ? 'good'
+                    : endTierId === 'SILVER' ? 'mid'
+                    : 'bad';
+    window.AudioManager && window.AudioManager.end(audioTier);
     // Snapshot the hot tier so the end screen shows exactly what was applied.
     const tierAtSave = window.Daily ? window.Daily.hotTier('time') : null;
     const mult       = window.Daily ? window.Daily.hotMultiplier('time') : 1;
@@ -234,19 +245,43 @@ const TimeAttackApp = ({ cards }) => {
   React.useEffect(() => {
     if (phase !== 'play' || endAt == null) return;
     let raf;
+    // Low-time window: matches the topbar `danger` flag (last 10s). Crossing it
+    // ramps the audio bed into distortion; leaving it (or the round ending)
+    // ramps back to clean. Fire once per crossing via panicOnRef.
+    const PANIC_MS = 10_000;
+    const setPanic = (on) => {
+      if (panicOnRef.current === on) return;
+      panicOnRef.current = on;
+      window.AudioManager && window.AudioManager.setPanic(on);
+    };
     const loop = () => {
       const remaining = endAt - performance.now();
       if (remaining <= 0) {
+        setPanic(false);
         setClockMs(0);
         finish(false);
         return;
       }
+      setPanic(remaining <= PANIC_MS);
       setClockMs(remaining);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
   }, [phase, endAt]);
+
+  // Defensively clear the audio panic distortion whenever we're not actively in
+  // the play phase (quit, restart, end, unmount). end() already clears it on the
+  // end transition; this catches quits/restarts that bail out of play directly.
+  // Kept separate from the clock effect so a mid-round endAt change (miss
+  // penalty) doesn't flicker panic off/on.
+  React.useEffect(() => {
+    if (phase === 'play') return;
+    if (panicOnRef.current) {
+      panicOnRef.current = false;
+      window.AudioManager && window.AudioManager.setPanic(false);
+    }
+  }, [phase]);
 
   const finish = (perfectFlag) => {
     if (phase === 'end') return;
@@ -311,7 +346,11 @@ const TimeAttackApp = ({ cards }) => {
     }, ok ? 260 : 420);
   };
 
-  const start = () => { setPhase('ready'); };
+  const start = () => {
+    window.AudioManager && window.AudioManager.unlock();
+    window.AudioManager && window.AudioManager.setBedForMode('time');
+    setPhase('ready');
+  };
   const restart = () => {
     setScore(0); setHits(0); setMisses(0); setCombo(0); setMaxCombo(0);
     setHistory([]); setUsedIdx(new Set()); setBeatPb(false); setQuestion(null);

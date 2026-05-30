@@ -168,5 +168,52 @@
     return `${Math.round(days / 365)}y`;
   }
 
-  window.Srs = { schedule, preview, labelInterval, QUALITY, MIN_EASE, INITIAL_EASE };
+  // ─────────────────────────────────────────────────────────────────────
+  // Adaptive "light deleveling" (v-next). Gently nudges a STRUGGLING card's
+  // interval DOWN without nuking earned progress — the inverse of a lapse:
+  // not triggered by a single miss, but by a standing pattern of difficulty
+  // across SM-2 state AND cross-mode evidence (card_events). Pure: returns a
+  // NEW state with interval/due lowered, or null when no change is warranted.
+  // The caller persists via DB.upsertCardState. Never mutates the input,
+  // never touches ease/reviews/lapses or the sticky mastery breadcrumbs, and
+  // never raises an interval — only ever down, and never below the floor.
+  //
+  //   evidence = { recentHitRate: 0..1 | null, recentEvents: int }
+  //   opts     = { now?: Date, floorDays=1, maxDropRatio=0.5, minInterval=4 }
+  function delevel(state, evidence, opts) {
+    if (!state) return null;
+    const o = opts || {};
+    const now          = o.now          || new Date();
+    const floorDays    = o.floorDays    != null ? o.floorDays    : 1;
+    const maxDropRatio = o.maxDropRatio != null ? o.maxDropRatio : 0.5;
+    const minInterval  = o.minInterval  != null ? o.minInterval  : 4;
+
+    const interval = state.interval_days || 0;
+    // Below the floor there's nothing earned worth protecting — leave young
+    // cards to normal SM-2 (they graduate fast anyway).
+    if (interval < minInterval) return null;
+
+    const ev = evidence || {};
+    let score = 0;
+    if ((state.lapses || 0) >= 2) score += 1;                                  // repeat-failure intensity
+    if (ev.recentEvents >= 3 && ev.recentHitRate != null && ev.recentHitRate < 0.5) score += 1; // poor recent cross-mode recall
+    if ((state.ease_factor || INITIAL_EASE) <= MIN_EASE + 0.05) score += 1;    // chronic struggle (ease at floor)
+    if (score === 0) return null;
+
+    // Each point of trouble shaves 15%, capped so a 200d card can't collapse
+    // to 1d in a single sweep (and a 1-point nudge stays a gentle 15%).
+    const factor = Math.min(0.85, Math.max(1 - maxDropRatio, 1 - 0.15 * score));
+    const next   = Math.max(Math.round(interval * factor), floorDays);
+    if (next >= interval) return null; // only ever DOWN
+
+    const due = new Date(now);
+    due.setDate(due.getDate() + next);
+    // Spread preserves first_correct_at / first_mature_at / days_overdue_at_lapse
+    // and ease/reviews/lapses/lapsed_from_interval verbatim — only the schedule
+    // moves, so the Mastery wall never visibly regresses and leech accounting
+    // is untouched.
+    return { ...state, interval_days: next, due_date: due.toISOString() };
+  }
+
+  window.Srs = { schedule, preview, labelInterval, delevel, QUALITY, MIN_EASE, INITIAL_EASE };
 })();

@@ -466,6 +466,9 @@ const StreakInjectApp = ({ cards }) => {
           xp_earned: 0,
         });
       } catch (e) {}
+      // Accuracy threshold not met → hard fail. Result tone is 'bad'; end()
+      // stops the bed so the loop doesn't bleed into the debrief screen.
+      window.AudioManager && window.AudioManager.end('bad');
       setOutcome('failed');
       setPhase('end');
       return;
@@ -539,6 +542,8 @@ const StreakInjectApp = ({ cards }) => {
           });
         } catch (e) {}
         setXpGained(SUCCESS_XP);
+        // Streak recovered → win tone. end() stops the bed before the debrief.
+        window.AudioManager && window.AudioManager.end('good');
         setOutcome('recovered');
       } else {
         const after = window.StreakInject.recordAttempt(false);
@@ -561,6 +566,8 @@ const StreakInjectApp = ({ cards }) => {
           await window.DB.grantXp(CONSOLATION_XP);
         } catch (e) {}
         setXpGained(CONSOLATION_XP);
+        // Accuracy held but the recovery roll missed → neutral 'mid' tone.
+        window.AudioManager && window.AudioManager.end('mid');
         setOutcome('rejected');
       }
       setPhase('end');

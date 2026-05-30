@@ -2,7 +2,7 @@
 // land on next visit without forcing cache-version bumps. Cache-first
 // for heavy/stable assets (cards.json, icons, manifest, fonts).
 
-const CACHE = 'kb-v29';
+const CACHE = 'kb-v30';
 const CDN_CACHE = 'kb-cdn-v2';
 const NAV_FALLBACK = './Home.html';
 
@@ -56,6 +56,9 @@ const LOCAL_ASSETS = [
   './audio/sfx_rankup.wav',
   './audio/sfx_hot.wav',
   './audio/sfx_milestone.wav',
+  './audio/sfx_end_good.wav',
+  './audio/sfx_end_mid.wav',
+  './audio/sfx_end_bad.wav',
   './audio/amb_challenge.wav',
   './data/db.js',
   './data/load-cards.js',
