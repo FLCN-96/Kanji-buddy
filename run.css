@@ -46,7 +46,7 @@ body[data-scanlines="on"]::after {
   background: var(--glass-1);
   backdrop-filter: var(--glass-filter-lg);
   -webkit-backdrop-filter: var(--glass-filter-lg);
-  box-shadow: var(--glass-specular);
+  box-shadow: var(--glass-specular), 0 2px 12px rgba(0,0,0,.28);
   position: sticky; top: 0; z-index: 10;
 }
 /* Run / Overclock have a centered counter between QUIT and LIVE — geometric
@@ -265,7 +265,7 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
   padding: var(--sp-1) 0;
   border-bottom: 1px solid transparent;
 }
-.run-ex + .run-ex { border-top: 1px solid var(--line-dim); padding-top: var(--sp-2); }
+.run-ex + .run-ex { border-top: 1px solid var(--glass-edge); padding-top: var(--sp-2); }
 .run-ex-word {
   font-family: var(--font-jp-sans);
   font-size: 16px;
@@ -657,7 +657,7 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 }
 .run-pre-hint kbd {
   font-family: var(--font-mono); font-size: 10px;
-  background: var(--bg-2); border: 1px solid var(--line-bright);
+  background: var(--glass-2); border: 1px solid var(--glass-edge-bright);
   border-bottom-width: 2px;
   padding: 1px 6px; color: var(--fg-0);
   margin: 0 2px;

@@ -256,7 +256,7 @@
 }
 .sv-pre-hint kbd {
   font-family: var(--font-mono); font-size: 10px;
-  background: var(--bg-2); border: 1px solid var(--line-bright);
+  background: var(--glass-2); border: 1px solid var(--glass-edge-bright);
   border-bottom-width: 2px; padding: 1px 6px; color: var(--fg-0);
   margin: 0 2px;
 }

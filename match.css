@@ -90,7 +90,7 @@
 .mt-hud-cell {
   display: inline-flex; align-items: center; justify-content: center;
   padding: 5px 10px;
-  border-right: 1px solid var(--line-dim);
+  border-right: 1px solid var(--glass-edge);
   color: var(--fg-1);
   font-variant-numeric: tabular-nums;
   transition: color var(--dur-fast) var(--ease-snap),
@@ -249,11 +249,12 @@
   -webkit-backdrop-filter: var(--glass-filter);
   border-radius: var(--r-glass);
   box-shadow: var(--glass-shadow);
+  overflow: hidden;
 }
 .mt-pre-rule {
   display: flex; align-items: center; gap: var(--sp-3);
   padding: var(--sp-3);
-  border-bottom: 1px solid var(--line-dim);
+  border-bottom: 1px solid var(--glass-edge);
   font-size: 13px; color: var(--fg-1);
 }
 .mt-pre-rule:last-child { border-bottom: 0; }
@@ -335,12 +336,13 @@
   -webkit-backdrop-filter: var(--glass-filter);
   border-radius: var(--r-glass);
   box-shadow: var(--glass-shadow);
+  overflow: hidden;
 }
 .mt-pre-meta-1 { grid-template-columns: 1fr; }
 .mt-pre-meta-3 { grid-template-columns: 1fr 1fr 1fr; }
 .mt-pre-meta-cell {
   padding: var(--sp-3); text-align: center;
-  border-right: 1px solid var(--line-dim);
+  border-right: 1px solid var(--glass-edge);
 }
 .mt-pre-meta-cell:last-child { border-right: 0; }
 .mt-pre-meta-lbl { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-2); }
@@ -460,8 +462,10 @@
    for that row), so no flex:1 or min-height needed. overflow:visible on
    transient states lets the ::before bus line extend past the tile edge. */
 /* Board tiles stay ANGULAR + UNBLURRED on purpose: 12+ repeated elements in a
-   timed mode (iOS perf), and the permanent .mt-tile-edge corner brackets would
-   detach from any rounded corner. Translucent glass bg only. */
+   timed mode (iOS perf), and the .mt-tile-edge corner brackets pin at a 2px
+   inset — an 8px curve cuts away beneath them. House rule: brackets inset
+   >=6px tolerate --r-glass-sm (see .sv-tile / .ta-card); brackets at <=2px
+   keep the surface angular. Translucent glass bg only. */
 .mt-tile {
   position: relative;
   display: flex; align-items: center; justify-content: center;
@@ -793,11 +797,12 @@
   -webkit-backdrop-filter: var(--glass-filter);
   border-radius: var(--r-glass);
   box-shadow: var(--glass-shadow);
+  overflow: hidden;
 }
 .mt-end-hero-stat {
   padding: var(--sp-3);
-  border-right: 1px solid var(--line-dim);
-  border-bottom: 1px solid var(--line-dim);
+  border-right: 1px solid var(--glass-edge);
+  border-bottom: 1px solid var(--glass-edge);
 }
 .mt-end-hero-stat:nth-child(2n) { border-right: 0; }
 .mt-end-hero-stat:nth-last-child(-n+2) { border-bottom: 0; }

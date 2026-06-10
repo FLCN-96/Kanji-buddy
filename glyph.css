@@ -127,10 +127,7 @@
   padding: 8px var(--sp-3);
   border: 1px solid var(--glass-edge);
   background: var(--glass-1);
-  backdrop-filter: var(--glass-filter-sm);
-  -webkit-backdrop-filter: var(--glass-filter-sm);
   border-radius: var(--r-glass-sm);
-  box-shadow: var(--glass-specular);
   display: flex; flex-direction: column; gap: 2px;
 }
 .gl-pre-meta-cell.is-pb { border-color: var(--accent-cyan); }
@@ -195,7 +192,7 @@
   backdrop-filter: var(--glass-filter);
   -webkit-backdrop-filter: var(--glass-filter);
   border-radius: var(--r-glass);
-  box-shadow: var(--glass-specular);
+  box-shadow: var(--glass-shadow);
 }
 .gl-prompt-eyebrow {
   font-family: var(--font-mono); font-size: 9px; letter-spacing: .2em;
@@ -503,9 +500,9 @@
 .gl-end-chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 4px 8px;
-  border: 1px solid var(--glass-edge);
-  background: var(--glass-1);
-  border-radius: var(--r-glass-sm);
+  border: 1px solid var(--glass-edge-bright);
+  background: var(--glass-2);
+  border-radius: var(--r-pill);
   font-family: var(--font-mono); font-size: 11px; color: var(--fg-1);
 }
 .gl-end-chip.is-ok   { border-color: rgba(34,211,238,.5); }
@@ -528,7 +525,7 @@
 .gl-end-xp-head {
   display: flex; justify-content: space-between; align-items: baseline;
   padding: 8px var(--sp-3);
-  border-bottom: 1px solid var(--line-dim);
+  border-bottom: 1px solid var(--glass-edge);
   font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em;
   color: var(--accent-cyan);
 }

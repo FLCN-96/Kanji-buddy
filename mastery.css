@@ -45,7 +45,7 @@
   backdrop-filter: var(--glass-filter-lg);
   -webkit-backdrop-filter: var(--glass-filter-lg);
   border-bottom: 1px solid rgba(0,229,255,.15);
-  box-shadow: var(--glass-specular), var(--glass-drop);
+  box-shadow: var(--glass-specular), 0 2px 12px rgba(0,0,0,.28);
 }
 .kb-mastery-back {
   color: var(--fg-2, #7a8694);

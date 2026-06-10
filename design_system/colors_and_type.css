@@ -477,6 +477,8 @@ a {
 
 .kb-confirm-btn {
   padding: var(--sp-3) var(--sp-4);
+  /* --glass-1 at bumped alpha: action buttons need a denser seat than
+     the panel they sit in so destructive choices stay legible. */
   background: rgba(15,22,35,.72);
   border: 0;
   font-family: var(--font-mono); font-weight: var(--fw-bold);

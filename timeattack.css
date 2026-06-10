@@ -246,7 +246,7 @@
 }
 .ta-pre-hint kbd {
   font-family: var(--font-mono); font-size: 10px;
-  background: var(--bg-2); border: 1px solid var(--line-bright);
+  background: var(--glass-2); border: 1px solid var(--glass-edge-bright);
   border-bottom-width: 2px;
   padding: 1px 6px; color: var(--fg-0);
   margin: 0 2px;
@@ -684,18 +684,18 @@
 }
 .ta-card.is-hit {
   border-color: var(--accent-cyan);
-  box-shadow: var(--glass-specular), inset 0 0 80px rgba(34,211,238,.35), 0 0 28px rgba(34,211,238,.45);
+  box-shadow: var(--glass-specular), inset 0 0 80px rgba(34,211,238,.35), 0 0 28px rgba(34,211,238,.45), var(--glass-drop);
   animation: ta-hit-flash .32s var(--ease-snap);
 }
 .ta-card.is-miss {
   border-color: var(--danger);
-  box-shadow: var(--glass-specular), inset 0 0 80px rgba(255,92,106,.35), 0 0 28px rgba(255,92,106,.45);
+  box-shadow: var(--glass-specular), inset 0 0 80px rgba(255,92,106,.35), 0 0 28px rgba(255,92,106,.45), var(--glass-drop);
   animation: ta-miss-shake .32s var(--ease-snap);
 }
 @keyframes ta-hit-flash {
-  0% { box-shadow: var(--glass-specular), inset 0 0 0 rgba(34,211,238,0); }
-  35% { box-shadow: var(--glass-specular), inset 0 0 120px rgba(34,211,238,.55), 0 0 40px rgba(34,211,238,.6); }
-  100% { box-shadow: var(--glass-specular), inset 0 0 80px rgba(34,211,238,.35), 0 0 28px rgba(34,211,238,.45); }
+  0% { box-shadow: var(--glass-specular), inset 0 0 0 rgba(34,211,238,0), var(--glass-drop); }
+  35% { box-shadow: var(--glass-specular), inset 0 0 120px rgba(34,211,238,.55), 0 0 40px rgba(34,211,238,.6), var(--glass-drop); }
+  100% { box-shadow: var(--glass-specular), inset 0 0 80px rgba(34,211,238,.35), 0 0 28px rgba(34,211,238,.45), var(--glass-drop); }
 }
 @keyframes ta-miss-shake {
   0%, 100% { transform: translateX(0); }
