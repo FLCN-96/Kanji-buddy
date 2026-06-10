@@ -559,7 +559,7 @@
 .sg-quiz-foot {
   display: flex; align-items: center; gap: var(--sp-2);
   padding: 8px var(--sp-3);
-  border-top: 1px solid var(--line-dim);
+  border-top: 1px solid var(--glass-edge);
   font-size: 10px; color: var(--fg-2);
   letter-spacing: .08em; text-transform: uppercase;
 }
