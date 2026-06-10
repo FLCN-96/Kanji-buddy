@@ -4,14 +4,15 @@
 
 .kb-dict-back {
   color: var(--fg-2);
-  background: transparent;
+  background: var(--glass-1);
   text-decoration: none;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: .12em;
   text-transform: lowercase;
   padding: 4px 8px;
-  border: 1px solid var(--line-dim);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass-sm);
   cursor: pointer;
   transition: color var(--dur-fast) var(--ease-snap),
               border-color var(--dur-fast) var(--ease-snap);
@@ -28,8 +29,12 @@
 /* ─── list intro ─── */
 .kb-dict-intro {
   padding: var(--sp-3);
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular), var(--glass-drop);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -59,11 +64,14 @@
   grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
   gap: 6px;
 }
+/* Hundreds of repeated browser cells — translucent glass + radius only,
+   never backdrop-filter. */
 .kb-dict-cell {
   position: relative;
   aspect-ratio: 1 / 1;
-  background: var(--bg-1);
-  border: 1px solid var(--line-dim);
+  background: var(--glass-1);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass-sm);
   color: var(--fg-0);
   font-family: var(--font-jp-serif);
   font-weight: var(--fw-bold);
@@ -118,10 +126,14 @@
   border: 1px solid var(--accent-cyan);
   background:
     linear-gradient(180deg, rgba(34,211,238,.08), transparent 40%),
-    var(--bg-1);
+    var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass-lg);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.08),
-    0 0 18px rgba(34,211,238,.10);
+    var(--glass-specular),
+    0 0 18px rgba(34,211,238,.10),
+    var(--glass-drop);
   align-items: center;
 }
 .kb-dict-detail-k {
@@ -155,7 +167,9 @@
   letter-spacing: .12em;
   text-transform: lowercase;
   color: var(--fg-1);
-  border: 1px solid var(--line-dim);
+  background: var(--glass-2);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-pill);
   padding: 2px 6px;
 }
 .kb-dict-detail-tag-dim {
@@ -175,8 +189,12 @@
   flex-direction: column;
   gap: var(--sp-2);
   padding: var(--sp-3);
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular);
 }
 .kb-dict-rdrow {
   display: grid;
@@ -197,13 +215,15 @@
   flex-wrap: wrap;
   gap: 4px;
 }
+/* Repeated reading chips — translucent + radius only, no blur. */
 .kb-dict-rd {
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
   padding: 3px 8px;
-  border: 1px solid var(--line-dim);
-  background: var(--bg-0);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-2);
+  border-radius: var(--r-glass-sm);
   font-size: 12px;
 }
 .kb-dict-rd.is-main {
@@ -233,8 +253,15 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular);
+  /* word rows have no bg of their own, but their dashed dividers run
+     edge-to-edge — clip them to the rounded corners */
+  overflow: hidden;
 }
 .kb-dict-list-numbered .kb-dict-item {
   grid-template-columns: 28px auto auto 1fr;
@@ -279,8 +306,9 @@
 }
 .kb-dict-empty-block {
   padding: var(--sp-3);
-  border: 1px dashed var(--line-dim);
-  background: var(--bg-1);
+  border: 1px dashed var(--glass-edge);
+  background: var(--glass-1);
+  border-radius: var(--r-glass);
   color: var(--fg-2);
   font-size: 12px;
   font-style: italic;

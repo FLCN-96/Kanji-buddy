@@ -65,11 +65,13 @@
   font-family: var(--font-mono); font-size: 12px;
   color: var(--fg-2); letter-spacing: .02em;
 }
+/* Full-bleed marquee band — stays angular (top/bottom hairlines only),
+   just goes translucent. No blur under the scrolling track. */
 .gl-pre-ticker {
   overflow: hidden;
-  border-top: 1px solid var(--line-dim);
-  border-bottom: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border-top: 1px solid var(--glass-edge);
+  border-bottom: 1px solid var(--glass-edge);
+  background: var(--glass-1);
   padding: 4px 0; white-space: nowrap; margin-top: 4px;
 }
 .gl-pre-ticker-track {
@@ -88,8 +90,12 @@
 .gl-pre-diagram {
   display: flex; justify-content: center;
   padding: var(--sp-3);
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular), var(--glass-drop);
 }
 .gl-pre-diag-svg { width: 132px; height: 132px; }
 
@@ -99,8 +105,9 @@
   display: grid; grid-template-columns: 28px 1fr;
   align-items: center; gap: var(--sp-3);
   padding: 8px var(--sp-3);
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  border-radius: var(--r-glass-sm);
   font-family: var(--font-mono); font-size: 12px;
   color: var(--fg-1);
 }
@@ -118,8 +125,12 @@
 .gl-pre-meta-2 { grid-template-columns: 1fr 1fr; }
 .gl-pre-meta-cell {
   padding: 8px var(--sp-3);
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter-sm);
+  -webkit-backdrop-filter: var(--glass-filter-sm);
+  border-radius: var(--r-glass-sm);
+  box-shadow: var(--glass-specular);
   display: flex; flex-direction: column; gap: 2px;
 }
 .gl-pre-meta-cell.is-pb { border-color: var(--accent-cyan); }
@@ -146,19 +157,22 @@
   width: 100%;
   padding: 14px var(--sp-3);
   border: 1px solid var(--accent-cyan);
-  background: var(--bg-1);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter-sm);
+  -webkit-backdrop-filter: var(--glass-filter-sm);
+  border-radius: var(--r-glass-sm);
   color: var(--fg-0);
   font-family: var(--font-mono); font-weight: 700;
   font-size: 14px; letter-spacing: .18em;
   cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 0 16px rgba(34,211,238,.18);
+  box-shadow: var(--glass-specular), 0 0 16px rgba(34,211,238,.18), var(--glass-drop);
   transition: background var(--dur-fast) var(--ease-snap),
               box-shadow var(--dur-fast) var(--ease-snap);
 }
 @media (hover: hover) {
   .gl-pre-start:hover {
     background: rgba(34,211,238,.08);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 0 24px rgba(34,211,238,.32);
+    box-shadow: var(--glass-specular), 0 0 24px rgba(34,211,238,.32), var(--glass-drop);
   }
 }
 .gl-pre-start .arrow { color: var(--accent-cyan); }
@@ -176,8 +190,12 @@
 .gl-prompt {
   display: flex; flex-direction: column; gap: 4px; text-align: center;
   padding: var(--sp-3);
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular);
 }
 .gl-prompt-eyebrow {
   font-family: var(--font-mono); font-size: 9px; letter-spacing: .2em;
@@ -194,11 +212,15 @@
   font-size: 13px; color: var(--accent-magenta); letter-spacing: .04em;
 }
 
-/* stage — the 米字格 assembly canvas */
+/* stage — the 米字格 assembly canvas. Cosmetic radius on the frame ONLY:
+   no backdrop-filter on or over the tap surface, and pointer plumbing
+   (touch-action / overflow / position) is untouched. Bg stays a solid dark
+   field so the locked glyphs keep contrast. */
 .gl-stage {
   position: relative;
   width: 100%; max-width: 340px; margin: 0 auto;
   aspect-ratio: 1 / 1;
+  border-radius: var(--r-glass);
   border: 1px solid var(--line-med);
   background:
     radial-gradient(circle at 50% 45%, rgba(34,211,238,.05), transparent 70%),
@@ -347,11 +369,14 @@
   min-height: 64px; align-items: center;
 }
 .gl-tray-empty { color: var(--fg-3); font-family: var(--font-mono); font-size: 13px; }
+/* Tray tiles — repeated tap targets next to the play surface: translucent
+   glass + radius, NO backdrop-filter. */
 .gl-tile {
   width: 60px; height: 60px;
   display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--line-bright);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge-bright);
+  background: var(--glass-1);
+  border-radius: var(--r-glass-sm);
   cursor: pointer;
   transition: border-color var(--dur-fast) var(--ease-snap),
               box-shadow var(--dur-fast) var(--ease-snap),
@@ -400,7 +425,11 @@
 }
 .gl-end-ribbon {
   border: 1px solid var(--ribbon-clr, var(--accent-cyan));
-  background: linear-gradient(180deg, rgba(34,211,238,.08), transparent 60%), var(--bg-1);
+  background: linear-gradient(180deg, rgba(34,211,238,.08), transparent 60%), var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular), var(--glass-drop);
   padding: var(--sp-3); text-align: center;
   display: flex; flex-direction: column; gap: 4px;
 }
@@ -417,8 +446,13 @@
 .gl-end-hero {
   display: grid; grid-template-columns: auto 1fr; gap: var(--sp-3);
   padding: var(--sp-3);
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1); align-items: center;
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular), var(--glass-drop);
+  align-items: center;
 }
 .gl-end-hero-score { display: flex; flex-direction: column; gap: 2px; min-width: 110px; }
 .gl-end-hero-lbl {
@@ -442,8 +476,9 @@
 .gl-end-hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .gl-end-hero-stat {
   padding: 6px 8px;
-  border: 1px dashed var(--line-dim);
-  background: var(--bg-0);
+  border: 1px dashed var(--glass-edge);
+  background: var(--glass-0);
+  border-radius: var(--r-glass-sm);
   display: flex; flex-direction: column; gap: 2px; text-align: center;
 }
 .gl-end-hero-stat-lbl {
@@ -464,11 +499,13 @@
 }
 .gl-end-group-count { color: var(--fg-3); }
 .gl-end-row { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Repeated per-card chips — translucent + radius only, no blur. */
 .gl-end-chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 4px 8px;
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  border-radius: var(--r-glass-sm);
   font-family: var(--font-mono); font-size: 11px; color: var(--fg-1);
 }
 .gl-end-chip.is-ok   { border-color: rgba(34,211,238,.5); }
@@ -479,7 +516,15 @@
 .gl-end-chip.is-ok  .gl-end-chip-tag { color: var(--accent-cyan); }
 .gl-end-chip.is-bad .gl-end-chip-tag { color: var(--danger); }
 
-.gl-end-xp { border: 1px solid var(--line-bright); background: var(--bg-1); }
+.gl-end-xp {
+  border: 1px solid var(--glass-edge-bright);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular), var(--glass-drop);
+  overflow: hidden; /* clip the edge-to-edge xp-head divider to the radius */
+}
 .gl-end-xp-head {
   display: flex; justify-content: space-between; align-items: baseline;
   padding: 8px var(--sp-3);
