@@ -82,6 +82,46 @@
   --scanline-overlay:
     repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 3px);
 
+  /* Ambient neon depth field — sits UNDER the grid overlay in body
+     backgrounds so liquid-glass surfaces have light to refract.
+     Always list it before var(--bg-0):
+       background: var(--grid-overlay), var(--bg-ambient), var(--bg-0); */
+  --bg-ambient:
+    radial-gradient(60% 42% at 14% -8%,  rgba(34, 211, 238, 0.10), transparent 62%),
+    radial-gradient(52% 40% at 88% 110%, rgba(255, 61, 255, 0.085), transparent 64%),
+    radial-gradient(40% 32% at 80% 18%,  rgba(138, 180, 255, 0.055), transparent 66%);
+
+  /* ---------- Liquid glass (smoked neon glass) ----------
+     Fusion contract — cyberpunk × liquid glass:
+     · surfaces are translucent smoked glass (--glass-*) lit by the
+       neon accents, never frosted white;
+     · pair a --glass-* background with backdrop-filter:
+       var(--glass-filter) AND the -webkit- prefixed copy (iOS);
+     · 1px hairline border in --glass-edge / --glass-edge-bright;
+     · the specular top highlight (--glass-specular) layers FIRST in
+       box-shadow, neon glows layer after it, soft drop (--glass-drop)
+       last — e.g. box-shadow: var(--glass-specular), <neon>, var(--glass-drop);
+     · large surfaces take --r-glass / --r-glass-lg, controls take
+       --r-glass-sm — chips may go --r-pill. Keep neon edges; lose flat fills. */
+  --glass-0: rgba(10, 15, 23, 0.66);   /* scrim / backdrop glass */
+  --glass-1: rgba(15, 22, 35, 0.58);   /* panel / card glass (bg-1 analogue) */
+  --glass-2: rgba(21, 30, 47, 0.55);   /* hover surface, inputs (bg-2) */
+  --glass-3: rgba(28, 39, 60, 0.58);   /* pressed surface (bg-3) */
+  --glass-filter:    blur(16px) saturate(160%);
+  --glass-filter-sm: blur(10px) saturate(140%);   /* buttons, chips */
+  --glass-filter-lg: blur(26px) saturate(180%);   /* modals, sticky bars */
+  --glass-edge:        rgba(255, 255, 255, 0.09);
+  --glass-edge-bright: rgba(255, 255, 255, 0.16);
+  --glass-specular: inset 0 1px 0 rgba(255, 255, 255, 0.10),
+                    inset 0 -1px 0 rgba(255, 255, 255, 0.02);
+  --glass-drop: 0 10px 30px rgba(0, 0, 0, 0.42), 0 2px 8px rgba(0, 0, 0, 0.30);
+  --glass-shadow: var(--glass-specular), var(--glass-drop);
+  /* Neon-rimmed glass compounds (specular + accent rim + ambient bloom + drop) */
+  --glass-glow-cyan:    var(--glass-specular), 0 0 0 1px rgba(34, 211, 238, 0.55),  0 0 18px rgba(34, 211, 238, 0.22),  var(--glass-drop);
+  --glass-glow-magenta: var(--glass-specular), 0 0 0 1px rgba(255, 61, 255, 0.55),  0 0 18px rgba(255, 61, 255, 0.22),  var(--glass-drop);
+  --glass-glow-amber:   var(--glass-specular), 0 0 0 1px rgba(245, 165, 36, 0.55),  0 0 16px rgba(245, 165, 36, 0.20),  var(--glass-drop);
+  --glass-glow-danger:  var(--glass-specular), 0 0 0 1px rgba(255, 92, 106, 0.55),  0 0 16px rgba(255, 92, 106, 0.20),  var(--glass-drop);
+
   /* ---------- Spacing (4px base grid) ---------- */
   --sp-0: 0;
   --sp-1: 4px;
@@ -100,6 +140,15 @@
   --r-0: 0;
   --r-1: 2px;
   --r-2: 4px;
+  /* Liquid-glass continuous curves — surfaces only; micro chrome
+     (corner ticks, brackets, segment bars) stays angular. */
+  --r-3: 8px;
+  --r-4: 14px;
+  --r-5: 20px;
+  --r-pill: 999px;
+  --r-glass-sm: var(--r-3);   /* buttons, inputs, small tiles */
+  --r-glass:    var(--r-4);   /* panels, cards, sections */
+  --r-glass-lg: var(--r-5);   /* modals, hero surfaces */
 
   /* ---------- Borders ---------- */
   --bw-1: 1px;
@@ -170,12 +219,35 @@
   --z-toast:   70;
 }
 
+/* Liquid glass degrades to the solid elevated surfaces wherever
+   backdrop-filter isn't available (or the user opted out of
+   transparency) — contrast is preserved, only the refraction goes. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass-0: var(--bg-scrim);
+    --glass-1: var(--bg-1);
+    --glass-2: var(--bg-2);
+    --glass-3: var(--bg-3);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-0: var(--bg-scrim);
+    --glass-1: var(--bg-1);
+    --glass-2: var(--bg-2);
+    --glass-3: var(--bg-3);
+    --glass-filter: none;
+    --glass-filter-sm: none;
+    --glass-filter-lg: none;
+  }
+}
+
 /* ============================================================
    Semantic element defaults
    ============================================================ */
 
 html, body {
-  background: var(--bg-0);
+  background: var(--bg-ambient), var(--bg-0);
   color: var(--fg-0);
   font-family: var(--font-ui);
   font-size: var(--fs-14);
@@ -302,9 +374,9 @@ a {
    ============================================================ */
 .kb-confirm-scrim {
   position: fixed; inset: 0; z-index: var(--z-modal);
-  background: rgba(10,14,20,.78);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: rgba(10,14,20,.60);
+  backdrop-filter: blur(8px) saturate(130%);
+  -webkit-backdrop-filter: blur(8px) saturate(130%);
   display: flex; align-items: center; justify-content: center;
   padding: var(--sp-4);
   animation: kb-confirm-scrim-in 140ms var(--ease-snap);
@@ -314,12 +386,16 @@ a {
 .kb-confirm {
   position: relative;
   width: 100%; max-width: 420px;
-  background: var(--bg-1);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter-lg);
+  -webkit-backdrop-filter: var(--glass-filter-lg);
   border: 1px solid var(--accent-magenta);
+  border-radius: var(--r-glass-lg);
   box-shadow:
-    0 0 0 1px var(--bg-0),
+    var(--glass-specular),
     0 0 28px rgba(255,61,255,.30),
-    inset 0 0 60px rgba(255,61,255,.04);
+    inset 0 0 60px rgba(255,61,255,.04),
+    var(--glass-drop);
   font-family: var(--font-mono);
   color: var(--fg-0);
   animation: kb-confirm-in 180ms var(--ease-snap);
@@ -328,9 +404,10 @@ a {
 .kb-confirm.tone-info {
   border-color: var(--accent-cyan);
   box-shadow:
-    0 0 0 1px var(--bg-0),
+    var(--glass-specular),
     0 0 24px rgba(34,211,238,.30),
-    inset 0 0 60px rgba(34,211,238,.04);
+    inset 0 0 60px rgba(34,211,238,.04),
+    var(--glass-drop);
 }
 .kb-confirm::before {
   content: '';
@@ -366,10 +443,10 @@ a {
 .kb-confirm-top {
   display: flex; justify-content: space-between; align-items: center;
   padding: 8px var(--sp-4);
-  border-bottom: 1px solid var(--line-dim);
+  border-bottom: 1px solid var(--glass-edge);
   font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
   color: var(--accent-magenta);
-  background: var(--bg-2);
+  background: rgba(255,255,255,.04);
 }
 .kb-confirm.tone-info .kb-confirm-top { color: var(--accent-cyan); }
 
@@ -393,14 +470,14 @@ a {
 
 .kb-confirm-actions {
   display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
-  border-top: 1px solid var(--line-dim);
-  background: var(--line-dim);
+  border-top: 1px solid var(--glass-edge);
+  background: var(--glass-edge);
 }
 .kb-confirm-actions.is-info { grid-template-columns: 1fr; }
 
 .kb-confirm-btn {
   padding: var(--sp-3) var(--sp-4);
-  background: var(--bg-1);
+  background: rgba(15,22,35,.72);
   border: 0;
   font-family: var(--font-mono); font-weight: var(--fw-bold);
   font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
@@ -419,7 +496,7 @@ a {
 @media (hover: hover) {
   .kb-confirm-btn-cancel:hover {
     color: var(--fg-0);
-    background: var(--bg-2);
+    background: rgba(21,30,47,.82);
   }
 }
 .kb-confirm-btn-confirm.tone-danger {
@@ -468,6 +545,7 @@ a {
   display: flex; align-items: center; gap: 8px;
   padding: 8px 12px;
   border: 1px dashed var(--accent-lime);
+  border-radius: var(--r-glass-sm);
   background: rgba(163,230,53,.06);
   font-size: 11px; letter-spacing: .04em;
   color: var(--accent-lime);
