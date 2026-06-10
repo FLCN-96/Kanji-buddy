@@ -36,6 +36,15 @@
      backdrop-filter has something to smoke. */
   background: var(--glass-1);
 }
+/* iOS: the play-phase shell carries a continuous --dread filter (and a
+   band-3 infinite jitter) — a backdrop-filter inside a filtered ancestor
+   re-rasterizes every frame and samples a re-rooted backdrop. Run the
+   topbar solid during play; the glass returns on pre/end phases. */
+.sv-shell[data-phase="play"] .sv-top {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--bg-1);
+}
 .sv-top.is-play {
   /* During play the topbar collapses to a hairline strip. */
   border-bottom-color: transparent;

@@ -374,9 +374,10 @@ a {
    ============================================================ */
 .kb-confirm-scrim {
   position: fixed; inset: 0; z-index: var(--z-modal);
-  background: rgba(10,14,20,.60);
-  backdrop-filter: blur(8px) saturate(130%);
-  -webkit-backdrop-filter: blur(8px) saturate(130%);
+  /* Darken only — no scrim blur: the confirm pane on top already blurs,
+     and full-viewport backdrop sampling over animating mode screens is
+     iOS-hostile (nested with the pane's own filter). */
+  background: rgba(10,14,20,.78);
   display: flex; align-items: center; justify-content: center;
   padding: var(--sp-4);
   animation: kb-confirm-scrim-in 140ms var(--ease-snap);

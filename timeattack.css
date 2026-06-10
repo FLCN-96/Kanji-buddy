@@ -579,10 +579,10 @@
      for the brackets (backdrop-filter self-clips to the rounded border-box,
      so no overflow:hidden is needed for the glass). */
   border-radius: var(--r-glass-sm);
-  background: var(--glass-1);
-  /* Hit-flash / miss-shake are one-shot — blur is acceptable here. */
-  backdrop-filter: var(--glass-filter);
-  -webkit-backdrop-filter: var(--glass-filter);
+  /* --glass-1 densified: hit-flash/miss-shake fire at sprint cadence and a
+     crit-window ancestor effect would re-rasterize any backdrop blur —
+     translucent glass WITHOUT blur on the card. */
+  background: rgba(15, 22, 35, 0.82);
   box-shadow: var(--glass-shadow);
   display: flex; flex-direction: column;
   position: relative;
@@ -938,19 +938,23 @@
 
 /* ---- crit ---- last 3 seconds: timer jitters, glyph goes chroma-split,
         tile borders flicker, whole shell saturates ---- */
-.ta-play[data-tension="crit"] {
-  filter: saturate(1.15);
-}
+/* iOS: no filter on .ta-play — it's an ancestor of the glass card and the
+   fixed vignette/penalty/burst overlays; an ancestor filter re-roots the
+   fixed FX and forces per-frame re-rasterization of any backdrop sampling
+   at the exact 3-second climax. The crit saturation reads through a hotter
+   vignette + the glyph chroma-split instead. */
 .ta-play[data-tension="crit"] .ta-play-vignette {
   opacity: 1;
   background: radial-gradient(ellipse at center,
-    transparent 38%,
-    rgba(255,92,106,.42) 100%);
+    transparent 34%,
+    rgba(255,92,106,.50) 100%);
   animation: ta-vignette-pulse 600ms var(--ease-snap) infinite;
 }
+/* Opacity pulse, not filter — a viewport-sized fixed overlay animating
+   filter:brightness repaints the whole layer every frame on iOS. */
 @keyframes ta-vignette-pulse {
-  0%, 100% { filter: brightness(1); }
-  50%      { filter: brightness(1.35); }
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .72; }
 }
 .ta-play[data-tension="crit"] .ta-card-corner {
   border-color: var(--danger);

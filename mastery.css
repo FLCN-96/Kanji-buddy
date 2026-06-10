@@ -322,8 +322,8 @@
   background:
     linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.34)),
     var(--glass-1);
-  backdrop-filter: var(--glass-filter);
-  -webkit-backdrop-filter: var(--glass-filter);
+  /* No blur: 4 simultaneous tiles — the gradient-over-glass fill carries the
+     depth; blur here pushed the instrument view to 9 backdrop-filters. */
   border: 1px solid var(--tier-c);
   border-radius: var(--r-glass);
   box-shadow: var(--glass-specular), var(--glass-drop);

@@ -247,6 +247,13 @@
   opacity: .22; filter: blur(1px) saturate(.5);
   pointer-events: none;
 }
+/* iOS: the rescue quiz floats a blur(26px) pane over this grid — pause the
+   breathe/alarm loops while dimmed so the quiz backdrop stays static instead
+   of forcing a continuous re-blur for the whole rescue interaction. */
+.sg-grid-wrap.is-dim .sg-cell,
+.sg-grid-wrap.is-dim .sg-cell-live {
+  animation-play-state: paused;
+}
 .sg-grid-head {
   display: flex; justify-content: space-between; align-items: baseline;
   padding: 2px 2px;

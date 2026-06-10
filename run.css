@@ -100,10 +100,11 @@ body[data-scanlines="on"]::after {
 .run-card {
   border: 1px solid var(--glass-edge);
   border-radius: var(--r-glass);
-  background: var(--glass-1);
-  /* Flip-in / flash / shake are all one-shot — blur is safe here. */
-  backdrop-filter: var(--glass-filter);
-  -webkit-backdrop-filter: var(--glass-filter);
+  /* --glass-1 densified: the card remounts with a 3D flip per card and
+     shakes on miss — a backdrop-filter here would force full backdrop
+     resampling every frame of those transforms on iOS, so the card is
+     translucent glass WITHOUT blur. */
+  background: rgba(15, 22, 35, 0.82);
   box-shadow: var(--glass-shadow);
   display: flex; flex-direction: column;
   flex: 1;
@@ -801,7 +802,12 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
   font-family: var(--font-mono); font-weight: 700;
   font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
   cursor: pointer; text-align: center;
-  transition: all var(--dur-fast) var(--ease-snap);
+  /* Enumerated (not `all`): this element carries backdrop-filter, and iOS
+     animates backdrop-filter poorly if a future state ever toggles it. */
+  transition: border-color var(--dur-fast) var(--ease-snap),
+              color        var(--dur-fast) var(--ease-snap),
+              background   var(--dur-fast) var(--ease-snap),
+              box-shadow   var(--dur-fast) var(--ease-snap);
 }
 @media (hover: hover) {
   .run-end-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); background: var(--glass-2); box-shadow: var(--glass-specular), 0 0 12px rgba(34,211,238,.3); }
