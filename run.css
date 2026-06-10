@@ -116,6 +116,11 @@ body[data-scanlines="on"]::after {
   transition: border-color var(--dur-base) var(--ease-snap), box-shadow var(--dur-base) var(--ease-snap);
   animation: card-flip-in 420ms var(--ease-snap) both;
 }
+@media (prefers-reduced-transparency: reduce) {
+  /* The card fill is hand-densified rgba (not a --glass-* token), so it
+     misses the token-level solid fallback — solidify it here. */
+  .run-card { background: var(--bg-1); }
+}
 .run-card.revealed { border-color: var(--accent-cyan); box-shadow: var(--glass-specular), 0 0 14px rgba(34,211,238,.2), var(--glass-drop); }
 /* Quiz cards remount per-card (React key on idx) so the flip plays between
    cards. Intro cards animate in via .run-intro which overrides. */

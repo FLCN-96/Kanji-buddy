@@ -589,6 +589,10 @@
   overflow: visible;
   transition: border-color var(--dur-fast) var(--ease-snap), box-shadow var(--dur-fast) var(--ease-snap);
 }
+@media (prefers-reduced-transparency: reduce) {
+  /* Hand-densified rgba misses the token-level solid fallback. */
+  .ta-card { background: var(--bg-1); }
+}
 
 /* Corner brackets — cyberpunk bezel frame around the prompt card.
    Color shifts with tension tier via cascades below. */
@@ -749,7 +753,6 @@
   color: var(--fg-0);
   font-family: var(--font-mono); font-weight: 500;
   font-size: 13px;
-  min-height: 52px;
   cursor: pointer;
   text-align: left;
   min-height: 64px;
