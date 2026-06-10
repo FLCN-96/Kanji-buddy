@@ -33,8 +33,9 @@
   width: 100%;
   max-width: 260px;
   height: 4px;
-  background: var(--bg-2);
-  border: 1px solid var(--line-dim);
+  background: var(--glass-2);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-pill);
   overflow: hidden;
 }
 .mt-top-bar-fill {
@@ -78,8 +79,11 @@
 .mt-top-r { display: flex; align-items: center; }
 .mt-hud-cluster {
   display: inline-flex; align-items: stretch;
-  border: 1px solid var(--line-bright);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge-bright);
+  background: var(--glass-1);
+  border-radius: var(--r-glass-sm);
+  overflow: hidden;
+  box-shadow: var(--glass-specular);
   font-family: var(--font-mono); font-weight: 700;
   font-size: 13px; letter-spacing: .08em;
 }
@@ -187,16 +191,21 @@
   gap: var(--sp-3);
   align-items: stretch;
   padding: var(--sp-3);
-  border: 1px solid var(--line-dim);
-  background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
   min-height: 140px;
 }
 .mt-pre-diag-col { display: flex; flex-direction: column; gap: 6px; justify-content: center; }
 .mt-pre-diag-tile {
   display: flex; align-items: center; justify-content: center;
   height: 32px;
-  border: 1px solid var(--line-bright);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge-bright);
+  background: var(--glass-1);
+  border-radius: var(--r-glass-sm);
   font-family: var(--font-mono); font-size: 12px;
   color: var(--fg-1);
 }
@@ -234,8 +243,12 @@
 }
 
 .mt-pre-rules {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
 }
 .mt-pre-rule {
   display: flex; align-items: center; gap: var(--sp-3);
@@ -249,8 +262,9 @@
   font-size: 14px;
   min-width: 48px; text-align: center;
   padding: 4px 6px;
-  border: 1px solid var(--line-bright);
-  background: var(--bg-2);
+  border: 1px solid var(--glass-edge-bright);
+  background: var(--glass-2);
+  border-radius: var(--r-glass-sm);
   color: var(--fg-1);
 }
 .mt-rk-ok { color: var(--accent-cyan); border-color: var(--accent-cyan); background: var(--accent-cyan-bg); }
@@ -269,8 +283,9 @@
 .mt-pre-axis-btn {
   display: flex; flex-direction: column; align-items: stretch; gap: 4px;
   padding: var(--sp-3);
-  border: 1px solid var(--line-bright);
-  background: transparent;
+  border: 1px solid var(--glass-edge-bright);
+  background: var(--glass-1);
+  border-radius: var(--r-glass-sm);
   color: var(--fg-1);
   font-family: var(--font-mono);
   cursor: pointer;
@@ -289,6 +304,7 @@
   .mt-pre-axis-btn:hover {
     color: var(--fg-0);
     border-color: var(--accent-cyan);
+    background: var(--glass-2);
   }
 }
 .mt-pre-axis-btn.is-active {
@@ -313,8 +329,12 @@
 .mt-pre-meta {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
 }
 .mt-pre-meta-1 { grid-template-columns: 1fr; }
 .mt-pre-meta-3 { grid-template-columns: 1fr 1fr 1fr; }
@@ -341,13 +361,14 @@
   letter-spacing: .1em; text-transform: uppercase;
   cursor: pointer;
   display: flex; justify-content: space-between; align-items: center;
-  box-shadow: 0 0 18px rgba(255,61,255,.3), inset 0 0 0 1px var(--accent-magenta);
+  border-radius: var(--r-glass-sm);
+  box-shadow: var(--glass-specular), 0 0 18px rgba(255,61,255,.3), inset 0 0 0 1px var(--accent-magenta), var(--glass-drop);
   transition: all var(--dur-fast) var(--ease-snap);
   text-shadow: 0 0 12px rgba(255,61,255,.55);
 }
 @media (hover: hover) {
   .mt-pre-start:hover {
-    box-shadow: 0 0 32px rgba(255,61,255,.6), inset 0 0 0 1px var(--accent-magenta);
+    box-shadow: var(--glass-specular), 0 0 32px rgba(255,61,255,.6), inset 0 0 0 1px var(--accent-magenta), var(--glass-drop);
     transform: translateY(-1px);
   }
 }
@@ -367,7 +388,7 @@
 }
 .mt-pre-hint kbd {
   font-family: var(--font-mono); font-size: 10px;
-  background: var(--bg-2); border: 1px solid var(--line-bright);
+  background: var(--glass-2); border: 1px solid var(--glass-edge-bright);
   border-bottom-width: 2px;
   padding: 1px 6px; color: var(--fg-0);
   text-transform: none; letter-spacing: 0;
@@ -411,8 +432,9 @@
 .mt-lane-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 8px 12px;
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  border-radius: var(--r-glass-sm);
 }
 .mt-lane-head-tag {
   font-family: var(--font-mono); font-size: 10px;
@@ -437,12 +459,15 @@
 /* Tiles. Height is dictated by the grid row track (the taller of left/right
    for that row), so no flex:1 or min-height needed. overflow:visible on
    transient states lets the ::before bus line extend past the tile edge. */
+/* Board tiles stay ANGULAR + UNBLURRED on purpose: 12+ repeated elements in a
+   timed mode (iOS perf), and the permanent .mt-tile-edge corner brackets would
+   detach from any rounded corner. Translucent glass bg only. */
 .mt-tile {
   position: relative;
   display: flex; align-items: center; justify-content: center;
   padding: 8px 14px;
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
   color: var(--fg-0);
   cursor: pointer;
   transition: border-color var(--dur-fast) var(--ease-snap),
@@ -463,26 +488,26 @@
 @media (hover: hover) {
   .mt-tile:hover:not(:disabled) {
     border-color: var(--accent-cyan);
-    background: linear-gradient(180deg, var(--accent-cyan-bg), var(--bg-1));
+    background: linear-gradient(180deg, var(--accent-cyan-bg), var(--glass-2));
     transform: translateY(-1px);
     box-shadow: 0 0 14px rgba(34,211,238,.3);
   }
   .mt-tile.mt-tile-v:hover:not(:disabled) {
     border-color: var(--accent-magenta);
-    background: linear-gradient(180deg, var(--accent-magenta-bg), var(--bg-1));
+    background: linear-gradient(180deg, var(--accent-magenta-bg), var(--glass-2));
     box-shadow: 0 0 14px rgba(255,61,255,.3);
   }
 }
 .mt-tile.is-selected {
   border-color: var(--accent-magenta);
-  background: linear-gradient(180deg, var(--accent-magenta-bg), var(--bg-1) 80%);
+  background: linear-gradient(180deg, var(--accent-magenta-bg), var(--glass-3) 80%);
   box-shadow: 0 0 22px rgba(255,61,255,.6), inset 0 0 0 1px var(--accent-magenta);
   transform: translateY(-2px);
   z-index: 2;
 }
 .mt-tile.mt-tile-k.is-selected {
   border-color: var(--accent-cyan);
-  background: linear-gradient(180deg, var(--accent-cyan-bg), var(--bg-1) 80%);
+  background: linear-gradient(180deg, var(--accent-cyan-bg), var(--glass-3) 80%);
   box-shadow: 0 0 22px rgba(34,211,238,.6), inset 0 0 0 1px var(--accent-cyan);
 }
 
@@ -704,10 +729,13 @@
   border: 2px solid var(--ribbon-clr);
   background: linear-gradient(180deg,
     color-mix(in oklch, var(--ribbon-clr) 18%, transparent),
-    transparent 80%);
+    transparent 80%), var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
   padding: var(--sp-3) var(--sp-4);
   text-align: center;
-  box-shadow: 0 0 18px color-mix(in oklch, var(--ribbon-clr) 35%, transparent), inset 0 0 0 1px var(--ribbon-clr);
+  box-shadow: var(--glass-specular), 0 0 18px color-mix(in oklch, var(--ribbon-clr) 35%, transparent), inset 0 0 0 1px var(--ribbon-clr), var(--glass-drop);
 }
 .mt-end-eyebrow {
   font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
@@ -729,7 +757,11 @@
 @media (max-width: 560px) { .mt-end-hero { grid-template-columns: 1fr; } }
 .mt-end-hero-score {
   border: 1px solid var(--accent-magenta);
-  background: linear-gradient(180deg, var(--accent-magenta-bg), transparent 80%);
+  background: linear-gradient(180deg, var(--accent-magenta-bg), transparent 80%), var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular), 0 0 18px rgba(255,61,255,.22), var(--glass-drop);
   padding: var(--sp-3);
   text-align: center;
 }
@@ -755,8 +787,12 @@
 .mt-end-hero-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
 }
 .mt-end-hero-stat {
   padding: var(--sp-3);
@@ -775,8 +811,12 @@
 .mt-end-hero-stat-val.is-bad { color: var(--accent-amber); }
 
 .mt-end-group {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
   padding: var(--sp-3);
 }
 .mt-end-group-head {
@@ -795,8 +835,9 @@
 .mt-end-chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 10px;
-  border: 1px solid var(--line-bright);
-  background: var(--bg-2);
+  border: 1px solid var(--glass-edge-bright);
+  background: var(--glass-2);
+  border-radius: var(--r-pill);
   font-family: var(--font-mono); font-size: 12px;
   color: var(--fg-1);
 }
@@ -818,7 +859,11 @@
 
 .mt-end-xp {
   border: 1px solid var(--accent-magenta);
-  background: linear-gradient(180deg, var(--accent-magenta-bg), transparent 90%);
+  background: linear-gradient(180deg, var(--accent-magenta-bg), transparent 90%), var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular), 0 0 18px rgba(255,61,255,.22), var(--glass-drop);
   padding: var(--sp-3);
 }
 .mt-end-xp-head {

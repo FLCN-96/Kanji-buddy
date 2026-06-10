@@ -9,7 +9,9 @@
 .lh-pill {
   font-family: var(--font-mono); font-weight: 700;
   font-size: 11px; padding: 3px 8px;
-  border: 1px solid var(--line-bright);
+  border: 1px solid var(--glass-edge-bright);
+  background: var(--glass-2);
+  border-radius: var(--r-pill);
   color: var(--fg-1); letter-spacing: .08em;
   font-variant-numeric: tabular-nums;
 }
@@ -58,7 +60,11 @@
 @keyframes lh-ticker { to { transform: translateX(-100%); } }
 
 .lh-pre-stages {
-  border: 1px solid var(--line-dim); background: var(--bg-1);
+  border: 1px solid var(--glass-edge); background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
   padding: var(--sp-3);
 }
 .lh-pre-stages-lbl {
@@ -72,6 +78,7 @@
 .lh-pre-stage {
   border: 1px solid var(--accent-cyan);
   background: var(--accent-cyan-bg);
+  border-radius: var(--r-glass-sm);
   padding: var(--sp-2);
   text-align: center;
   display: flex; flex-direction: column; gap: 2px;
@@ -83,7 +90,11 @@
 
 .lh-pre-rules {
   display: flex; flex-direction: column;
-  border: 1px solid var(--line-dim); background: var(--bg-1);
+  border: 1px solid var(--glass-edge); background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
 }
 .lh-pre-rule {
   padding: 10px var(--sp-3);
@@ -106,7 +117,11 @@
 
 .lh-pre-meta {
   display: grid; grid-template-columns: 1fr 1fr;
-  border: 1px solid var(--line-dim); background: var(--bg-1);
+  border: 1px solid var(--glass-edge); background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
 }
 .lh-pre-meta:has(.is-pb) { grid-template-columns: 1fr 1fr 1fr; }
 .lh-pre-meta-cell {
@@ -150,12 +165,13 @@
   font-size: 16px; letter-spacing: .14em; text-transform: uppercase;
   cursor: pointer;
   display: flex; justify-content: space-between; align-items: center;
-  box-shadow: 0 0 14px rgba(255,61,255,.25), inset 0 0 0 1px var(--accent-magenta);
+  border-radius: var(--r-glass-sm);
+  box-shadow: var(--glass-specular), 0 0 14px rgba(255,61,255,.25), inset 0 0 0 1px var(--accent-magenta), var(--glass-drop);
   transition: all var(--dur-fast) var(--ease-snap);
   text-shadow: 0 0 10px rgba(255,61,255,.5);
 }
 @media (hover: hover) {
-  .lh-pre-start:hover { box-shadow: 0 0 28px rgba(255,61,255,.55), inset 0 0 0 1px var(--accent-magenta); transform: translateY(-1px); }
+  .lh-pre-start:hover { box-shadow: var(--glass-specular), 0 0 28px rgba(255,61,255,.55), inset 0 0 0 1px var(--accent-magenta), var(--glass-drop); transform: translateY(-1px); }
 }
 .lh-pre-start .arrow { font-size: 18px; }
 
@@ -165,7 +181,7 @@
 }
 .lh-pre-hint kbd {
   font-family: var(--font-mono); font-size: 10px;
-  background: var(--bg-2); border: 1px solid var(--line-bright);
+  background: var(--glass-2); border: 1px solid var(--glass-edge-bright);
   border-bottom-width: 2px; padding: 1px 6px; color: var(--fg-0);
   margin: 0 2px;
 }
@@ -180,6 +196,10 @@
   border: 1px solid var(--accent-magenta);
   padding: 6px var(--sp-3);
   background: var(--accent-magenta-bg);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass-sm);
+  box-shadow: var(--glass-specular), 0 0 14px rgba(255,61,255,.18);
 }
 .lh-dossier-stamp {
   font-family: var(--font-mono); font-weight: 700;
@@ -208,7 +228,8 @@
 .lh-dossier-hud {
   display: flex; justify-content: space-between; align-items: center;
   padding: 4px var(--sp-3);
-  border: 1px dashed var(--line-dim);
+  border: 1px dashed var(--glass-edge);
+  border-radius: var(--r-glass-sm);
   font-family: var(--font-mono); font-size: 9px;
   color: var(--fg-2); letter-spacing: .18em; text-transform: uppercase;
 }
@@ -219,14 +240,18 @@
   display: flex; flex-direction: column; gap: 4px;
 }
 
+/* Dossier rows: repeated list rows — translucent glass + radius, NO
+   backdrop-filter (can be 10+ rows; the mini-reticle brackets live on the
+   inner glyph cell, not the row corners, so the curve is safe). */
 .lh-row {
   display: grid;
   grid-template-columns: auto auto 1fr auto;
   gap: var(--sp-3);
   align-items: center;
   padding: var(--sp-2) var(--sp-3);
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  border-radius: var(--r-glass);
   transition: all var(--dur-fast) var(--ease-out);
 }
 @media (hover: hover) {
@@ -352,6 +377,7 @@
 .lh-row-btn {
   padding: 8px 14px;
   border: 1px solid var(--accent-magenta);
+  border-radius: var(--r-glass-sm);
   background: var(--accent-magenta-bg);
   color: var(--accent-magenta);
   font-family: var(--font-mono); font-weight: 700;
@@ -370,6 +396,7 @@
   font-family: var(--font-mono); font-weight: 700;
   font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
   padding: 6px 10px; border: 1px solid currentColor;
+  border-radius: var(--r-glass-sm);
   white-space: nowrap;
 }
 .lh-row-seal[data-state="purged"] { color: var(--accent-cyan); background: var(--accent-cyan-bg); }
@@ -396,6 +423,10 @@
 .lh-hunt-target {
   border: 1px solid var(--accent-magenta);
   background: var(--accent-magenta-bg);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular), 0 0 18px rgba(255,61,255,.2), var(--glass-drop);
 }
 .lh-hunt-target-meta {
   display: flex; justify-content: space-between; align-items: baseline;
@@ -471,8 +502,9 @@
 }
 .lh-stagebar-seg {
   padding: 6px var(--sp-2);
-  border: 1px solid var(--line-bright);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge-bright);
+  background: var(--glass-1);
+  border-radius: var(--r-glass-sm);
   display: flex; flex-direction: column; gap: 2px; align-items: center;
   font-family: var(--font-mono);
   opacity: .5;
@@ -493,7 +525,8 @@
 }
 .lh-hunt-ctx {
   padding: 10px var(--sp-3);
-  border: 1px solid var(--line-dim); background: var(--bg-1);
+  border: 1px solid var(--glass-edge); background: var(--glass-1);
+  border-radius: var(--r-glass-sm);
   display: flex; justify-content: space-between; align-items: baseline;
   gap: var(--sp-3);
 }
@@ -507,10 +540,12 @@
   display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2);
 }
 .lh-hunt-tiles-application { grid-template-columns: 1fr; }
+/* Answer tiles: rapid-fire — radius + translucent bg, NO backdrop-filter. */
 .lh-tile {
   padding: var(--sp-3);
-  border: 1px solid var(--line-bright);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge-bright);
+  background: var(--glass-1);
+  border-radius: var(--r-glass-sm);
   color: var(--fg-0);
   font-family: var(--font-mono); font-weight: 500;
   font-size: 13px;
@@ -616,8 +651,11 @@
   border: 1px solid var(--ribbon-clr, var(--accent-magenta));
   padding: var(--sp-3);
   text-align: center;
-  background: linear-gradient(180deg, color-mix(in oklab, var(--ribbon-clr, var(--accent-magenta)) 14%, transparent), transparent 80%);
-  box-shadow: inset 0 0 0 1px var(--ribbon-clr, var(--accent-magenta));
+  background: linear-gradient(180deg, color-mix(in oklab, var(--ribbon-clr, var(--accent-magenta)) 14%, transparent), transparent 80%), var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular), inset 0 0 0 1px var(--ribbon-clr, var(--accent-magenta)), var(--glass-drop);
 }
 .lh-end-eyebrow {
   font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
@@ -633,8 +671,12 @@
 
 .lh-end-stats {
   display: grid; grid-template-columns: 1fr 1fr 1fr;
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
 }
 .lh-end-stat {
   padding: var(--sp-3);
@@ -663,8 +705,12 @@
 }
 
 .lh-end-group {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
 }
 .lh-end-group-head {
   display: flex; justify-content: space-between;
@@ -682,7 +728,9 @@
 }
 .lh-end-chip {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 8px; border: 1px solid var(--line-bright);
+  padding: 4px 8px; border: 1px solid var(--glass-edge-bright);
+  background: var(--glass-2);
+  border-radius: var(--r-pill);
   font-size: 11px; color: var(--fg-1);
 }
 .lh-end-chip-k { font-family: var(--font-jp-serif); font-weight: 700; font-size: 18px; color: var(--fg-0); }
@@ -696,7 +744,11 @@
 .lh-end-chip.is-surv .lh-end-chip-k { color: var(--danger); }
 
 .lh-end-xp {
-  border: 1px solid var(--line-dim); background: var(--bg-1);
+  border: 1px solid var(--glass-edge); background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
   padding: var(--sp-3);
 }
 .lh-end-xp-head {
