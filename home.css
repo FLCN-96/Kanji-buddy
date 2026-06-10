@@ -9,7 +9,7 @@
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
 body {
-  background: var(--grid-overlay), var(--bg-0);
+  background: var(--grid-overlay), var(--bg-ambient), var(--bg-0);
   color: var(--fg-0);
   font-family: var(--font-mono);
   overflow-x: hidden;
@@ -35,7 +35,10 @@ body[data-scanlines="on"]::after {
   border-left: 1px solid var(--line-dim);
   border-right: 1px solid var(--line-dim);
   position: relative;
-  background: var(--bg-0);
+  /* Ambient neon depth inside the shell too — glass surfaces above need
+     light to refract. (Opaque bg-0 here would leave every glass panel
+     sitting on a flat black field.) */
+  background: var(--bg-ambient), var(--bg-0);
 }
 @media (min-width: 900px) {
   .kb-shell.variant-game {
@@ -51,8 +54,11 @@ body[data-scanlines="on"]::after {
   height: calc(48px + env(safe-area-inset-top));
   display: flex; align-items: center; justify-content: space-between;
   padding: env(safe-area-inset-top) var(--sp-4) 0;
-  border-bottom: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border-bottom: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter-lg);
+  -webkit-backdrop-filter: var(--glass-filter-lg);
+  box-shadow: var(--glass-specular), 0 2px 12px rgba(0,0,0,.28);
   position: sticky; top: 0; z-index: 10;
 }
 .kb-wm-group {
@@ -71,7 +77,8 @@ body[data-scanlines="on"]::after {
 .kb-wm-ver {
   font-family: var(--font-mono); font-size: 10px; font-weight: 500;
   color: var(--fg-2); letter-spacing: .14em; text-transform: uppercase;
-  padding: 1px 6px; border: 1px solid var(--line-dim);
+  padding: 1px 6px; border: 1px solid var(--glass-edge);
+  border-radius: var(--r-pill);
   background: transparent;
   white-space: nowrap;
   cursor: pointer;
@@ -123,6 +130,7 @@ body[data-scanlines="on"]::after {
   color: var(--fg-2); text-decoration: none;
   font-size: 14px; line-height: 1;
   border: 1px solid transparent;
+  border-radius: var(--r-glass-sm);
   transition: color var(--dur-fast) var(--ease-snap), border-color var(--dur-fast) var(--ease-snap), transform .4s;
 }
 @media (hover: hover) {
@@ -140,6 +148,7 @@ body[data-scanlines="on"]::after {
   padding: 3px 10px 3px 8px;
   min-height: 22px;
   border: 1px solid currentColor;
+  border-radius: var(--r-pill);
   font-family: var(--font-mono); font-weight: 700;
   font-size: 10px; letter-spacing: .12em;
   text-transform: uppercase;
@@ -227,6 +236,7 @@ body[data-scanlines="on"]::after {
   content: '';
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background: linear-gradient(
     90deg,
     transparent 0%,
@@ -246,7 +256,7 @@ body[data-scanlines="on"]::after {
 .kb-streak-chip.is-cold {
   color: var(--fg-1);
   border-color: var(--line-bright);
-  background: var(--bg-2);
+  background: var(--glass-2);
 }
 .kb-streak-chip.is-cold .kb-streak-chip-icon { color: var(--fg-3); }
 .kb-streak-chip.is-cold .kb-streak-chip-lbl  { color: var(--fg-2); }
@@ -346,8 +356,12 @@ body[data-scanlines="on"]::after {
    BOOT BANNER — small strip at top of dashboard (unified)
    ========================================================= */
 .kb-boot {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular);
   padding: var(--sp-3) var(--sp-3);
   font-size: 11px; line-height: 1.6; color: var(--fg-1);
   overflow: hidden;
@@ -383,15 +397,19 @@ body[data-scanlines="on"]::after {
    ========================================================= */
 .kb-hero {
   position: relative;
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass-lg);
+  box-shadow: var(--glass-specular);
   overflow: hidden;
   isolation: isolate;
 }
 .kb-hero-strip {
   display: flex; justify-content: space-between;
   padding: 6px var(--sp-3);
-  border-bottom: 1px solid var(--line-dim);
+  border-bottom: 1px solid var(--glass-edge);
   font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--fg-2);
 }
 .kb-hero-strip .mag { color: var(--accent-magenta); }
@@ -477,8 +495,12 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   align-items: center;
   gap: var(--sp-3);
   padding: var(--sp-3);
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  /* No backdrop-filter here: the overclock/inject states run continuous
+     transform jitter animations, which must never be combined with blur. */
+  border-radius: var(--r-glass-sm);
+  box-shadow: var(--glass-specular);
   font-family: var(--font-mono);
   color: var(--fg-0);
   text-align: left;
@@ -488,14 +510,14 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-inject-slot.is-locked {
   cursor: not-allowed;
   opacity: .55;
-  border-color: var(--line-dim);
+  border-color: var(--glass-edge);
   background:
     repeating-linear-gradient(
       135deg,
       transparent 0 6px,
       rgba(255,255,255,.02) 6px 7px
     ),
-    var(--bg-1);
+    var(--glass-1);
   grid-template-columns: 1fr;
   justify-items: center;
   min-height: 64px;
@@ -578,6 +600,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   content: '';
   position: absolute;
   inset: -2px;
+  border-radius: inherit;
   pointer-events: none;
   background:
     radial-gradient(circle at 14% 78%, rgba(255,61,255,.38), transparent 22%),
@@ -592,6 +615,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   content: '';
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   pointer-events: none;
   background: repeating-linear-gradient(
     180deg,
@@ -695,7 +719,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   background:
     linear-gradient(180deg, rgba(255,92,106,.10), transparent 60%),
     radial-gradient(circle at 22% 88%, rgba(255,92,106,.12), transparent 35%),
-    var(--bg-1);
+    var(--glass-1);
   box-shadow:
     0 0 18px rgba(255,92,106,.32),
     inset 0 0 0 1px rgba(255,92,106,.45),
@@ -708,6 +732,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-inject-slot.is-inject::before {
   content: '';
   position: absolute; inset: -2px;
+  border-radius: inherit;
   pointer-events: none;
   background:
     radial-gradient(circle at 14% 22%, rgba(255,92,106,.28), transparent 24%),
@@ -720,6 +745,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-inject-slot.is-inject::after {
   content: '';
   position: absolute; inset: 0;
+  border-radius: inherit;
   pointer-events: none;
   background:
     repeating-linear-gradient(
@@ -906,8 +932,12 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 }
 
 .kb-chal {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  /* 5 tiles at once — translucent glass without backdrop-filter to keep
+     the per-screen blur budget for the singleton panels. */
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular);
   padding: 10px;
   text-align: left;
   cursor: pointer;
@@ -922,8 +952,9 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 @media (hover: hover) {
   .kb-chal:hover {
     border-color: var(--accent-cyan);
+    background: var(--glass-2);
     color: var(--accent-cyan);
-    box-shadow: 0 0 10px rgba(34,211,238,.25);
+    box-shadow: var(--glass-specular), 0 0 10px rgba(34,211,238,.25);
     transform: translateY(-1px);
   }
 }
@@ -952,13 +983,13 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
                  tile's hot identity. */
 .kb-chal.is-hot.is-gold {
   border-color: var(--accent-amber);
-  box-shadow: 0 0 0 1px var(--accent-amber), 0 0 14px rgba(245,165,36,.25);
+  box-shadow: var(--glass-specular), 0 0 0 1px var(--accent-amber), 0 0 14px rgba(245,165,36,.25);
 }
 .kb-chal.is-hot.is-gold .kb-chal-glyph { color: var(--accent-amber); text-shadow: 0 0 10px rgba(245,165,36,.4); }
 
 .kb-chal.is-hot.is-silver {
   border-color: #c9d6e2;
-  box-shadow: 0 0 0 1px #c9d6e2, 0 0 10px rgba(201,214,226,.18);
+  box-shadow: var(--glass-specular), 0 0 0 1px #c9d6e2, 0 0 10px rgba(201,214,226,.18);
 }
 .kb-chal.is-hot.is-silver .kb-chal-glyph { color: #c9d6e2; text-shadow: 0 0 8px rgba(201,214,226,.35); }
 
@@ -1108,22 +1139,30 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
    VARIANT: GAME (v3) — full game HUD, XP bar, rank badge
    ========================================================= */
 .variant-game .kb-hero {
-  background: linear-gradient(180deg, var(--accent-magenta-bg), var(--bg-1) 80%);
+  background:
+    linear-gradient(180deg, var(--accent-magenta-bg), transparent 80%),
+    var(--glass-1);
 }
 .variant-game .kb-hero-kanji { font-size: 160px; }
 .variant-game .kb-inject-slot.is-overachiever {
   background: linear-gradient(135deg, var(--accent-magenta-bg), rgba(255,61,255,.18));
 }
 .variant-xp {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular);
   padding: var(--sp-3);
   display: flex; flex-direction: column; gap: 6px;
 }
 .variant-xp-head { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
 .variant-xp-head .rank { color: var(--accent-magenta); font-weight: 700; }
 .variant-xp-bar {
-  height: 10px; border: 1px solid var(--line-dim); background: var(--bg-2); position: relative; overflow: hidden;
+  height: 10px; border: 1px solid var(--glass-edge); background: var(--glass-2);
+  border-radius: var(--r-pill);
+  position: relative; overflow: hidden;
 }
 .variant-xp-fill {
   height: 100%;
@@ -1221,9 +1260,10 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
    ========================================================= */
 .ku-scrim {
   position: fixed; inset: 0; z-index: var(--z-modal, 60);
-  background: rgba(10,14,20,.82);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  /* Darken only — no scrim blur: a full-viewport backdrop-filter would
+     re-evaluate every frame over the dashboard's ambient animations, and
+     the modal pane on top already blurs (nested sampling is iOS-hostile). */
+  background: rgba(10,14,20,.78);
   display: flex; align-items: center; justify-content: center;
   padding: var(--sp-4);
   animation: ku-scrim-in 200ms var(--ease-snap);
@@ -1234,12 +1274,18 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   position: relative;
   width: 100%;
   max-width: 480px;
-  background: var(--bg-1);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter-lg);
+  -webkit-backdrop-filter: var(--glass-filter-lg);
+  /* Corner ticks sit at 6px insets — r-glass-sm max so they hold the corners. */
+  border-radius: var(--r-glass-sm);
   border: 1px solid var(--accent-cyan);
   box-shadow:
+    var(--glass-specular),
     0 0 0 1px var(--bg-0),
     0 0 32px rgba(34,211,238,.35),
-    inset 0 0 80px rgba(34,211,238,.04);
+    inset 0 0 80px rgba(34,211,238,.04),
+    var(--glass-drop);
   font-family: var(--font-mono);
   color: var(--fg-0);
   animation: ku-modal-in 260ms var(--ease-snap);
@@ -1277,10 +1323,10 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .ku-top {
   display: flex; justify-content: space-between; align-items: center;
   padding: 8px var(--sp-4);
-  border-bottom: 1px solid var(--line-dim);
+  border-bottom: 1px solid var(--glass-edge);
   font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
   color: var(--accent-cyan);
-  background: var(--bg-2);
+  background: var(--glass-2);
 }
 .ku-x {
   background: transparent; border: 0; color: var(--fg-2);
@@ -1368,23 +1414,25 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
     0 0 40px rgba(255,61,255,.35);
   animation: kb-void-jitter 1.6s steps(8) infinite;
 }
-.ku-modal.tier-amber      { border-color: var(--accent-amber);   box-shadow: 0 0 0 1px var(--bg-0), 0 0 32px rgba(245,165,36,.35), inset 0 0 80px rgba(245,165,36,.05); }
-.ku-modal.tier-transcend  { border-color: #fefce8;               box-shadow: 0 0 0 1px var(--bg-0), 0 0 40px rgba(254,252,232,.45), inset 0 0 80px rgba(245,165,36,.05); }
+.ku-modal.tier-amber      { border-color: var(--accent-amber);   box-shadow: var(--glass-specular), 0 0 0 1px var(--bg-0), 0 0 32px rgba(245,165,36,.35), inset 0 0 80px rgba(245,165,36,.05), var(--glass-drop); }
+.ku-modal.tier-transcend  { border-color: #fefce8;               box-shadow: var(--glass-specular), 0 0 0 1px var(--bg-0), 0 0 40px rgba(254,252,232,.45), inset 0 0 80px rgba(245,165,36,.05), var(--glass-drop); }
 .ku-modal.tier-void       {
   border-color: #d3e3ff;
   box-shadow:
+    var(--glass-specular),
     0 0 0 1px var(--bg-0),
     0 0 32px rgba(34,211,238,.35),
     0 0 32px rgba(255,61,255,.35),
     inset 0 0 80px rgba(34,211,238,.04),
-    inset 0 0 80px rgba(255,61,255,.04);
+    inset 0 0 80px rgba(255,61,255,.04),
+    var(--glass-drop);
 }
 
 .ku-plaque {
   padding: var(--sp-5) var(--sp-4);
   text-align: center;
-  border-top: 1px solid var(--line-dim);
-  border-bottom: 1px solid var(--line-dim);
+  border-top: 1px solid var(--glass-edge);
+  border-bottom: 1px solid var(--glass-edge);
   background: linear-gradient(180deg, rgba(255,61,255,.04), transparent);
   opacity: 0;
   animation: ku-fade-up 320ms var(--ease-snap) 1350ms forwards;
@@ -1444,6 +1492,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   padding: 12px 16px;
   background: transparent;
   border: 1px solid var(--accent-cyan);
+  border-radius: var(--r-glass-sm);
   color: var(--accent-cyan);
   font-family: var(--font-mono);
   font-size: 12px; font-weight: 700;
@@ -1500,8 +1549,12 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
    Legend below mirrors tier colours and surfaces the raw ratios.
    ========================================================= */
 .kb-ladder {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular);
   padding: var(--sp-3) var(--sp-3) var(--sp-3);
   display: flex; flex-direction: column;
   gap: var(--sp-3);
@@ -1639,8 +1692,12 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
    interval hang on the right so the severity is legible.
    ========================================================= */
 .kb-leech {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular);
   padding: var(--sp-3);
   display: flex; flex-direction: column;
   gap: var(--sp-2);
@@ -1686,8 +1743,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   align-items: center;
   gap: var(--sp-3);
   padding: 6px var(--sp-2);
-  background: var(--bg-2);
-  border: 1px solid var(--line-dim);
+  background: var(--glass-2);
+  border: 1px solid var(--glass-edge);
   border-left: 2px solid var(--accent-magenta);
   transition: border-color var(--dur-fast) var(--ease-snap),
               background var(--dur-fast) var(--ease-snap);
@@ -1895,8 +1952,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-pop-scrim {
   position: fixed; inset: 0;
   z-index: 180;
+  /* Darken only — no scrim blur (see .ku-scrim). */
   background: rgba(8,12,18,.78);
-  backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   padding: var(--sp-3);
   animation: kb-pop-scrim-in 220ms ease-out;
@@ -1910,9 +1967,12 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   width: 100%; max-width: 540px;
   max-height: calc(100vh - 32px);
   overflow-y: auto;
-  background: var(--bg-1);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter-lg);
+  -webkit-backdrop-filter: var(--glass-filter-lg);
+  border-radius: var(--r-glass-lg);
   border: 1px solid var(--accent-cyan);
-  box-shadow: 0 0 32px rgba(34,211,238,.25), inset 0 0 0 1px rgba(34,211,238,.15);
+  box-shadow: var(--glass-specular), 0 0 32px rgba(34,211,238,.25), inset 0 0 0 1px rgba(34,211,238,.15), var(--glass-drop);
   font-family: var(--font-mono);
   color: var(--fg-0);
   padding: var(--sp-4);
@@ -1927,11 +1987,12 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   display: flex; justify-content: space-between; align-items: center;
   font-size: 11px; color: var(--accent-cyan);
   letter-spacing: .14em; text-transform: uppercase;
-  border-bottom: 1px solid var(--line-dim);
+  border-bottom: 1px solid var(--glass-edge);
   padding-bottom: var(--sp-2);
 }
 .kb-pop-x {
-  background: transparent; border: 1px solid var(--line-dim);
+  background: transparent; border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass-sm);
   color: var(--fg-2); cursor: pointer;
   width: 24px; height: 22px;
   font-family: var(--font-mono); font-size: 11px;
@@ -1943,6 +2004,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 }
 .kb-pop-ack {
   background: var(--accent-cyan); color: var(--bg-0); border: none;
+  border-radius: var(--r-glass-sm);
   padding: 10px var(--sp-3);
   font-family: var(--font-mono); font-weight: 700;
   font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
@@ -1959,8 +2021,9 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   gap: var(--sp-2);
 }
 .kb-pop-stats > div {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-2);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-2);
+  border-radius: var(--r-glass-sm);
   padding: var(--sp-2);
   display: flex; flex-direction: column; align-items: center;
   gap: 2px;
@@ -1979,6 +2042,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   padding: var(--sp-3); text-align: center;
   font-size: 12px; color: var(--fg-2); letter-spacing: .04em;
   border: 1px dashed var(--line-dim);
+  border-radius: var(--r-glass-sm);
 }
 .kb-pop-legend {
   display: flex; justify-content: center; gap: var(--sp-3);
@@ -2000,7 +2064,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-pop-heatmap {
   display: grid; grid-template-columns: repeat(10, 1fr);
   gap: 4px;
-  padding: var(--sp-2); border: 1px solid var(--line-dim); background: var(--bg-2);
+  padding: var(--sp-2); border: 1px solid var(--glass-edge); background: var(--glass-2);
+  border-radius: var(--r-glass-sm);
 }
 .kb-pop-heatmap-cell {
   position: relative;
@@ -2031,8 +2096,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 /* B2 — deck breakdown */
 .kb-pop-deck-groups { display: flex; flex-direction: column; gap: var(--sp-2); }
 .kb-pop-deck-group {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-2);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-2);
   padding: var(--sp-2);
 }
 .kb-pop-deck-group.tone-cyan    { border-left: 3px solid var(--accent-cyan); }
@@ -2052,8 +2117,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   font-size: 28px; line-height: 1;
   color: var(--fg-0);
   padding: 4px 8px;
-  background: var(--bg-0);
-  border: 1px solid var(--line-dim);
+  background: var(--glass-0);
+  border: 1px solid var(--glass-edge);
   cursor: help;
 }
 
@@ -2063,7 +2128,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   display: grid; grid-template-columns: repeat(3, 1fr);
   gap: var(--sp-2);
   padding: var(--sp-2);
-  background: var(--bg-2); border: 1px solid var(--line-dim);
+  background: var(--glass-2); border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass-sm);
 }
 .kb-pop-summary > div { display: flex; flex-direction: column; gap: 2px; }
 .kb-pop-summary-lbl { font-size: 9px; color: var(--fg-2); letter-spacing: .14em; text-transform: uppercase; }
@@ -2072,7 +2138,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   display: flex; flex-direction: column; gap: 6px;
 }
 .kb-pop-progress-bar {
-  height: 8px; background: var(--bg-2); border: 1px solid var(--line-dim);
+  height: 8px; background: var(--glass-2); border: 1px solid var(--glass-edge);
+  border-radius: var(--r-pill);
   position: relative; overflow: hidden;
 }
 .kb-pop-progress-fill {
@@ -2089,7 +2156,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   list-style: none; margin: 0; padding: 0;
   display: flex; flex-direction: column; gap: 2px;
   max-height: 360px; overflow-y: auto;
-  border: 1px solid var(--line-dim);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass-sm);
 }
 .kb-pop-ladder-row {
   display: grid;
@@ -2097,7 +2165,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   align-items: center;
   gap: var(--sp-2);
   padding: 6px var(--sp-2);
-  background: var(--bg-2);
+  /* Many rows at once — translucent fill only, never backdrop-filter. */
+  background: var(--glass-2);
   font-size: 11px;
   color: var(--fg-2);
   border-left: 2px solid transparent;
@@ -2106,7 +2175,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 }
 .kb-pop-ladder-row.is-reached { opacity: 1; color: var(--fg-1); }
 .kb-pop-ladder-row.is-current {
-  background: var(--bg-0);
+  background: var(--glass-0);
   border-left-color: var(--accent-cyan);
   box-shadow: inset 0 0 12px rgba(34,211,238,.18);
   color: var(--fg-0);
@@ -2146,7 +2215,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-pop-cal {
   display: grid; grid-template-columns: repeat(7, 1fr);
   gap: 4px;
-  padding: var(--sp-2); border: 1px solid var(--line-dim); background: var(--bg-2);
+  padding: var(--sp-2); border: 1px solid var(--glass-edge); background: var(--glass-2);
+  border-radius: var(--r-glass-sm);
 }
 .kb-pop-cal-cell {
   aspect-ratio: 1;
@@ -2213,8 +2283,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   display: grid; grid-template-columns: auto 1fr;
   gap: var(--sp-2); align-items: center;
   padding: 6px var(--sp-2);
-  background: var(--bg-2);
-  border: 1px solid var(--line-dim);
+  background: var(--glass-2);
+  border: 1px solid var(--glass-edge);
   border-left: 2px solid var(--accent-magenta);
 }
 .kb-pop-leech-k {
@@ -2249,7 +2319,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-pop-hero-tag { font-size: 10px; color: var(--fg-2); letter-spacing: .14em; text-transform: uppercase; }
 .kb-pop-hero-svg {
   display: flex; justify-content: center;
-  padding: var(--sp-3); background: var(--bg-2); border: 1px solid var(--line-dim);
+  padding: var(--sp-3); background: var(--glass-2); border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass-sm);
 }
 .kb-pop-hero-svg svg { width: 180px; height: 180px; max-width: 100%; }
 .kb-pop-hero-svg svg * { stroke: var(--accent-cyan); fill: none; }
@@ -2261,7 +2332,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 }
 .kb-pop-hero-r .tag {
   font-family: var(--font-mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--fg-2); padding: 2px 6px; border: 1px solid var(--line-dim);
+  color: var(--fg-2); padding: 2px 6px; border: 1px solid var(--glass-edge);
+  border-radius: var(--r-pill);
 }
 .kb-pop-hero-r em {
   font-style: normal; font-family: var(--font-mono); font-size: 10px;
@@ -2294,7 +2366,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
 .kb-pop-tier-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
   gap: 4px;
-  padding: var(--sp-2); background: var(--bg-2); border: 1px solid var(--line-dim);
+  padding: var(--sp-2); background: var(--glass-2); border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass-sm);
   max-height: 240px; overflow-y: auto;
 }
 .kb-pop-tier-grid.is-dim { opacity: .6; }
@@ -2303,8 +2376,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   font-size: 22px; line-height: 1;
   text-align: center;
   padding: 6px 0;
-  background: var(--bg-0);
-  border: 1px solid var(--line-dim);
+  background: var(--glass-0);
+  border: 1px solid var(--glass-edge);
   cursor: help;
   color: var(--fg-0);
 }
@@ -2320,8 +2393,8 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   max-height: 50vh; overflow-y: auto;
 }
 .kb-pop-changelog-list > li {
-  background: var(--bg-2);
-  border: 1px solid var(--line-dim);
+  background: var(--glass-2);
+  border: 1px solid var(--glass-edge);
   border-left: 2px solid var(--accent-cyan);
   padding: var(--sp-2);
 }
@@ -2360,6 +2433,7 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   color: var(--fg-2);
   text-decoration: none;
   border: 1px solid transparent;
+  border-radius: var(--r-glass-sm);
   transition: color var(--dur-fast) var(--ease-snap),
               border-color var(--dur-fast) var(--ease-snap);
 }
@@ -2383,29 +2457,40 @@ body[data-romaji="on"] .kb-hero-reading .r-romaji {
   border: 1px solid var(--accent-cyan-dim);
   background:
     linear-gradient(180deg, rgba(34,211,238,.06), transparent 60%),
-    var(--bg-1);
+    var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
   font-family: var(--font-mono);
   color: var(--fg-0);
   text-align: left;
   cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-snap);
-  box-shadow: inset 0 0 0 1px rgba(34,211,238,.18);
+  /* Enumerated (not `all`): carries backdrop-filter — see .run-end-btn. */
+  transition: border-color var(--dur-fast) var(--ease-snap),
+              background   var(--dur-fast) var(--ease-snap),
+              box-shadow   var(--dur-fast) var(--ease-snap),
+              transform    var(--dur-fast) var(--ease-snap),
+              opacity      var(--dur-fast) var(--ease-snap);
+  box-shadow: var(--glass-specular), inset 0 0 0 1px rgba(34,211,238,.18);
 }
 button.kb-daily-strip { width: 100%; }
 .kb-daily-strip.is-loading,
 .kb-daily-strip.is-done {
   cursor: default;
-  border-color: var(--line-dim);
-  background: var(--bg-1);
-  box-shadow: none;
+  border-color: var(--glass-edge);
+  background: var(--glass-1);
+  box-shadow: var(--glass-specular);
 }
 .kb-daily-strip.is-done {
-  background: linear-gradient(180deg, rgba(34,211,238,.04), transparent 70%);
+  background:
+    linear-gradient(180deg, rgba(34,211,238,.04), transparent 70%),
+    var(--glass-1);
 }
 @media (hover: hover) {
   button.kb-daily-strip:hover:not(.is-loading):not(.is-done) {
     border-color: var(--accent-cyan);
     box-shadow:
+      var(--glass-specular),
       0 0 14px rgba(34,211,238,.25),
       inset 0 0 0 1px var(--accent-cyan);
   }
@@ -2420,8 +2505,9 @@ button.kb-daily-strip:active:not(.is-loading):not(.is-done) { transform: scale(.
   font-size: 28px;
   color: var(--accent-cyan);
   text-shadow: 0 0 8px rgba(34,211,238,.45);
-  border: 1px solid var(--line-dim);
-  background: var(--bg-0);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass-sm);
+  background: var(--glass-0);
 }
 .kb-daily-strip-icon-circle,
 .kb-daily-strip-icon-k {
@@ -2547,8 +2633,9 @@ button.kb-daily-strip:active:not(.is-loading):not(.is-done) { transform: scale(.
   justify-content: center;
   gap: 6px;
   padding: 4px 10px;
-  background: var(--bg-1);
-  border: 1px solid var(--line-dim);
+  background: var(--glass-1);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass-sm);
   color: var(--fg-1);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -2565,13 +2652,14 @@ button.kb-daily-strip:active:not(.is-loading):not(.is-done) { transform: scale(.
 .kb-ladder-chip.tier-cyan    { border-color: var(--accent-cyan-dim); }
 .kb-ladder-chip.tier-amber   { border-color: rgba(245,165,36,.45); }
 .kb-ladder-chip.tier-magenta { border-color: var(--accent-magenta-dim); }
-.kb-ladder-chip.tier-extra   { border-color: var(--line-dim); color: var(--fg-2); }
+.kb-ladder-chip.tier-extra   { border-color: var(--glass-edge); color: var(--fg-2); }
 .kb-ladder-chip.is-full.tier-cyan    { background: rgba(34,211,238,.10);  box-shadow: 0 0 8px rgba(34,211,238,.35); }
 .kb-ladder-chip.is-full.tier-amber   { background: rgba(245,165,36,.10);  box-shadow: 0 0 8px rgba(245,165,36,.35); }
 .kb-ladder-chip.is-full.tier-magenta { background: rgba(255,61,255,.10);  box-shadow: 0 0 8px rgba(255,61,255,.35); }
 @media (hover: hover) {
   .kb-ladder-chip:hover {
     border-color: var(--accent-cyan);
+    background: var(--glass-2);
     box-shadow: inset 0 0 0 1px var(--accent-cyan);
     color: var(--fg-0);
   }

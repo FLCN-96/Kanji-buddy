@@ -22,7 +22,9 @@
   letter-spacing: .12em;
   text-transform: lowercase;
   padding: 4px 8px;
-  border: 1px solid var(--line-dim);
+  background: var(--glass-1);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass-sm);
   transition: color var(--dur-fast) var(--ease-snap), border-color var(--dur-fast) var(--ease-snap);
 }
 @media (hover: hover) {
@@ -32,8 +34,12 @@
 .kb-set-ver { color: var(--fg-3); font-size: 10px; letter-spacing: .12em; }
 
 .kb-set-section {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular), var(--glass-drop);
   padding: var(--sp-2) var(--sp-3);
   display: flex;
   flex-direction: column;
@@ -63,8 +69,9 @@
 }
 .kb-set-opts { display: flex; gap: 4px; flex-wrap: wrap; }
 .kb-set-btn {
-  background: var(--bg-0);
-  border: 1px solid var(--line-dim);
+  background: var(--glass-1);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass-sm);
   color: var(--fg-2);
   font-family: var(--font-mono);
   font-size: 10px;
@@ -75,7 +82,7 @@
   transition: all var(--dur-fast) var(--ease-snap);
 }
 @media (hover: hover) {
-  .kb-set-btn:hover { color: var(--fg-0); border-color: var(--line-bright); }
+  .kb-set-btn:hover { color: var(--fg-0); border-color: var(--glass-edge-bright); background: var(--glass-2); }
 }
 .kb-set-btn.is-active {
   background: var(--accent-cyan);
@@ -94,8 +101,9 @@
 
 .kb-set-name { display: flex; gap: 6px; flex: 1; min-width: 220px; justify-content: flex-end; }
 .kb-set-input {
-  background: var(--bg-0);
-  border: 1px solid var(--line-dim);
+  background: var(--glass-2);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass-sm);
   color: var(--fg-0);
   font-family: var(--font-mono);
   /* Keep at 16px minimum — Safari/iOS auto-zooms on focus for any input
@@ -111,6 +119,7 @@
 .kb-set-save {
   background: var(--accent-cyan);
   border: none;
+  border-radius: var(--r-glass-sm);
   color: var(--bg-0);
   font-family: var(--font-mono);
   font-size: 10px;
@@ -127,6 +136,7 @@
 .kb-set-reset {
   background: transparent;
   border: 1px solid var(--accent-magenta);
+  border-radius: var(--r-glass-sm);
   color: var(--accent-magenta);
   font-family: var(--font-mono);
   font-size: 10px;
@@ -148,7 +158,11 @@
 .kb-danger {
   margin-top: var(--sp-4);
   border: 1px solid var(--accent-magenta);
-  background: linear-gradient(180deg, rgba(233,111,207,0.04), transparent 60%), var(--bg-1);
+  background: linear-gradient(180deg, rgba(233,111,207,0.04), transparent 60%), var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-specular), var(--glass-drop);
   padding: var(--sp-3) var(--sp-4);
   position: relative;
   overflow: hidden;
@@ -201,6 +215,7 @@
   margin-left: auto;
   background: transparent;
   border: 1px solid var(--accent-magenta);
+  border-radius: var(--r-glass-sm);
   color: var(--accent-magenta);
   font-family: var(--font-mono);
   font-size: 10px;
@@ -220,7 +235,7 @@
 
 .kb-danger.is-armed {
   border-color: var(--accent-magenta);
-  box-shadow: 0 0 24px rgba(233,111,207,.25), inset 0 0 40px rgba(233,111,207,.08);
+  box-shadow: var(--glass-specular), 0 0 24px rgba(233,111,207,.25), inset 0 0 40px rgba(233,111,207,.08), var(--glass-drop);
 }
 .kb-danger-armed-head {
   display: flex; align-items: center; gap: var(--sp-3);
@@ -233,7 +248,8 @@
 }
 .kb-danger-cancel {
   background: transparent;
-  border: 1px solid var(--line-bright);
+  border: 1px solid var(--glass-edge-bright);
+  border-radius: var(--r-glass-sm);
   color: var(--fg-1);
   font-family: var(--font-mono);
   font-size: 10px;
@@ -252,8 +268,9 @@
   position: relative;
   flex: 1;
   overflow: hidden;
-  background: var(--bg-0);
+  background: var(--glass-2);
   border: 1px solid var(--accent-magenta);
+  border-radius: var(--r-glass-sm);
   color: var(--accent-magenta);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -290,13 +307,13 @@
   animation: kb-wiping-flash .4s steps(2) infinite;
 }
 @keyframes kb-wiping-flash {
-  0%,100% { background: var(--bg-1); }
+  0%,100% { background: var(--glass-1); }
   50%     { background: rgba(233,111,207,.15); }
 }
 
 .kb-danger.is-done {
   border-color: var(--accent-cyan);
-  box-shadow: 0 0 20px rgba(34,211,238,.3);
+  box-shadow: var(--glass-specular), 0 0 20px rgba(34,211,238,.3), var(--glass-drop);
 }
 .kb-danger.is-done::before {
   background: repeating-linear-gradient(90deg,
@@ -306,12 +323,16 @@
 .kb-danger.is-done .kb-danger-title { color: var(--accent-cyan); }
 
 /* ---------- Hard reset nuke (safety-cover + red button) ---------- */
+/* The nuke stays a solid physical prop (hazard paint, hinged cover, big red
+   button) — glass would undercut the "industrial hardware" read. Only the
+   outer housing picks up the panel radius. */
 .kb-nuke {
   margin-top: var(--sp-4);
   position: relative;
   padding: 0;
   background: #0a0908;
   border: 1px solid #3a2a10;
+  border-radius: var(--r-glass);
   overflow: hidden;
 }
 .kb-nuke-hazard {

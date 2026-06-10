@@ -28,7 +28,8 @@
   font-size: 10px;
   color: var(--fg-2);
   letter-spacing: .12em;
-  border: 1px solid var(--line-dim);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-pill);
   background: var(--accent-cyan-bg);
   padding: 3px 8px;
   font-family: var(--font-mono);
@@ -102,13 +103,18 @@
 .ta-pre-rules {
   display: grid; grid-template-columns: repeat(2, 1fr);
   gap: 0;
-  border: 1px solid var(--line-dim); background: var(--bg-1);
+  border: 1px solid var(--glass-edge); background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
 }
 .ta-pre-rule {
   padding: var(--sp-3);
   display: flex; align-items: center; gap: var(--sp-3);
-  border-right: 1px solid var(--line-dim);
-  border-bottom: 1px solid var(--line-dim);
+  border-right: 1px solid var(--glass-edge);
+  border-bottom: 1px solid var(--glass-edge);
 }
 .ta-pre-rule:nth-child(2n) { border-right: 0; }
 .ta-pre-rule:nth-last-child(-n+2) { border-bottom: 0; }
@@ -120,6 +126,7 @@
   text-align: center;
   padding: 6px 0;
   border: 1px solid var(--accent-cyan);
+  border-radius: var(--r-glass-sm);
   background: var(--accent-cyan-bg);
   font-variant-numeric: tabular-nums;
 }
@@ -150,8 +157,9 @@
 }
 .ta-pre-dur-btn {
   padding: var(--sp-3);
-  border: 1px solid var(--line-bright);
-  background: transparent;
+  border: 1px solid var(--glass-edge-bright);
+  border-radius: var(--r-glass-sm);
+  background: var(--glass-1);
   color: var(--fg-1);
   font-family: var(--font-mono); font-weight: 700;
   font-size: 16px; letter-spacing: .08em;
@@ -163,6 +171,7 @@
   .ta-pre-dur-btn:hover {
     color: var(--fg-0);
     border-color: var(--accent-cyan);
+    background: var(--glass-2);
   }
 }
 .ta-pre-dur-btn.is-active {
@@ -174,7 +183,11 @@
 
 .ta-pre-pb {
   border: 1px solid var(--accent-amber);
+  border-radius: var(--r-glass);
   background: rgba(245,165,36,0.06);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  box-shadow: var(--glass-shadow);
   padding: var(--sp-3);
   display: flex; align-items: center; justify-content: space-between;
   gap: var(--sp-3);
@@ -202,6 +215,7 @@
   margin-top: var(--sp-2);
   padding: var(--sp-4);
   border: 2px solid var(--accent-magenta);
+  border-radius: var(--r-glass-sm);
   background: linear-gradient(180deg, var(--accent-magenta-bg), transparent 70%);
   color: var(--accent-magenta);
   font-family: var(--font-mono); font-weight: 700;
@@ -232,7 +246,7 @@
 }
 .ta-pre-hint kbd {
   font-family: var(--font-mono); font-size: 10px;
-  background: var(--bg-2); border: 1px solid var(--line-bright);
+  background: var(--glass-2); border: 1px solid var(--glass-edge-bright);
   border-bottom-width: 2px;
   padding: 1px 6px; color: var(--fg-0);
   margin: 0 2px;
@@ -462,7 +476,9 @@
   position: relative;
   height: 14px;
   border: 1px solid var(--line-bright);
-  background: var(--bg-2);
+  border-radius: var(--r-pill);
+  /* Translucent track, no blur — the fill is restyled 60×/s by RAF. */
+  background: var(--glass-2);
   overflow: hidden;
   transition: border-color var(--dur-fast) var(--ease-snap);
 }
@@ -556,12 +572,26 @@
 
 /* ================= Play — card ================= */
 .ta-card {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  /* Modest radius only — the .ta-card-corner brackets are square Ls pinned
+     at -2px; at 8px the curve tucks behind the bracket arms and still reads
+     as a bezel. --r-glass would visibly detach them. overflow stays visible
+     for the brackets (backdrop-filter self-clips to the rounded border-box,
+     so no overflow:hidden is needed for the glass). */
+  border-radius: var(--r-glass-sm);
+  /* --glass-1 densified: hit-flash/miss-shake fire at sprint cadence and a
+     crit-window ancestor effect would re-rasterize any backdrop blur —
+     translucent glass WITHOUT blur on the card. */
+  background: rgba(15, 22, 35, 0.82);
+  box-shadow: var(--glass-shadow);
   display: flex; flex-direction: column;
   position: relative;
   overflow: visible;
   transition: border-color var(--dur-fast) var(--ease-snap), box-shadow var(--dur-fast) var(--ease-snap);
+}
+@media (prefers-reduced-transparency: reduce) {
+  /* Hand-densified rgba misses the token-level solid fallback. */
+  .ta-card { background: var(--bg-1); }
 }
 
 /* Corner brackets — cyberpunk bezel frame around the prompt card.
@@ -596,7 +626,7 @@
 
 .ta-card-meta {
   display: flex; align-items: stretch;
-  border-bottom: 1px solid var(--line-dim);
+  border-bottom: 1px solid var(--glass-edge);
   font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
   color: var(--fg-2);
   min-height: 28px;
@@ -607,7 +637,7 @@
   padding: 6px var(--sp-3);
 }
 .ta-card-meta-cell + .ta-card-meta-cell {
-  border-left: 1px solid var(--line-dim);
+  border-left: 1px solid var(--glass-edge);
 }
 .ta-card-meta-jlpt { color: var(--fg-1); }
 .ta-card-prompt {
@@ -658,18 +688,18 @@
 }
 .ta-card.is-hit {
   border-color: var(--accent-cyan);
-  box-shadow: inset 0 0 80px rgba(34,211,238,.35), 0 0 28px rgba(34,211,238,.45);
+  box-shadow: var(--glass-specular), inset 0 0 80px rgba(34,211,238,.35), 0 0 28px rgba(34,211,238,.45), var(--glass-drop);
   animation: ta-hit-flash .32s var(--ease-snap);
 }
 .ta-card.is-miss {
   border-color: var(--danger);
-  box-shadow: inset 0 0 80px rgba(255,92,106,.35), 0 0 28px rgba(255,92,106,.45);
+  box-shadow: var(--glass-specular), inset 0 0 80px rgba(255,92,106,.35), 0 0 28px rgba(255,92,106,.45), var(--glass-drop);
   animation: ta-miss-shake .32s var(--ease-snap);
 }
 @keyframes ta-hit-flash {
-  0% { box-shadow: inset 0 0 0 rgba(34,211,238,0); }
-  35% { box-shadow: inset 0 0 120px rgba(34,211,238,.55), 0 0 40px rgba(34,211,238,.6); }
-  100% { box-shadow: inset 0 0 80px rgba(34,211,238,.35), 0 0 28px rgba(34,211,238,.45); }
+  0% { box-shadow: var(--glass-specular), inset 0 0 0 rgba(34,211,238,0), var(--glass-drop); }
+  35% { box-shadow: var(--glass-specular), inset 0 0 120px rgba(34,211,238,.55), 0 0 40px rgba(34,211,238,.6), var(--glass-drop); }
+  100% { box-shadow: var(--glass-specular), inset 0 0 80px rgba(34,211,238,.35), 0 0 28px rgba(34,211,238,.45), var(--glass-drop); }
 }
 @keyframes ta-miss-shake {
   0%, 100% { transform: translateX(0); }
@@ -715,12 +745,14 @@
 }
 .ta-tile {
   padding: var(--sp-3);
-  border: 1px solid var(--line-bright);
-  background: var(--bg-1);
+  /* 4 answer tiles, tapped under time pressure — translucent glass fill +
+     hairline + radius only; NO backdrop-filter on a 4-up grid. */
+  border: 1px solid var(--glass-edge-bright);
+  border-radius: var(--r-glass-sm);
+  background: var(--glass-1);
   color: var(--fg-0);
   font-family: var(--font-mono); font-weight: 500;
   font-size: 13px;
-  min-height: 52px;
   cursor: pointer;
   text-align: left;
   min-height: 64px;
@@ -792,9 +824,12 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0;
-  border: 1px solid var(--line-dim);
+  /* Joined readout strip (border-top:0 butts it against the element above) —
+     stays angular; rounding would break the join. Values update per hit, so
+     translucent fill only, no blur. */
+  border: 1px solid var(--glass-edge);
   border-top: 0;
-  background: var(--bg-1);
+  background: var(--glass-1);
   transition: border-color var(--dur-fast) var(--ease-snap);
 }
 .ta-hud-col {
@@ -802,7 +837,7 @@
   font-family: var(--font-mono);
   display: flex; align-items: baseline; justify-content: space-between;
   gap: var(--sp-2);
-  border-left: 1px solid var(--line-dim);
+  border-left: 1px solid var(--glass-edge);
 }
 .ta-hud-col:first-child { border-left: 0; }
 .ta-hud-lbl { font-size: 9px; letter-spacing: .18em; color: var(--fg-2); text-transform: uppercase; }
@@ -906,19 +941,23 @@
 
 /* ---- crit ---- last 3 seconds: timer jitters, glyph goes chroma-split,
         tile borders flicker, whole shell saturates ---- */
-.ta-play[data-tension="crit"] {
-  filter: saturate(1.15);
-}
+/* iOS: no filter on .ta-play — it's an ancestor of the glass card and the
+   fixed vignette/penalty/burst overlays; an ancestor filter re-roots the
+   fixed FX and forces per-frame re-rasterization of any backdrop sampling
+   at the exact 3-second climax. The crit saturation reads through a hotter
+   vignette + the glyph chroma-split instead. */
 .ta-play[data-tension="crit"] .ta-play-vignette {
   opacity: 1;
   background: radial-gradient(ellipse at center,
-    transparent 38%,
-    rgba(255,92,106,.42) 100%);
+    transparent 34%,
+    rgba(255,92,106,.50) 100%);
   animation: ta-vignette-pulse 600ms var(--ease-snap) infinite;
 }
+/* Opacity pulse, not filter — a viewport-sized fixed overlay animating
+   filter:brightness repaints the whole layer every frame on iOS. */
 @keyframes ta-vignette-pulse {
-  0%, 100% { filter: brightness(1); }
-  50%      { filter: brightness(1.35); }
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .72; }
 }
 .ta-play[data-tension="crit"] .ta-card-corner {
   border-color: var(--danger);
@@ -939,7 +978,7 @@
   animation: ta-tile-flicker 360ms steps(2, end) infinite;
 }
 @keyframes ta-tile-flicker {
-  0%, 100% { border-color: var(--line-bright); }
+  0%, 100% { border-color: var(--glass-edge-bright); }
   50%      { border-color: var(--danger); }
 }
 
@@ -974,10 +1013,13 @@
 }
 .ta-end-score-block {
   border: 1px solid var(--accent-cyan);
+  border-radius: var(--r-glass);
   background: linear-gradient(180deg, var(--accent-cyan-bg), transparent 70%);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
   padding: var(--sp-3) var(--sp-4);
   display: flex; flex-direction: column; justify-content: center;
-  box-shadow: inset 0 0 0 1px var(--accent-cyan), 0 0 14px rgba(34,211,238,.25);
+  box-shadow: var(--glass-specular), inset 0 0 0 1px var(--accent-cyan), 0 0 14px rgba(34,211,238,.25), var(--glass-drop);
 }
 .ta-end-score-lbl {
   font-size: 10px; color: var(--accent-cyan);
@@ -1047,17 +1089,22 @@
 .ta-end-stats {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  border: 1px solid var(--line-dim); background: var(--bg-1);
+  border: 1px solid var(--glass-edge); background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
 }
 @media (max-width: 520px) {
   .ta-end-stats { grid-template-columns: repeat(3, 1fr); }
   .ta-end-stats .ta-end-stat:nth-child(3) { border-right: 0; }
-  .ta-end-stats .ta-end-stat:nth-child(n+4) { border-top: 1px solid var(--line-dim); }
+  .ta-end-stats .ta-end-stat:nth-child(n+4) { border-top: 1px solid var(--glass-edge); }
 }
 .ta-end-stat {
   padding: var(--sp-2) var(--sp-2);
   text-align: center;
-  border-right: 1px solid var(--line-dim);
+  border-right: 1px solid var(--glass-edge);
 }
 .ta-end-stat:last-child { border-right: 0; }
 .ta-end-stat-lbl {
@@ -1080,7 +1127,11 @@
 }
 
 .ta-end-xp {
-  border: 1px solid var(--line-dim); background: var(--bg-1);
+  border: 1px solid var(--glass-edge); background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
   padding: var(--sp-3);
 }
 .ta-end-xp-head {
@@ -1111,7 +1162,11 @@
 .ta-end-xp-streak b { color: var(--accent-cyan); }
 
 .ta-end-missed {
-  border: 1px solid var(--line-dim); background: var(--bg-1);
+  border: 1px solid var(--glass-edge); background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
   padding: var(--sp-3);
 }
 .ta-end-missed-head {
@@ -1127,6 +1182,7 @@
 .ta-end-missed-k {
   min-width: 56px; height: 56px;
   border: 1px solid var(--danger);
+  border-radius: var(--r-glass-sm);
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-jp-serif); font-weight: 700; font-size: 28px;
   color: var(--fg-0);
@@ -1147,7 +1203,7 @@
 }
 
 /* variant tweaks */
-.variant-game .ta-card { background: linear-gradient(180deg, var(--accent-magenta-bg), var(--bg-1) 50%); }
+.variant-game .ta-card { background: linear-gradient(180deg, var(--accent-magenta-bg), var(--glass-1) 50%); }
 .variant-calm .ta-card-glyph-ghost { display: none; }
 .variant-calm .ta-pre-start { border-color: var(--line-bright); color: var(--fg-0); background: var(--bg-1); }
 .variant-calm .ta-tier-ring { box-shadow: inset 0 0 0 1px var(--tier-color); }

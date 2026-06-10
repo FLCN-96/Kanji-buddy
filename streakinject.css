@@ -9,7 +9,7 @@
 
 /* ---------- Topbar overrides ---------- */
 .inj-shell .run-top {
-  background: linear-gradient(180deg, rgba(255,92,106,.06), var(--bg-1));
+  background: linear-gradient(180deg, rgba(255,92,106,.06), var(--glass-1));
   border-bottom-color: rgba(255,92,106,.4);
 }
 .inj-shell .run-top::after {
@@ -51,11 +51,16 @@
   width: 100%; max-width: 460px;
   background:
     linear-gradient(180deg, rgba(255,92,106,.04), transparent 60%),
-    var(--bg-1);
+    var(--glass-1);
+  backdrop-filter: var(--glass-filter-lg);
+  -webkit-backdrop-filter: var(--glass-filter-lg);
   border: 1px solid var(--danger);
+  border-radius: var(--r-glass-lg);
   box-shadow:
+    var(--glass-specular),
     0 0 22px rgba(255,92,106,.32),
-    inset 0 0 80px rgba(255,92,106,.05);
+    inset 0 0 80px rgba(255,92,106,.05),
+    var(--glass-drop);
   padding: var(--sp-5);
   position: relative;
   overflow: hidden;
@@ -72,6 +77,7 @@
   display: flex; align-items: center; justify-content: center; gap: var(--sp-3);
   padding: 6px var(--sp-3);
   border: 1px dashed rgba(255,92,106,.5);
+  border-radius: var(--r-glass-sm);
   background: rgba(255,92,106,.05);
   margin-bottom: var(--sp-5);
   position: relative;
@@ -98,8 +104,9 @@
   position: relative;
 }
 .inj-pre-stat {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-0);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-0);
+  border-radius: var(--r-glass-sm);
   padding: var(--sp-3);
   text-align: center;
   position: relative;
@@ -108,7 +115,7 @@
   border-color: var(--danger);
   background:
     linear-gradient(180deg, rgba(255,92,106,.10), transparent 60%),
-    var(--bg-0);
+    var(--glass-0);
   box-shadow: inset 0 0 18px rgba(255,92,106,.08);
 }
 .inj-pre-stat-k {
@@ -135,8 +142,9 @@
 .inj-pre-warn {
   display: flex; flex-direction: column; gap: 3px;
   padding: var(--sp-3);
-  border: 1px solid var(--line-dim);
-  background: var(--bg-0);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-0);
+  border-radius: var(--r-glass-sm);
   margin-bottom: var(--sp-5);
   position: relative;
 }
@@ -154,8 +162,9 @@
   color: var(--bg-0);
   font-family: var(--font-mono); font-weight: 700;
   cursor: pointer;
+  border-radius: var(--r-glass-sm);
   transition: transform 80ms var(--ease-snap), box-shadow 120ms var(--ease-snap);
-  box-shadow: 0 0 18px rgba(255,92,106,.5);
+  box-shadow: 0 0 18px rgba(255,92,106,.5), var(--glass-drop);
   position: relative;
 }
 .inj-pre-go-txt {
@@ -241,10 +250,16 @@
   z-index: 5;
 }
 .inj-verdict.is-hidden { visibility: hidden; pointer-events: none; }
+/* Verdict bar is sticky over scrolling card content → glass with a small
+   blur so the card reads through it (one-verdict-per-card pace, only two
+   elements, no looping animation — safe on iOS). Cells stay ANGULAR: the
+   two buttons + 1px seam read as one fused instrument bar. */
 .inj-vbtn {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   padding: 14px 8px env(safe-area-inset-bottom);
-  background: var(--bg-1);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter-sm);
+  -webkit-backdrop-filter: var(--glass-filter-sm);
   border: 0;
   cursor: pointer;
   font-family: var(--font-mono);
@@ -284,14 +299,21 @@
   background:
     radial-gradient(circle at 50% 50%, rgba(255,92,106,.10), transparent 60%);
 }
+/* Splash frame runs a looping transform jitter → NO backdrop-filter here
+   (animated backdrop sampling is an iOS perf trap). Translucent glass bg
+   + radius only; overflow:hidden clips the ::before scanlines to the curve. */
 .inj-splash-frame {
   width: 100%; max-width: 460px;
-  background: var(--bg-0);
+  background: var(--glass-0);
   border: 1px solid var(--danger);
+  border-radius: var(--r-glass-lg);
+  overflow: hidden;
   padding: var(--sp-5) var(--sp-4);
   box-shadow:
+    var(--glass-specular),
     0 0 28px rgba(255,92,106,.45),
-    inset 0 0 60px rgba(255,92,106,.06);
+    inset 0 0 60px rgba(255,92,106,.06),
+    var(--glass-drop);
   font-family: var(--font-mono);
   position: relative;
   animation: inj-jitter 1.2s steps(13, end) infinite;
@@ -326,8 +348,9 @@
   animation: inj-text-jitter 1.4s steps(11, end) infinite;
 }
 .inj-splash-log {
-  background: var(--bg-1);
+  background: var(--glass-1);
   border: 1px dashed rgba(255,92,106,.35);
+  border-radius: var(--r-glass-sm);
   padding: var(--sp-3);
   margin-bottom: var(--sp-3);
   min-height: 92px;
@@ -348,8 +371,9 @@
 .inj-splash-bar {
   position: relative;
   height: 14px;
-  background: var(--bg-1);
+  background: var(--glass-1);
   border: 1px solid rgba(255,92,106,.4);
+  border-radius: var(--r-pill);
   margin-bottom: var(--sp-2);
   overflow: hidden;
 }
@@ -388,9 +412,12 @@
   padding: var(--sp-5) var(--sp-4) var(--sp-8);
   flex: 1;
 }
+/* End frames may run the looping jitter (reject/fail) → translucent glass
+   bg + radius, NO backdrop-filter on any of the three variants. */
 .inj-end-frame {
   width: 100%; max-width: 460px;
-  background: var(--bg-1);
+  background: var(--glass-1);
+  border-radius: var(--r-glass-lg);
   padding: var(--sp-6) var(--sp-5) var(--sp-5);
   text-align: center;
   font-family: var(--font-mono);
@@ -400,16 +427,20 @@
 .inj-end.is-win .inj-end-frame {
   border: 1px solid var(--accent-lime);
   box-shadow:
+    var(--glass-specular),
     0 0 32px rgba(163,230,53,.45),
-    inset 0 0 80px rgba(163,230,53,.06);
+    inset 0 0 80px rgba(163,230,53,.06),
+    var(--glass-drop);
   animation: inj-win-flash 700ms ease-out;
 }
 .inj-end.is-reject .inj-end-frame,
 .inj-end.is-fail   .inj-end-frame {
   border: 1px solid var(--danger);
   box-shadow:
+    var(--glass-specular),
     0 0 28px rgba(255,92,106,.45),
-    inset 0 0 60px rgba(255,92,106,.06);
+    inset 0 0 60px rgba(255,92,106,.06),
+    var(--glass-drop);
 }
 .inj-end.is-reject .inj-end-frame { animation: inj-jitter 1.2s steps(13, end) infinite; }
 .inj-end.is-fail   .inj-end-frame { animation: inj-jitter 1.4s steps(11, end) infinite; }
@@ -478,6 +509,7 @@
   padding: var(--sp-3);
   margin-bottom: var(--sp-4);
   border: 1px dashed rgba(255,92,106,.4);
+  border-radius: var(--r-glass-sm);
   background: rgba(255,92,106,.04);
   font-size: 11px; color: var(--fg-1);
   letter-spacing: .03em;
@@ -489,6 +521,7 @@
   padding: 6px 12px;
   margin-bottom: var(--sp-4);
   border: 1px solid var(--accent-amber);
+  border-radius: var(--r-glass-sm);
   background: rgba(245,165,36,.08);
   color: var(--accent-amber);
   font-weight: 700; font-size: 12px; letter-spacing: .14em;
@@ -503,8 +536,9 @@
 .inj-end-actions:has(.again) { grid-template-columns: 1fr 1fr; }
 .inj-end-btn {
   padding: var(--sp-3) var(--sp-4);
-  background: var(--bg-0);
-  border: 1px solid var(--line-med);
+  background: var(--glass-0);
+  border: 1px solid var(--glass-edge-bright);
+  border-radius: var(--r-glass-sm);
   color: var(--fg-0);
   font-family: var(--font-mono); font-weight: 700;
   font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
@@ -573,8 +607,8 @@
 }
 @keyframes inj-win-flash {
   0%   { background: rgba(163,230,53,.18); box-shadow: 0 0 60px rgba(163,230,53,.7), inset 0 0 80px rgba(163,230,53,.18); }
-  60%  { background: var(--bg-1); }
-  100% { background: var(--bg-1); }
+  60%  { background: var(--glass-1); }
+  100% { background: var(--glass-1); }
 }
 
 @media (prefers-reduced-motion: reduce) {

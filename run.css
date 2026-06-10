@@ -3,7 +3,7 @@
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
 body {
-  background: var(--grid-overlay), var(--bg-0);
+  background: var(--grid-overlay), var(--bg-ambient), var(--bg-0);
   color: var(--fg-0);
   font-family: var(--font-mono);
   overflow-x: hidden;
@@ -23,10 +23,14 @@ body[data-scanlines="on"]::after {
   min-height: 100dvh;
   display: flex; flex-direction: column;
   max-width: 520px; margin: 0 auto;
-  border-left: 1px solid var(--line-dim);
-  border-right: 1px solid var(--line-dim);
+  border-left: 1px solid var(--glass-edge);
+  border-right: 1px solid var(--glass-edge);
   position: relative;
-  background: var(--bg-0);
+  /* Translucent smoked column — lets the body --bg-ambient neon field glow
+     through every mode. No backdrop-filter here: the shell is full-page, an
+     ancestor of position:sticky/fixed chrome, and blur on it would both cost
+     a screenful of GPU and re-parent fixed descendants. */
+  background: var(--glass-0);
 }
 @media (min-width: 900px) { .run-shell { max-width: 900px; } }
 
@@ -38,8 +42,11 @@ body[data-scanlines="on"]::after {
   height: calc(48px + env(safe-area-inset-top));
   display: flex; align-items: center; justify-content: space-between;
   padding: env(safe-area-inset-top) var(--sp-4) 0;
-  border-bottom: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border-bottom: 1px solid var(--glass-edge);
+  background: var(--glass-1);
+  backdrop-filter: var(--glass-filter-lg);
+  -webkit-backdrop-filter: var(--glass-filter-lg);
+  box-shadow: var(--glass-specular), 0 2px 12px rgba(0,0,0,.28);
   position: sticky; top: 0; z-index: 10;
 }
 /* Run / Overclock have a centered counter between QUIT and LIVE — geometric
@@ -52,14 +59,15 @@ body[data-scanlines="on"]::after {
 .run-top:has(> .run-timer) .run-top-r { justify-self: end; }
 .run-top-l { display: flex; align-items: center; gap: var(--sp-3); }
 .run-quit {
-  background: transparent; border: 1px solid var(--line-dim);
+  background: transparent; border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass-sm);
   color: var(--fg-2); font-family: var(--font-mono);
   padding: 4px 10px; font-size: 10px; letter-spacing: .12em;
   text-transform: uppercase; cursor: pointer;
   transition: all var(--dur-fast) var(--ease-snap);
 }
 @media (hover: hover) {
-  .run-quit:hover { border-color: var(--danger); color: var(--danger); }
+  .run-quit:hover { border-color: var(--danger); color: var(--danger); background: var(--glass-2); }
 }
 .run-lbl { font-size: 10px; color: var(--accent-cyan); letter-spacing: .18em; text-transform: uppercase; }
 .run-timer {
@@ -90,8 +98,14 @@ body[data-scanlines="on"]::after {
 
 /* ================= Card ================= */
 .run-card {
-  border: 1px solid var(--line-dim);
-  background: var(--bg-1);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-glass);
+  /* --glass-1 densified: the card remounts with a 3D flip per card and
+     shakes on miss — a backdrop-filter here would force full backdrop
+     resampling every frame of those transforms on iOS, so the card is
+     translucent glass WITHOUT blur. */
+  background: rgba(15, 22, 35, 0.82);
+  box-shadow: var(--glass-shadow);
   display: flex; flex-direction: column;
   flex: 1;
   min-height: 280px;
@@ -102,7 +116,12 @@ body[data-scanlines="on"]::after {
   transition: border-color var(--dur-base) var(--ease-snap), box-shadow var(--dur-base) var(--ease-snap);
   animation: card-flip-in 420ms var(--ease-snap) both;
 }
-.run-card.revealed { border-color: var(--accent-cyan); box-shadow: 0 0 14px rgba(34,211,238,.2); }
+@media (prefers-reduced-transparency: reduce) {
+  /* The card fill is hand-densified rgba (not a --glass-* token), so it
+     misses the token-level solid fallback — solidify it here. */
+  .run-card { background: var(--bg-1); }
+}
+.run-card.revealed { border-color: var(--accent-cyan); box-shadow: var(--glass-specular), 0 0 14px rgba(34,211,238,.2), var(--glass-drop); }
 /* Quiz cards remount per-card (React key on idx) so the flip plays between
    cards. Intro cards animate in via .run-intro which overrides. */
 @keyframes card-flip-in {
@@ -118,7 +137,7 @@ body[data-scanlines="on"]::after {
 .run-card-strip {
   display: flex; justify-content: space-between; align-items: center;
   padding: var(--sp-2) var(--sp-3);
-  border-bottom: 1px solid var(--line-dim);
+  border-bottom: 1px solid var(--glass-edge);
   font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-2);
 }
 .run-card.revealed .run-card-strip { border-bottom-color: var(--accent-cyan); color: var(--accent-cyan); }
@@ -252,7 +271,7 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
   padding: var(--sp-1) 0;
   border-bottom: 1px solid transparent;
 }
-.run-ex + .run-ex { border-top: 1px solid var(--line-dim); padding-top: var(--sp-2); }
+.run-ex + .run-ex { border-top: 1px solid var(--glass-edge); padding-top: var(--sp-2); }
 .run-ex-word {
   font-family: var(--font-jp-sans);
   font-size: 16px;
@@ -277,9 +296,9 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
   -webkit-tap-highlight-color: transparent;
 }
 @media (hover: hover) {
-  .run-card.is-tap:hover { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(34,211,238,.18); }
+  .run-card.is-tap:hover { border-color: var(--accent-cyan); box-shadow: var(--glass-specular), 0 0 10px rgba(34,211,238,.18), var(--glass-drop); }
 }
-.run-card.is-tap:focus-visible { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 16px rgba(34,211,238,.35); }
+.run-card.is-tap:focus-visible { outline: none; border-color: var(--accent-cyan); box-shadow: var(--glass-specular), 0 0 16px rgba(34,211,238,.35), var(--glass-drop); }
 .run-card.is-tap:active { transform: scale(.995); }
 
 .run-reveal-hint {
@@ -330,18 +349,18 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 .run-flash.hit { animation: flash-hit 280ms var(--ease-snap); }
 .run-flash.miss { animation: flash-miss 320ms var(--ease-snap); }
 @keyframes flash-hit {
-  0% { box-shadow: inset 0 0 0px rgba(34,211,238,0), 0 0 0 rgba(34,211,238,0); }
-  35% { box-shadow: inset 0 0 80px rgba(34,211,238,.45), 0 0 40px rgba(34,211,238,.5); border-color: var(--accent-cyan); }
-  100% { box-shadow: inset 0 0 0px rgba(34,211,238,0); }
+  0% { box-shadow: var(--glass-specular), inset 0 0 0px rgba(34,211,238,0), 0 0 0 rgba(34,211,238,0); }
+  35% { box-shadow: var(--glass-specular), inset 0 0 80px rgba(34,211,238,.45), 0 0 40px rgba(34,211,238,.5); border-color: var(--accent-cyan); }
+  100% { box-shadow: var(--glass-specular), inset 0 0 0px rgba(34,211,238,0); }
 }
 @keyframes flash-miss {
-  0% { box-shadow: inset 0 0 0px rgba(255,92,106,0); transform: translateX(0); }
+  0% { box-shadow: var(--glass-specular), inset 0 0 0px rgba(255,92,106,0); transform: translateX(0); }
   10% { transform: translateX(-4px); }
   20% { transform: translateX(4px); }
   30% { transform: translateX(-3px); }
   40% { transform: translateX(3px); }
-  50% { transform: translateX(0); box-shadow: inset 0 0 80px rgba(255,92,106,.4), 0 0 40px rgba(255,92,106,.4); border-color: var(--danger); }
-  100% { box-shadow: inset 0 0 0px rgba(255,92,106,0); }
+  50% { transform: translateX(0); box-shadow: var(--glass-specular), inset 0 0 80px rgba(255,92,106,.4), 0 0 40px rgba(255,92,106,.4); border-color: var(--danger); }
+  100% { box-shadow: var(--glass-specular), inset 0 0 0px rgba(255,92,106,0); }
 }
 
 /* combo chip */
@@ -349,12 +368,14 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
   position: fixed;
   right: 12px; top: calc(56px + env(safe-area-inset-top));
   border: 1px solid var(--accent-magenta);
-  background: var(--bg-1);
+  /* Translucent, no blur — re-rendered/pulsed on every hit during play. */
+  background: var(--glass-1);
+  border-radius: var(--r-pill);
   padding: 6px 10px;
   font-family: var(--font-mono);
   font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
   color: var(--accent-magenta);
-  box-shadow: 0 0 10px rgba(255,61,255,.4);
+  box-shadow: var(--glass-specular), 0 0 10px rgba(255,61,255,.4);
   z-index: 8;
   display: flex; align-items: center; gap: 6px;
   transition: transform var(--dur-fast) var(--ease-snap);
@@ -375,8 +396,10 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 .run-undo-chip {
   position: fixed;
   left: 12px; bottom: calc(16px + env(safe-area-inset-bottom));
-  background: var(--bg-1);
-  border: 1px solid var(--line-bright);
+  /* Translucent, no blur — its depletion bar transitions every 80ms. */
+  background: var(--glass-1);
+  border: 1px solid var(--glass-edge-bright);
+  border-radius: var(--r-glass-sm);
   padding: 8px 12px 10px;
   display: inline-flex; align-items: center; gap: 10px;
   font-family: var(--font-mono);
@@ -384,7 +407,7 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
   cursor: pointer;
   z-index: 11;
   animation: undo-in 180ms var(--ease-snap);
-  box-shadow: 0 0 14px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.03);
+  box-shadow: var(--glass-specular), 0 0 14px rgba(0,0,0,.35), var(--glass-drop);
   transition: transform var(--dur-fast) var(--ease-snap),
               box-shadow var(--dur-fast) var(--ease-snap),
               border-color var(--dur-fast) var(--ease-snap);
@@ -393,7 +416,7 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 .run-undo-chip:hover {
   transform: translateY(-1px);
   border-color: var(--accent-cyan);
-  box-shadow: 0 0 18px rgba(34,211,238,.35), inset 0 0 0 1px rgba(34,211,238,.2);
+  box-shadow: var(--glass-specular), 0 0 18px rgba(34,211,238,.35), inset 0 0 0 1px rgba(34,211,238,.2), var(--glass-drop);
 }
 .run-undo-chip:active { transform: translateY(0); }
 .run-undo-chip-icon {
@@ -454,6 +477,8 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
   letter-spacing: .08em; text-transform: uppercase;
   padding: var(--sp-3) var(--sp-2);
   border: 1px solid var(--line-bright);
+  border-radius: var(--r-glass-sm);
+  /* 4 side-by-side, hammered rapidly — translucent only, never blurred. */
   background: transparent;
   color: var(--fg-0);
   cursor: pointer;
@@ -518,16 +543,25 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 }
 .run-pre-stats {
   display: grid; grid-template-columns: repeat(3, 1fr);
-  border: 1px solid var(--line-dim); background: var(--bg-1);
+  border: 1px solid var(--glass-edge); background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
 }
-.run-pre-stat { padding: var(--sp-3); text-align: center; border-right: 1px solid var(--line-dim); }
+.run-pre-stat { padding: var(--sp-3); text-align: center; border-right: 1px solid var(--glass-edge); }
 .run-pre-stat:last-child { border-right: 0; }
 .run-pre-stat-lbl { font-size: 9px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; }
 .run-pre-stat-val { font-family: var(--font-mono); font-weight: 700; font-size: 22px; color: var(--fg-0); margin-top: var(--sp-1); }
 .run-pre-stat-val.cyan { color: var(--accent-cyan); }
 .run-pre-stat-val.amb { color: var(--accent-amber); }
 .run-pre-breakdown {
-  border: 1px solid var(--line-dim); background: var(--bg-1); padding: var(--sp-3);
+  border: 1px solid var(--glass-edge); background: var(--glass-1); padding: var(--sp-3);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
 }
 .run-pre-breakdown-head {
   font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-2);
@@ -548,7 +582,11 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 /* Verdict key — explainer strip shown on PreRun so first-time operators
    understand what MISS/HARD/OK/EASY will do once the card is revealed. */
 .run-pre-verdicts {
-  border: 1px solid var(--line-dim); background: var(--bg-1); padding: var(--sp-3);
+  border: 1px solid var(--glass-edge); background: var(--glass-1); padding: var(--sp-3);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
 }
 .run-pre-verdicts-head {
   font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-2);
@@ -558,7 +596,9 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
   display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-2);
 }
 .run-pre-vk {
-  border: 1px solid var(--line-dim); background: var(--bg-0);
+  /* 4 tiles inside an already-blurred panel — translucent fill only. */
+  border: 1px solid var(--glass-edge); background: var(--glass-0);
+  border-radius: var(--r-glass-sm);
   padding: var(--sp-2) var(--sp-3); display: flex; flex-direction: column; gap: var(--sp-1);
   font-family: var(--font-mono);
 }
@@ -598,6 +638,7 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
   margin-top: var(--sp-2);
   padding: var(--sp-4);
   border: 2px solid var(--accent-cyan);
+  border-radius: var(--r-glass-sm);
   background: linear-gradient(180deg, var(--accent-cyan-bg), transparent 60%);
   color: var(--accent-cyan);
   font-family: var(--font-mono);
@@ -622,7 +663,7 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 }
 .run-pre-hint kbd {
   font-family: var(--font-mono); font-size: 10px;
-  background: var(--bg-2); border: 1px solid var(--line-bright);
+  background: var(--glass-2); border: 1px solid var(--glass-edge-bright);
   border-bottom-width: 2px;
   padding: 1px 6px; color: var(--fg-0);
   margin: 0 2px;
@@ -691,9 +732,14 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 
 .run-end-tallies {
   display: grid; grid-template-columns: repeat(4, 1fr);
-  border: 1px solid var(--line-dim); background: var(--bg-1);
+  border: 1px solid var(--glass-edge); background: var(--glass-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
 }
-.run-end-t { padding: var(--sp-3); text-align: center; border-right: 1px solid var(--line-dim); }
+.run-end-t { padding: var(--sp-3); text-align: center; border-right: 1px solid var(--glass-edge); }
 .run-end-t:last-child { border-right: 0; }
 .run-end-t-lbl { font-size: 9px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; }
 .run-end-t-val { font-family: var(--font-mono); font-weight: 700; font-size: 22px; margin-top: 4px; }
@@ -704,7 +750,13 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 
 .run-end-panels { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
 @media (max-width: 560px) { .run-end-panels { grid-template-columns: 1fr; } }
-.run-end-panel { border: 1px solid var(--line-dim); background: var(--bg-1); padding: var(--sp-3); }
+.run-end-panel {
+  border: 1px solid var(--glass-edge); background: var(--glass-1); padding: var(--sp-3);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
+}
 .run-end-p-head { font-size: 10px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase; margin-bottom: var(--sp-2); display: flex; justify-content: space-between; }
 .run-end-p-val { font-family: var(--font-mono); font-weight: 700; font-size: 28px; color: var(--fg-0); }
 .run-end-p-sub { font-size: 11px; color: var(--fg-2); margin-top: 4px; }
@@ -712,7 +764,11 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 .run-end-p-val.xp { color: var(--accent-magenta); text-shadow: 0 0 10px rgba(255,61,255,.4); }
 
 .run-end-missed {
-  border: 1px solid var(--line-dim); background: var(--bg-1); padding: var(--sp-3);
+  border: 1px solid var(--glass-edge); background: var(--glass-1); padding: var(--sp-3);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: var(--r-glass);
+  box-shadow: var(--glass-shadow);
 }
 .run-end-missed-head {
   font-size: 10px; color: var(--fg-2); letter-spacing: .12em; text-transform: uppercase;
@@ -725,6 +781,7 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 .run-end-missed-k {
   min-width: 56px; height: 56px;
   border: 1px solid var(--danger);
+  border-radius: var(--r-glass-sm);
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-jp-serif); font-weight: 700; font-size: 28px;
   color: var(--fg-0);
@@ -741,28 +798,37 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 .run-end-actions .run-end-btn { padding: var(--sp-3) var(--sp-5); min-width: 220px; }
 .run-end-btn {
   padding: var(--sp-3);
-  border: 1px solid var(--line-bright);
-  background: transparent; color: var(--fg-0);
+  border: 1px solid var(--glass-edge-bright);
+  border-radius: var(--r-glass-sm);
+  background: var(--glass-1); color: var(--fg-0);
+  backdrop-filter: var(--glass-filter-sm);
+  -webkit-backdrop-filter: var(--glass-filter-sm);
+  box-shadow: var(--glass-specular);
   font-family: var(--font-mono); font-weight: 700;
   font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
   cursor: pointer; text-align: center;
-  transition: all var(--dur-fast) var(--ease-snap);
+  /* Enumerated (not `all`): this element carries backdrop-filter, and iOS
+     animates backdrop-filter poorly if a future state ever toggles it. */
+  transition: border-color var(--dur-fast) var(--ease-snap),
+              color        var(--dur-fast) var(--ease-snap),
+              background   var(--dur-fast) var(--ease-snap),
+              box-shadow   var(--dur-fast) var(--ease-snap);
 }
 @media (hover: hover) {
-  .run-end-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); box-shadow: 0 0 12px rgba(34,211,238,.3); }
+  .run-end-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); background: var(--glass-2); box-shadow: var(--glass-specular), 0 0 12px rgba(34,211,238,.3); }
 }
 .run-end-btn.primary {
   border-color: var(--accent-cyan); color: var(--accent-cyan);
-  box-shadow: inset 0 0 0 1px var(--accent-cyan), 0 0 12px rgba(34,211,238,.3);
+  box-shadow: var(--glass-specular), inset 0 0 0 1px var(--accent-cyan), 0 0 12px rgba(34,211,238,.3);
 }
 @media (hover: hover) {
-  .run-end-btn.primary:hover { background: var(--accent-cyan-bg); color: #fff; box-shadow: 0 0 18px rgba(34,211,238,.5); }
+  .run-end-btn.primary:hover { background: var(--accent-cyan-bg); color: #fff; box-shadow: var(--glass-specular), 0 0 18px rgba(34,211,238,.5); }
 }
 
 /* variant — game */
 .variant-game .run-kanji { font-size: 220px; }
 .variant-game .run-card {
-  background: linear-gradient(180deg, var(--accent-magenta-bg), var(--bg-1) 40%);
+  background: linear-gradient(180deg, var(--accent-magenta-bg), var(--glass-1) 40%);
 }
 .variant-game .run-vbtn.easy { animation: easy-pulse 2s ease-in-out infinite; }
 @keyframes easy-pulse {
@@ -857,14 +923,18 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
 }
 .run-pre-overclock-callout {
   border: 1px solid var(--accent-magenta);
+  border-radius: var(--r-glass);
   background: linear-gradient(180deg, var(--accent-magenta-bg), transparent 80%);
-  box-shadow: inset 0 0 24px rgba(255,61,255,.06);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  box-shadow: var(--glass-specular), inset 0 0 24px rgba(255,61,255,.06), var(--glass-drop);
   display: flex; flex-direction: column;
+  overflow: hidden;
 }
 .run-pre-overclock-callout-row {
   display: flex; align-items: center; gap: var(--sp-3);
   padding: var(--sp-3);
-  border-bottom: 1px solid var(--line-dim);
+  border-bottom: 1px solid var(--glass-edge);
 }
 .run-pre-overclock-callout-row:last-child { border-bottom: 0; }
 .run-pre-overclock-tag {
@@ -873,7 +943,8 @@ body[data-romaji="on"] .run-reading.main .r-romaji { color: var(--accent-magenta
   min-width: 56px; text-align: center;
   padding: 4px 8px;
   border: 1px solid var(--accent-magenta);
-  background: var(--bg-1);
+  border-radius: var(--r-glass-sm);
+  background: var(--glass-1);
   color: var(--accent-magenta);
   text-shadow: 0 0 6px rgba(255,61,255,.45);
 }
